@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios - Governa Fácil{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Filtros Globais -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Data Início</label>
+                            <input type="date" class="form-control" id="dataInicio">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Data Fim</label>
+                            <input type="date" class="form-control" id="dataFim">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Período</label>
+                            <select class="form-select" id="periodo">
+                                <option value="diario">Diário</option>
+                                <option value="semanal">Semanal</option>
+                                <option value="mensal" selected>Mensal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-primary d-block" onclick="atualizarTodosRelatorios()">
+                                <i class="bi bi-arrow-clockwise"></i> Atualizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Linha 1: Volume e Performance -->
+    <div class="row mb-4">
+        <!-- Volume de Incidências -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Volume de Incidências</h5>
+                    <button class="btn btn-sm btn-light" onclick="exportarGrafico('volumeChart')">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <canvas id="volumeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Performance</h5>
+                    <button class="btn btn-sm btn-light" onclick="exportarGrafico('performanceChart')">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Linha 2: Status e Categorias -->
+    <div class="row mb-4">
+        <!-- Distribuição por Status -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Distribuição por Status</h5>
+                    <button class="btn btn-sm btn-light" onclick="exportarGrafico('statusChart')">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribuição por Categoria -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Distribuição por Categoria</h5>
+                    <button class="btn btn-sm btn-light" onclick="exportarGrafico('categoriaChart')">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoriaChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Linha 3: Geográfico e Tempo de Resolução -->
+    <div class="row mb-4">
+        <!-- Mapa de Distribuição -->
+        <!-- <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Distribuição Geográfica</h5>
+                    <button class="btn btn-sm btn-light" onclick="exportarGrafico('mapaChart')">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="mapaChart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div> -->
+
+        <!-- Tempo de Resolução -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Tempo Médio de Resolução</h5>
+                    <button class="btn btn-sm btn-light" onclick="exportarGrafico('tempoChart')">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <canvas id="tempoChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Inclua o Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+
+<!-- Seu arquivo de relatórios -->
+<script>
+    // Função para exportar gráfico como imagem PNG
+    function exportarGrafico(chartId) {
+        try {
+            // Verificar se o chart existe
+            if (!charts[chartId]) {
+                console.error(`Gráfico ${chartId} não encontrado`);
+                alert('Não foi possível exportar o gráfico. Tente novamente.');
+                return;
+            }
+
+            // Obter o elemento canvas do gráfico
+            const canvas = document.getElementById(chartId);
+            if (!canvas) {
+                console.error(`Canvas para ${chartId} não encontrado`);
+                alert('Elemento do gráfico não encontrado. Tente novamente.');
+                return;
+            }
+
+            // Criar um link temporário para download
+            const link = document.createElement('a');
+
+            // Obter a data atual para o nome do arquivo
+            const dataAtual = new Date();
+            const dataFormatada = dataAtual.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+
+            // Definir o nome do arquivo baseado no ID do gráfico
+            let nomeArquivo = '';
+            switch (chartId) {
+                case 'volumeChart':
+                    nomeArquivo = `volume-incidencias-${dataFormatada}.png`;
+                    break;
+                case 'performanceChart':
+                    nomeArquivo = `performance-${dataFormatada}.png`;
+                    break;
+                case 'statusChart':
+                    nomeArquivo = `distribuicao-status-${dataFormatada}.png`;
+                    break;
+                case 'categoriaChart':
+                    nomeArquivo = `distribuicao-categorias-${dataFormatada}.png`;
+                    break;
+                case 'tempoChart':
+                    nomeArquivo = `tempo-resolucao-${dataFormatada}.png`;
+                    break;
+                case 'mapaChart':
+                case 'geograficoChart':
+                    nomeArquivo = `distribuicao-geografica-${dataFormatada}.png`;
+                    break;
+                default:
+                    nomeArquivo = `relatorio-${chartId}-${dataFormatada}.png`;
+            }
+
+            // Converter o canvas para URL de dados PNG
+            const image = canvas.toDataURL('image/png', 1.0);
+
+            // Configurar o link para download
+            link.href = image;
+            link.download = nomeArquivo;
+
+            // Simular clique para iniciar o download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            console.log(`Gráfico ${chartId} exportado com sucesso como ${nomeArquivo}`);
+        } catch (error) {
+            console.error('Erro ao exportar gráfico:', error);
+            alert('Ocorreu um erro ao exportar o gráfico. Verifique o console para mais detalhes.');
+        }
+    }
+
+    // Variáveis globais
+    let charts = {};
+    const chartColors = {
+        background: [
+            'rgba(255, 99, 132, 0.2)',
+            'rgba(54, 162, 235, 0.2)',
+            'rgba(255, 206, 86, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(153, 102, 255, 0.2)'
+        ],
+        border: [
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)'
+        ]
+    };
+
+    // Funções de carregamento de dados com autenticação
+    async function carregarVolume() {
+        try {
+            // Obter o token do localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token não encontrado no localStorage');
+                return;
+            }
+
+            // Configurar os cabeçalhos com o token
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            const params = new URLSearchParams({
+                periodo: document.getElementById('periodo').value,
+                data_inicio: document.getElementById('dataInicio').value,
+                data_fim: document.getElementById('dataFim').value
+            });
+
+            // Incluir o timestamp para evitar cache
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/relatorios/volume-periodo?${params}&t=${timestamp}`, { headers });
+            const data = await response.json();
+
+            if (charts.volumeChart) {
+                charts.volumeChart.destroy();
+            }
+
+            const ctx = document.getElementById('volumeChart');
+            charts.volumeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Volume de Incidências',
+                        data: data.values,
+                        borderColor: chartColors.border[0],
+                        backgroundColor: chartColors.background[0],
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao carregar volume:', error);
+        }
+    }
+
+    async function carregarPerformance() {
+        try {
+            // Obter o token do localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token não encontrado no localStorage');
+                return;
+            }
+
+            // Configurar os cabeçalhos com o token
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            // Incluir o timestamp para evitar cache
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/relatorios/performance?t=${timestamp}`, { headers });
+            const data = await response.json();
+
+            if (charts.performanceChart) {
+                charts.performanceChart.destroy();
+            }
+
+            const ctx = document.getElementById('performanceChart');
+            charts.performanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.tempo_medio_por_categoria),
+                    datasets: [{
+                        label: 'Tempo Médio (horas)',
+                        data: Object.values(data.tempo_medio_por_categoria),
+                        backgroundColor: chartColors.background,
+                        borderColor: chartColors.border,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao carregar performance:', error);
+        }
+    }
+
+    async function carregarDistribuicaoCategorias() {
+        try {
+            // Obter o token do localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token não encontrado no localStorage');
+                return;
+            }
+
+            // Configurar os cabeçalhos com o token
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            // Incluir o timestamp para evitar cache
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/relatorios/tendencias-categoria?t=${timestamp}`, { headers });
+            const data = await response.json();
+
+            if (charts.categoriaChart) {
+                charts.categoriaChart.destroy();
+            }
+
+            const ctx = document.getElementById('categoriaChart');
+            charts.categoriaChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.categorias,
+                    datasets: [{
+                        data: data.dados,
+                        backgroundColor: chartColors.background,
+                        borderColor: chartColors.border,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao carregar categorias:', error);
+        }
+    }
+
+    async function carregarDistribuicaoStatus() {
+        try {
+            // Obter o token do localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token não encontrado no localStorage');
+                return;
+            }
+
+            // Configurar os cabeçalhos com o token
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            // Incluir o timestamp para evitar cache
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/relatorios/status?t=${timestamp}`, { headers });
+            const data = await response.json();
+
+            if (charts.statusChart) {
+                charts.statusChart.destroy();
+            }
+
+            const ctx = document.getElementById('statusChart');
+            charts.statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data.distribuicao),
+                    datasets: [{
+                        data: Object.values(data.distribuicao),
+                        backgroundColor: chartColors.background,
+                        borderColor: chartColors.border,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao carregar status:', error);
+        }
+    }
+
+    async function carregarDistribuicaoGeografica() {
+        try {
+            // Obter o token do localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token não encontrado no localStorage');
+                return;
+            }
+
+            // Configurar os cabeçalhos com o token
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            console.log('Carregando dados geográficos...');
+            // Incluir o timestamp para evitar cache
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/relatorios/geografico?t=${timestamp}`, { headers });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Dados geográficos recebidos:', data);
+
+            if (!data || !data.por_estado) {
+                console.error('Dados geográficos inválidos:', data);
+                return;
+            }
+
+            if (charts.geograficoChart) {
+                charts.geograficoChart.destroy();
+            }
+
+            const estados = Object.keys(data.por_estado);
+            const totais = Object.values(data.por_estado);
+
+            const ctx = document.getElementById('geograficoChart');
+            charts.geograficoChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: estados,
+                    datasets: [{
+                        label: 'Incidências por Estado',
+                        data: totais,
+                        backgroundColor: chartColors.background,
+                        borderColor: chartColors.border,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribuição por Estado'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Quantidade'
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao carregar distribuição geográfica:', error);
+            // Mostrar mensagem de erro no local do gráfico
+            const ctx = document.getElementById('geograficoChart');
+            if (ctx) {
+                const div = document.createElement('div');
+                div.className = 'alert alert-danger';
+                div.textContent = 'Erro ao carregar dados geográficos';
+                ctx.parentNode.insertBefore(div, ctx);
+            }
+        }
+    }
+
+    async function carregarTempoResolucao() {
+        try {
+            // Obter o token do localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token não encontrado no localStorage');
+                return;
+            }
+
+            // Configurar os cabeçalhos com o token
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            // Incluir o timestamp para evitar cache
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/relatorios/performance?t=${timestamp}`, { headers });
+            const data = await response.json();
+
+            if (charts.tempoChart) {
+                charts.tempoChart.destroy();
+            }
+
+            const ctx = document.getElementById('tempoChart');
+            charts.tempoChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.tempo_medio_por_categoria),
+                    datasets: [{
+                        label: 'Tempo Médio (horas)',
+                        data: Object.values(data.tempo_medio_por_categoria),
+                        backgroundColor: chartColors.background[4],
+                        borderColor: chartColors.border[4],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Tempo Médio de Resolução por Categoria'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Horas'
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao carregar tempo de resolução:', error);
+        }
+    }
+
+    // Função para atualizar todos os relatórios
+    async function atualizarTodosRelatorios() {
+        try {
+            await Promise.all([
+                carregarVolume(),
+                carregarPerformance(),
+                carregarDistribuicaoStatus(),
+                carregarDistribuicaoCategorias(),
+                //carregarDistribuicaoGeografica(),  // Comentado como no original
+                carregarTempoResolucao()
+            ]);
+        } catch (error) {
+            console.error('Erro ao atualizar relatórios:', error);
+        }
+    }
+
+    // Inicialização com verificação de autenticação
+    document.addEventListener('DOMContentLoaded', function () {
+        // Verificar se o token existe
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('Token não encontrado. Redirecionando para login...');
+            // Opcionalmente, redirecionar para a página de login
+            // window.location.href = '/login';
+            return;
+        }
+
+        // Definir datas padrão
+        const hoje = new Date();
+        const mesPassado = new Date();
+        mesPassado.setMonth(hoje.getMonth() - 12);
+
+        document.getElementById('dataFim').valueAsDate = hoje;
+        document.getElementById('dataInicio').valueAsDate = mesPassado;
+
+        // Carregar todos os relatórios
+        atualizarTodosRelatorios();
+
+        // Adicionar listeners para filtros
+        ['dataInicio', 'dataFim', 'periodo'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('change', atualizarTodosRelatorios);
+            }
+        });
+    });
+</script>
+{% endblock %}

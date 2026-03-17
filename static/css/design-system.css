@@ -1,0 +1,10 @@
+/* =====================================================
+   DESIGN SYSTEM - GESTÃO INTERATIVA
+   Apenas Header, Footer e Login
+   ===================================================== */
+
+:root {
+    /* Cores Primárias - Configuráveis via JS */
+    --primary-color: #086218;
+    --secondary-color: #001F5B;
+}

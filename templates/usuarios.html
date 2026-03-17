@@ -1,0 +1,658 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários - Governa Fácil{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Usuários</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">
+        <i class="bi bi-plus-lg me-1"></i> Novo Usuário
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="usuariosTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Nível</th>
+                        <th>Telefone</th>
+                        <th>Endereço</th>
+                        <th>Cidade</th>
+                        <th>Estado</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Novo Usuário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <input type="hidden" id="userId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-7">
+                            <label class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="senha">
+                            <small class="text-muted" style="font-style: italic;font-size:11px">Deixe em branco para
+                                manter a senha atual ao editar</small>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Nível</label>
+                            <select class="form-select" id="nivel" name="nivel">
+                                <option value="0">Usuário</option>
+                                <option value="1">Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Endereço</label>
+                        <input type="text" class="form-control" id="endereco" required>
+                    </div>
+                    <div class="row">
+                        <div class="mb-3">
+                            <label for="celular" class="form-label">Celular</label>
+                            <input type="tel" class="form-control" id="celular" name="celular" maxlength="15"
+                                placeholder="(99) 99999-9999">
+                        </div>
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label class="form-label">Cidade</label>
+                                <input type="text" class="form-control" id="cidade" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Estado</label>
+                                <input type="text" class="form-control" id="estado" maxlength="2" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ativo" checked>
+                            <label class="form-check-label">Ativo</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarUsuario()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Permissões -->
+<!-- Modal de Permissões -->
+<!-- Modal de Permissões -->
+<div class="modal fade" id="permissoesModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Permissões de Categorias - <span id="nomeUsuario"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="permissoesUsuarioId">
+
+                <div class="row">
+                    <!-- Categorias Disponíveis -->
+                    <div class="col-md-5">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Categorias Disponíveis</h6>
+                            </div>
+                            <div class="card-body">
+                                <select id="categoriasDisponiveis" class="form-select" multiple size="10"></select>
+                            </div>
+                            <div class="card-footer">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="novaNotificaEmail">
+                                    <label class="form-check-label" for="novaNotificaEmail">
+                                        <i class="bi bi-envelope me-2"></i>Email
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="novaNotificaSMS">
+                                    <label class="form-check-label" for="novaNotificaSMS">
+                                        <i class="bi bi-phone me-2"></i>SMS
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Setas de Ação -->
+                    <div class="col-md-2 d-flex align-items-center justify-content-center">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" onclick="vincularCategorias()">
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="desvincularCategorias()">
+                                <i class="bi bi-arrow-left"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Categorias Vinculadas -->
+                    <div class="col-md-5">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Categorias Vinculadas</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th width="10%">Selecionar</th>
+                                                <th>Categoria</th>
+                                                <th class="text-center">Email</th>
+                                                <th class="text-center">SMS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="categoriasVinculadasTable">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    function mascaraCelular(event) {
+        var input = event.target;
+        var value = input.value.replace(/\D/g, '');
+        var formattedValue = '';
+
+        if (value.length > 0) {
+            formattedValue = '(' + value.substr(0, 2);
+        }
+        if (value.length > 2) {
+            formattedValue += ') ' + value.substr(2, 5);
+        }
+        if (value.length > 7) {
+            formattedValue += '-' + value.substr(7, 4);
+        }
+
+        input.value = formattedValue;
+    }
+
+
+    let usuarios = [];
+
+    async function loadUsuarios() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/lista_usuarios/', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const usuarios = await response.json();
+            //console.log('Dados recebidos:', usuarios); // Debug
+
+            const tbody = document.querySelector('#usuariosTable tbody');
+
+            if (usuarios && usuarios.length > 0) {
+                tbody.innerHTML = usuarios.map(usuario => `
+                <tr>
+                    <td>${usuario.usuario_id}</td>
+                    <td>${usuario.nome}</td>
+                    <td>${usuario.email}</td>
+                    <td>${usuario.nivel == '1' ? 'Administrador' : 'Usuário'}</td>
+                    <td>${usuario.celular || ''}</td>
+                    <td>${usuario.endereco || ''}</td>
+                    <td>${usuario.cidade || ''}</td>
+                    <td>${usuario.estado || ''}</td>                    
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-info me-1" onclick="editarUsuario(${usuario.usuario_id})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-primary me-1" onclick="abrirPermissoes(${usuario.usuario_id})">
+                                <i class="bi bi-key"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deletarUsuario(${usuario.usuario_id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum usuário encontrado</td></tr>';
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar usuários:', error);
+            const tbody = document.querySelector('#usuariosTable tbody');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar usuários</td></tr>';
+        }
+    }
+
+    // Certifique-se que a tabela existe no HTML
+    document.addEventListener('DOMContentLoaded', function () {
+        loadUsuarios();
+    });
+
+
+    async function salvarUsuario() {
+        const token = localStorage.getItem('token');
+        const userId = document.getElementById('userId').value;
+        const userData = {
+            nome: document.getElementById('nome').value,
+            email: document.getElementById('email').value,
+            senha: document.getElementById('senha').value,
+            endereco: document.getElementById('endereco').value,
+            cidade: document.getElementById('cidade').value,
+            estado: document.getElementById('estado').value,
+            ativo: document.getElementById('ativo').checked,
+            celular: document.getElementById('celular').value,
+            nivel: document.getElementById('nivel').value
+        };
+
+        try {
+            let url = '/novo_usuario/';
+            let method = 'POST';
+
+            // If userId exists, it's an edit operation
+            if (userId) {
+                url = `/editar_usuario/${userId}`;
+                method = 'PUT';
+                // If password is empty during edit, remove it from payload
+                if (!userData.senha) {
+                    delete userData.senha;
+                }
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Erro ao salvar usuário');
+            }
+
+            // Success handling
+            alert('Usuário salvo com sucesso!');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('userModal'));
+            modal.hide();
+            loadUsuarios();  // Reload the users list
+
+        } catch (error) {
+            console.error('Erro ao salvar usuário:', error);
+            alert(error.message);
+        }
+    }
+
+    async function editarUsuario(usuario_id) {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/usuario_id/${usuario_id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao buscar dados do usuário');
+            }
+
+            const usuario = await response.json();
+
+            // Preencher o formulário - usando os IDs corretos
+            document.getElementById('userId').value = usuario.usuario_id;
+            document.getElementById('nome').value = usuario.nome;
+            document.getElementById('email').value = usuario.email;
+            document.getElementById('celular').value = usuario.celular || '';
+            document.getElementById('endereco').value = usuario.endereco || '';
+            document.getElementById('cidade').value = usuario.cidade || '';
+            document.getElementById('estado').value = usuario.estado || '';
+            document.getElementById('ativo').checked = usuario.ativo;
+            document.getElementById('nivel').value = usuario.nivel || '0';
+
+            // Alterar título do modal
+            document.getElementById('modalTitle').textContent = 'Editar Usuário';
+
+            // Abrir o modal usando o ID correto
+            const modal = new bootstrap.Modal(document.getElementById('userModal'));
+            modal.show();
+        } catch (error) {
+            console.error('Erro ao editar usuário:', error);
+            alert('Erro ao carregar dados do usuário');
+        }
+    }
+
+    async function deletarUsuario(id) {
+        if (confirm('Deseja realmente excluir este usuário?')) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/deletar_usuario/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadUsuarios();
+                }
+            } catch (error) {
+                console.error('Erro ao deletar usuário:', error);
+            }
+        }
+    }
+
+    loadUsuarios();
+
+    document.getElementById('userModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('userForm').reset();
+        document.getElementById('userId').value = '';
+    });
+
+    // Adicione este código após a definição da função mascaraCelular
+    document.addEventListener('DOMContentLoaded', function () {
+        const celularInput = document.getElementById('celular');
+        if (celularInput) {
+            celularInput.addEventListener('input', mascaraCelular);
+            celularInput.addEventListener('keyup', mascaraCelular);
+            celularInput.addEventListener('mouseout', mascaraCelular);
+        }
+    });
+
+    async function abrirPermissoes(usuario_id) {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/usuario_id/${usuario_id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao buscar dados do usuário');
+            }
+
+            const usuario = await response.json();
+
+            // Preencher dados do usuário no modal
+            document.getElementById('permissoesUsuarioId').value = usuario.usuario_id;
+            document.getElementById('nomeUsuario').textContent = usuario.nome;
+
+            // Carregar categorias
+            await carregarCategoriasDisponiveis(usuario.usuario_id);
+            await carregarCategoriasVinculadas(usuario.usuario_id);
+
+            // Abrir o modal
+            const modal = new bootstrap.Modal(document.getElementById('permissoesModal'));
+            modal.show();
+        } catch (error) {
+            console.error('Erro ao abrir permissões:', error);
+        }
+    }
+
+    async function carregarCategoriasDisponiveis(usuario_id) {
+        try {
+            const token = localStorage.getItem('token');
+            console.log('Carregando categorias disponíveis para usuário:', usuario_id);
+
+            const response = await fetch(`/usuarios/${usuario_id}/categorias-disponiveis`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const categorias = await response.json();
+            console.log('Categorias disponíveis:', categorias);
+
+            const select = document.getElementById('categoriasDisponiveis');
+            select.innerHTML = '';
+
+            if (categorias && categorias.length > 0) {
+                categorias.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.categoria_id;
+                    option.textContent = cat.nome;
+                    select.appendChild(option);
+                });
+            } else {
+                const option = document.createElement('option');
+                option.disabled = true;
+                option.textContent = 'Nenhuma categoria disponível';
+                select.appendChild(option);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar categorias disponíveis:', error);
+        }
+    }
+
+    async function carregarCategoriasVinculadas(usuario_id) {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/usuarios/${usuario_id}/categorias-vinculadas`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao carregar categorias vinculadas');
+            }
+
+            const categorias = await response.json();
+            const tbody = document.getElementById('categoriasVinculadasTable');
+            tbody.innerHTML = '';
+
+            if (categorias && categorias.length > 0) {
+                categorias.forEach(cat => {
+                    tbody.innerHTML += `
+                    <tr data-categoria-id="${cat.categoria_id}">
+                        <td>
+                            <input type="checkbox" class="form-check-input categoria-select">
+                        </td>
+                        <td>${cat.nome}</td>
+                        <td class="text-center">
+                            <div class="form-check d-flex justify-content-center">
+                                <input class="form-check-input" type="checkbox" 
+                                       ${cat.notifica_email ? 'checked' : ''}
+                                       onchange="atualizarNotificacao(${cat.categoria_id}, 'email', this.checked)">
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check d-flex justify-content-center">
+                                <input class="form-check-input" type="checkbox" 
+                                       ${cat.notifica_sms ? 'checked' : ''}
+                                       onchange="atualizarNotificacao(${cat.categoria_id}, 'sms', this.checked)">
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                });
+            } else {
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center">Nenhuma categoria vinculada</td>
+                </tr>
+            `;
+            }
+        } catch (error) {
+            console.error('Erro ao carregar categorias vinculadas:', error);
+        }
+    }
+
+    async function atualizarNotificacao(categoria_id, tipo, valor) {
+        try {
+            const token = localStorage.getItem('token');
+            const usuario_id = document.getElementById('permissoesUsuarioId').value;
+
+            const response = await fetch(`/usuarios/${usuario_id}/atualizar-notificacao`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    categoria_id: categoria_id,
+                    tipo: tipo,
+                    valor: valor ? 1 : 0
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao atualizar notificação');
+            }
+
+            // Atualizar a lista para refletir as mudanças
+            await carregarCategoriasVinculadas(usuario_id);
+
+        } catch (error) {
+            console.error('Erro ao atualizar notificação:', error);
+            alert('Erro ao atualizar notificação');
+        }
+    }
+
+    async function desvincularCategorias() {
+        try {
+            const token = localStorage.getItem('token');
+            const usuario_id = document.getElementById('permissoesUsuarioId').value;
+
+            // Pegar todas as categorias selecionadas
+            const categoriasSelecionadas = Array.from(
+                document.querySelectorAll('#categoriasVinculadasTable .categoria-select:checked')
+            ).map(checkbox => checkbox.closest('tr').dataset.categoriaId);
+
+            if (categoriasSelecionadas.length === 0) {
+                alert('Selecione pelo menos uma categoria para desvincular');
+                return;
+            }
+
+            const response = await fetch(`/usuarios/${usuario_id}/desvincular-categorias`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    categorias: categoriasSelecionadas
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao desvincular categorias');
+            }
+
+            // Recarregar as listas
+            await carregarCategoriasDisponiveis(usuario_id);
+            await carregarCategoriasVinculadas(usuario_id);
+
+        } catch (error) {
+            console.error('Erro ao desvincular categorias:', error);
+            alert('Erro ao desvincular categorias');
+        }
+    }
+
+    async function vincularCategorias() {
+        try {
+            const token = localStorage.getItem('token');
+            const usuarioId = document.getElementById('permissoesUsuarioId').value;
+            const categoriasSelect = document.getElementById('categoriasDisponiveis');
+            const categoriasSelecionadas = Array.from(categoriasSelect.selectedOptions).map(opt => opt.value);
+
+            if (categoriasSelecionadas.length === 0) {
+                alert('Selecione pelo menos uma categoria para vincular');
+                return;
+            }
+
+            const notificaEmail = document.getElementById('novaNotificaEmail').checked ? 1 : 0;
+            const notificaSms = document.getElementById('novaNotificaSMS').checked ? 1 : 0;
+
+            console.log('Dados a enviar:', {
+                categorias: categoriasSelecionadas,
+                notifica_email: notificaEmail,
+                notifica_sms: notificaSms
+            });
+
+            const response = await fetch(`/usuarios/${usuarioId}/vincular-categorias`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    categorias: categoriasSelecionadas,
+                    notifica_email: notificaEmail,
+                    notifica_sms: notificaSms
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao vincular categorias');
+            }
+
+            // Recarregar as listas
+            await carregarCategoriasDisponiveis(usuarioId);
+            await carregarCategoriasVinculadas(usuarioId);
+
+        } catch (error) {
+            console.error('Erro ao vincular categorias:', error);
+            alert('Erro ao vincular categorias: ' + error.message);
+        }
+    }
+
+
+</script>
+
+{% endblock %}

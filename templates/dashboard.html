@@ -1,0 +1,1275 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Governa Fácil{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #4f46e5;
+        --primary-dark: #4338ca;
+        --primary-light: #818cf8;
+        --secondary: #0ea5e9;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --dark: #1e293b;
+        --gray-100: #f1f5f9;
+        --gray-200: #e2e8f0;
+        --gray-300: #cbd5e1;
+        --gray-400: #94a3b8;
+        --gray-500: #64748b;
+        --gray-600: #475569;
+    }
+
+    .page-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .page-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.25rem;
+    }
+
+    .page-header p {
+        color: var(--gray-500);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .stat-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-icon.blue {
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary);
+    }
+
+    .stat-icon.red {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .stat-icon.orange {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .stat-icon.green {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .stat-trend {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .stat-trend.up {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .stat-trend.down {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--gray-500);
+        font-weight: 500;
+    }
+
+    /* Insights Grid */
+    .insights-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .insight-card {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-radius: 14px;
+        padding: 1.25rem;
+        border-left: 4px solid var(--secondary);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .insight-icon {
+        width: 50px;
+        height: 50px;
+        background: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: var(--secondary);
+        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+    }
+
+    .insight-content h4 {
+        font-size: 0.8rem;
+        color: var(--gray-600);
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+    }
+
+    .insight-content .value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--dark);
+    }
+
+    /* Advanced Insights Grid */
+    .advanced-insights-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .advanced-insight-card {
+        background: white;
+        border-radius: 14px;
+        padding: 1.25rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .advanced-insight-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .advanced-insight-card.success {
+        border-left: 4px solid var(--success);
+    }
+
+    .advanced-insight-card.warning {
+        border-left: 4px solid var(--warning);
+    }
+
+    .advanced-insight-card.danger {
+        border-left: 4px solid var(--danger);
+    }
+
+    .advanced-insight-card.info {
+        border-left: 4px solid var(--secondary);
+    }
+
+    .advanced-insight-card.primary {
+        border-left: 4px solid var(--primary);
+    }
+
+    .advanced-insight-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+
+    .advanced-insight-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .advanced-insight-icon.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .advanced-insight-icon.warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .advanced-insight-icon.danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .advanced-insight-icon.info {
+        background: rgba(14, 165, 233, 0.1);
+        color: var(--secondary);
+    }
+
+    .advanced-insight-icon.primary {
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary);
+    }
+
+    .advanced-insight-badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .advanced-insight-badge.positive {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .advanced-insight-badge.negative {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .advanced-insight-badge.neutral {
+        background: rgba(100, 116, 139, 0.1);
+        color: var(--gray-500);
+    }
+
+    .advanced-insight-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+    }
+
+    .advanced-insight-label {
+        font-size: 0.8rem;
+        color: var(--gray-500);
+        font-weight: 500;
+    }
+
+    .advanced-insight-sublabel {
+        font-size: 0.7rem;
+        color: var(--gray-400);
+        margin-top: 0.25rem;
+    }
+
+    @media (max-width: 1400px) {
+        .advanced-insights-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 991px) {
+        .advanced-insights-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .advanced-insights-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Cards */
+    .dashboard-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .dashboard-card .card-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: transparent;
+    }
+
+    .dashboard-card .card-header h5 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .dashboard-card .card-header h5 i {
+        color: var(--gray-500);
+    }
+
+    .dashboard-card .card-body {
+        padding: 1.25rem;
+    }
+
+    /* Mapa */
+    #mapaIncidencias {
+        height: 380px;
+        border-radius: 12px;
+        z-index: 1;
+    }
+
+    .leaflet-popup-content-wrapper {
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+
+    .popup-content {
+        padding: 8px;
+        min-width: 220px;
+    }
+
+    .popup-content h6 {
+        margin: 0 0 8px 0;
+        color: var(--dark);
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .popup-content p {
+        margin: 4px 0;
+        font-size: 0.8rem;
+        color: var(--gray-500);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .popup-content img {
+        width: 100%;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .mapa-legenda {
+        display: flex;
+        gap: 1.25rem;
+        padding: 1rem;
+        background: var(--gray-100);
+        border-radius: 10px;
+        margin-top: 1rem;
+    }
+
+    .legenda-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: var(--gray-600);
+        font-weight: 500;
+    }
+
+    .legenda-item .marker {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .legenda-item .marker.novo { background: var(--danger); }
+    .legenda-item .marker.andamento { background: var(--warning); }
+    .legenda-item .marker.resolvido { background: var(--success); }
+
+    /* Tabela moderna */
+    .table-modern {
+        margin: 0;
+        width: 100%;
+    }
+
+    .table-modern thead th {
+        background: var(--gray-100);
+        border-bottom: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+        color: var(--gray-500);
+        padding: 1rem;
+    }
+
+    .table-modern tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: 0.875rem;
+    }
+
+    .table-modern tbody tr:hover {
+        background-color: var(--gray-100);
+    }
+
+    .table-modern .incident-photo {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 2px solid var(--gray-200);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-badge.novo {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .status-badge.andamento {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .status-badge.resolvido {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .chart-container {
+        position: relative;
+        height: 260px;
+    }
+
+    /* Activity List */
+    .activity-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .activity-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .activity-icon.new {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .activity-icon.progress {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .activity-icon.done {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--dark);
+        margin-bottom: 2px;
+    }
+
+    .activity-meta {
+        font-size: 0.8rem;
+        color: var(--gray-500);
+    }
+
+    /* Grids */
+    .grid-2-1 {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .grid-equal {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .loading-pulse {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* Responsivo */
+    @media (max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 991px) {
+        .insights-grid {
+            grid-template-columns: 1fr;
+        }
+        .grid-2-1 {
+            grid-template-columns: 1fr;
+        }
+        .grid-equal {
+            grid-template-columns: 1fr;
+        }
+        #mapaIncidencias {
+            height: 300px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="page-header">
+    <h2><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+    <p>Visão geral das incidências - Atualizado em tempo real</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon blue">
+                <i class="bi bi-list-check"></i>
+            </div>
+            <span class="stat-trend up" id="trendTotal" style="display: none;">
+                <i class="bi bi-arrow-up"></i> <span>0%</span>
+            </span>
+        </div>
+        <div class="stat-value" id="incidenciasCount">-</div>
+        <div class="stat-label">Total de Incidências</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon red">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+        </div>
+        <div class="stat-value" id="NovosCount">-</div>
+        <div class="stat-label">Novas (Aguardando)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon orange">
+                <i class="bi bi-clock-history"></i>
+            </div>
+        </div>
+        <div class="stat-value" id="EmAndamentoCount">-</div>
+        <div class="stat-label">Em Andamento</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon green">
+                <i class="bi bi-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-value" id="ResolvidosCount">-</div>
+        <div class="stat-label">Resolvidas</div>
+    </div>
+</div>
+
+<!-- Insights Grid -->
+<div class="insights-grid">
+    <div class="insight-card">
+        <div class="insight-icon">
+            <i class="bi bi-calendar-day"></i>
+        </div>
+        <div class="insight-content">
+            <h4>Incidencias Hoje</h4>
+            <div class="value" id="totalHoje">-</div>
+        </div>
+    </div>
+    <div class="insight-card">
+        <div class="insight-icon">
+            <i class="bi bi-geo-alt-fill"></i>
+        </div>
+        <div class="insight-content">
+            <h4>Bairro Mais Ativo</h4>
+            <div class="value" id="bairroMais">-</div>
+        </div>
+    </div>
+    <div class="insight-card">
+        <div class="insight-icon">
+            <i class="bi bi-tag-fill"></i>
+        </div>
+        <div class="insight-content">
+            <h4>Categoria Principal</h4>
+            <div class="value" id="categoriaMais">-</div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Insights Grid - Estatisticas Inteligentes -->
+<div class="advanced-insights-grid">
+    <!-- Taxa de Resolucao -->
+    <div class="advanced-insight-card success" id="cardTaxaResolucao">
+        <div class="advanced-insight-header">
+            <div class="advanced-insight-icon success">
+                <i class="bi bi-check2-all"></i>
+            </div>
+            <span class="advanced-insight-badge positive" id="badgeTaxaResolucao">
+                <i class="bi bi-arrow-up"></i> Bom
+            </span>
+        </div>
+        <div class="advanced-insight-value" id="taxaResolucao">-</div>
+        <div class="advanced-insight-label">Taxa de Resolucao</div>
+        <div class="advanced-insight-sublabel" id="taxaResolucaoDetalhe">Resolvidas vs Total</div>
+    </div>
+
+    <!-- Tempo Medio de Resolucao -->
+    <div class="advanced-insight-card info" id="cardTempoMedio">
+        <div class="advanced-insight-header">
+            <div class="advanced-insight-icon info">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <span class="advanced-insight-badge neutral" id="badgeTempoMedio">
+                <i class="bi bi-clock"></i> Media
+            </span>
+        </div>
+        <div class="advanced-insight-value" id="tempoMedioResolucao">-</div>
+        <div class="advanced-insight-label">Tempo Medio de Resolucao</div>
+        <div class="advanced-insight-sublabel">Dias para resolver</div>
+    </div>
+
+    <!-- Comparativo Semanal -->
+    <div class="advanced-insight-card warning" id="cardComparativoSemanal">
+        <div class="advanced-insight-header">
+            <div class="advanced-insight-icon warning">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <span class="advanced-insight-badge neutral" id="badgeComparativo">
+                <i class="bi bi-dash"></i> Estavel
+            </span>
+        </div>
+        <div class="advanced-insight-value" id="comparativoSemanal">-</div>
+        <div class="advanced-insight-label">Comparativo Semanal</div>
+        <div class="advanced-insight-sublabel" id="comparativoDetalhe">vs semana anterior</div>
+    </div>
+
+    <!-- Bairro Critico -->
+    <div class="advanced-insight-card danger" id="cardBairroCritico">
+        <div class="advanced-insight-header">
+            <div class="advanced-insight-icon danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <span class="advanced-insight-badge negative" id="badgeBairroCritico">
+                <i class="bi bi-geo-alt"></i> Alerta
+            </span>
+        </div>
+        <div class="advanced-insight-value" id="bairroCritico" style="font-size: 1.1rem;">-</div>
+        <div class="advanced-insight-label">Bairro Critico</div>
+        <div class="advanced-insight-sublabel" id="bairroCriticoQtd">Mais incidencias pendentes</div>
+    </div>
+
+    <!-- Categoria em Alta -->
+    <div class="advanced-insight-card primary" id="cardCategoriaAlta">
+        <div class="advanced-insight-header">
+            <div class="advanced-insight-icon primary">
+                <i class="bi bi-trending-up"></i>
+            </div>
+            <span class="advanced-insight-badge negative" id="badgeCategoriaAlta">
+                <i class="bi bi-arrow-up"></i> Alta
+            </span>
+        </div>
+        <div class="advanced-insight-value" id="categoriaEmAlta" style="font-size: 1.1rem;">-</div>
+        <div class="advanced-insight-label">Categoria em Alta</div>
+        <div class="advanced-insight-sublabel" id="categoriaAltaCrescimento">Mais cresceu no periodo</div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid-2-1">
+    <!-- Mapa -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h5><i class="bi bi-map"></i> Mapa de Incidências</h5>
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm" id="filtroBairro" style="width: 180px;">
+                    <option value="">Todos os Bairros</option>
+                </select>
+                <span class="badge bg-primary" id="totalMapa">0 pontos</span>
+                <a href="/mapa" class="btn btn-sm btn-outline-primary" title="Abrir mapa em tela cheia">
+                    <i class="bi bi-arrows-fullscreen"></i>
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="mapaIncidencias"></div>
+            <div class="mapa-legenda">
+                <div class="legenda-item"><div class="marker novo"></div> Novo</div>
+                <div class="legenda-item"><div class="marker andamento"></div> Em Andamento</div>
+                <div class="legenda-item"><div class="marker resolvido"></div> Resolvido</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart + Activity -->
+    <div class="d-flex flex-column gap-4">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h5><i class="bi bi-pie-chart"></i> Por Categoria</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="categoriasChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Últimas Incidências -->
+<div class="dashboard-card">
+    <div class="card-header">
+        <h5><i class="bi bi-clock"></i> Últimas Incidências Pendentes</h5>
+        <a href="/incidencias" class="btn btn-sm btn-primary">
+            <i class="bi bi-list me-1"></i>Ver Todas
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-modern" id="ultimasIncidencias">
+                <thead>
+                    <tr>
+                        <th>Foto</th>
+                        <th>Categoria</th>
+                        <th>Bairro</th>
+                        <th>Endereco</th>
+                        <th>Status</th>
+                        <th>Data</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="spinner-border text-primary spinner-border-sm me-2"></div>
+                            Carregando...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let mapa = null;
+    let markersLayer = null;
+    let categoriasChartInstance = null;
+    let todasIncidenciasMapa = [];
+    let bairrosCarregados = false;
+
+    async function loadDashboard() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('Token nao encontrado');
+            return;
+        }
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        try {
+            // Carregar todos os dados em paralelo
+            const [counters, incidencias, categorias, mapaData, insights, estatisticasAvancadas] = await Promise.all([
+                fetch(`/api/dashboard/counters2?t=${Date.now()}`, { headers }).then(r => r.json()),
+                fetch('/api/dashboard/ultimas-incidencias', { headers }).then(r => r.json()),
+                fetch('/api/dashboard/incidencias-por-categoria', { headers }).then(r => r.json()),
+                fetch('/api/dashboard/mapa-incidencias', { headers }).then(r => r.json()),
+                fetch('/api/dashboard/estatisticas-rapidas', { headers }).then(r => r.json()),
+                fetch('/api/dashboard/estatisticas-avancadas', { headers }).then(r => r.json())
+            ]);
+
+            // Animacao dos contadores
+            animateValue('incidenciasCount', 0, counters.incidencias || 0, 600);
+            animateValue('ResolvidosCount', 0, counters.resolvidos || 0, 600);
+            animateValue('EmAndamentoCount', 0, counters.emandamento || 0, 600);
+            animateValue('NovosCount', 0, counters.novos || 0, 600);
+
+            // Insights
+            document.getElementById('totalHoje').textContent = insights.total_hoje || 0;
+            document.getElementById('bairroMais').textContent = insights.bairro_mais_incidencias || 'N/A';
+            document.getElementById('categoriaMais').textContent = insights.categoria_mais_frequente || 'N/A';
+
+            // Estatisticas Avancadas
+            renderEstatisticasAvancadas(estatisticasAvancadas);
+
+            // Tabela de ultimas incidencias
+            renderTabela(incidencias);
+
+            // Grafico de categorias
+            renderGrafico(categorias);
+
+            // Mapa
+            todasIncidenciasMapa = mapaData.incidencias || [];
+            renderMapa(mapaData);
+
+            // Carregar bairros no filtro
+            if (!bairrosCarregados) {
+                carregarBairros(todasIncidenciasMapa);
+                bairrosCarregados = true;
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar dashboard:', error);
+        }
+    }
+
+    function renderEstatisticasAvancadas(dados) {
+        if (!dados) return;
+
+        // 1. Taxa de Resolucao
+        const taxaResolucao = dados.taxa_resolucao || 0;
+        document.getElementById('taxaResolucao').textContent = taxaResolucao + '%';
+        document.getElementById('taxaResolucaoDetalhe').textContent =
+            `${dados.total_resolvidas || 0} de ${dados.total_incidencias || 0} resolvidas`;
+
+        const cardTaxa = document.getElementById('cardTaxaResolucao');
+        const badgeTaxa = document.getElementById('badgeTaxaResolucao');
+        if (taxaResolucao >= 70) {
+            cardTaxa.className = 'advanced-insight-card success';
+            badgeTaxa.className = 'advanced-insight-badge positive';
+            badgeTaxa.innerHTML = '<i class="bi bi-check-circle"></i> Otimo';
+        } else if (taxaResolucao >= 50) {
+            cardTaxa.className = 'advanced-insight-card warning';
+            badgeTaxa.className = 'advanced-insight-badge neutral';
+            badgeTaxa.innerHTML = '<i class="bi bi-dash-circle"></i> Regular';
+        } else {
+            cardTaxa.className = 'advanced-insight-card danger';
+            badgeTaxa.className = 'advanced-insight-badge negative';
+            badgeTaxa.innerHTML = '<i class="bi bi-x-circle"></i> Baixa';
+        }
+
+        // 2. Tempo Medio de Resolucao
+        const tempoMedio = dados.tempo_medio_resolucao || 0;
+        document.getElementById('tempoMedioResolucao').textContent =
+            tempoMedio === 0 ? 'N/A' : tempoMedio + ' dias';
+
+        const cardTempo = document.getElementById('cardTempoMedio');
+        const badgeTempo = document.getElementById('badgeTempoMedio');
+        if (tempoMedio <= 3) {
+            cardTempo.className = 'advanced-insight-card success';
+            badgeTempo.className = 'advanced-insight-badge positive';
+            badgeTempo.innerHTML = '<i class="bi bi-lightning"></i> Rapido';
+        } else if (tempoMedio <= 7) {
+            cardTempo.className = 'advanced-insight-card warning';
+            badgeTempo.className = 'advanced-insight-badge neutral';
+            badgeTempo.innerHTML = '<i class="bi bi-clock"></i> Normal';
+        } else {
+            cardTempo.className = 'advanced-insight-card danger';
+            badgeTempo.className = 'advanced-insight-badge negative';
+            badgeTempo.innerHTML = '<i class="bi bi-hourglass"></i> Lento';
+        }
+
+        // 3. Comparativo Semanal
+        const comparativo = dados.comparativo_semanal || 0;
+        const isPositivo = dados.comparativo_positivo;
+
+        if (isPositivo) {
+            document.getElementById('comparativoSemanal').textContent = '-' + comparativo + '%';
+        } else {
+            document.getElementById('comparativoSemanal').textContent = '+' + comparativo + '%';
+        }
+
+        document.getElementById('comparativoDetalhe').textContent =
+            `${dados.incidencias_semana_atual || 0} esta semana vs ${dados.incidencias_semana_anterior || 0} anterior`;
+
+        const cardComp = document.getElementById('cardComparativoSemanal');
+        const badgeComp = document.getElementById('badgeComparativo');
+        const iconComp = cardComp.querySelector('.advanced-insight-icon');
+
+        if (isPositivo) {
+            cardComp.className = 'advanced-insight-card success';
+            badgeComp.className = 'advanced-insight-badge positive';
+            badgeComp.innerHTML = '<i class="bi bi-arrow-down"></i> Reducao';
+            iconComp.className = 'advanced-insight-icon success';
+            iconComp.innerHTML = '<i class="bi bi-graph-down-arrow"></i>';
+        } else if (comparativo > 0) {
+            cardComp.className = 'advanced-insight-card danger';
+            badgeComp.className = 'advanced-insight-badge negative';
+            badgeComp.innerHTML = '<i class="bi bi-arrow-up"></i> Aumento';
+            iconComp.className = 'advanced-insight-icon danger';
+            iconComp.innerHTML = '<i class="bi bi-graph-up-arrow"></i>';
+        } else {
+            cardComp.className = 'advanced-insight-card info';
+            badgeComp.className = 'advanced-insight-badge neutral';
+            badgeComp.innerHTML = '<i class="bi bi-dash"></i> Estavel';
+            iconComp.className = 'advanced-insight-icon info';
+        }
+
+        // 4. Bairro Critico
+        const bairroCritico = dados.bairro_critico || 'N/A';
+        const bairroCriticoQtd = dados.bairro_critico_qtd || 0;
+        document.getElementById('bairroCritico').textContent = bairroCritico;
+        document.getElementById('bairroCriticoQtd').textContent =
+            bairroCriticoQtd > 0 ? `${bairroCriticoQtd} incidencias pendentes` : 'Sem pendencias';
+
+        const cardBairro = document.getElementById('cardBairroCritico');
+        const badgeBairro = document.getElementById('badgeBairroCritico');
+        if (bairroCriticoQtd === 0 || bairroCritico === 'N/A') {
+            cardBairro.className = 'advanced-insight-card success';
+            badgeBairro.className = 'advanced-insight-badge positive';
+            badgeBairro.innerHTML = '<i class="bi bi-check"></i> OK';
+        } else if (bairroCriticoQtd <= 5) {
+            cardBairro.className = 'advanced-insight-card warning';
+            badgeBairro.className = 'advanced-insight-badge neutral';
+            badgeBairro.innerHTML = '<i class="bi bi-exclamation"></i> Atencao';
+        } else {
+            cardBairro.className = 'advanced-insight-card danger';
+            badgeBairro.className = 'advanced-insight-badge negative';
+            badgeBairro.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Critico';
+        }
+
+        // 5. Categoria em Alta
+        const categoriaAlta = dados.categoria_em_alta || 'N/A';
+        const crescimento = dados.categoria_em_alta_crescimento || 0;
+        document.getElementById('categoriaEmAlta').textContent = categoriaAlta;
+        document.getElementById('categoriaAltaCrescimento').textContent =
+            crescimento > 0 ? `+${crescimento}% esta semana` : 'Sem variacao significativa';
+
+        const cardCat = document.getElementById('cardCategoriaAlta');
+        const badgeCat = document.getElementById('badgeCategoriaAlta');
+        if (crescimento === 0 || categoriaAlta === 'N/A') {
+            cardCat.className = 'advanced-insight-card info';
+            badgeCat.className = 'advanced-insight-badge neutral';
+            badgeCat.innerHTML = '<i class="bi bi-dash"></i> Estavel';
+        } else if (crescimento <= 20) {
+            cardCat.className = 'advanced-insight-card warning';
+            badgeCat.className = 'advanced-insight-badge neutral';
+            badgeCat.innerHTML = '<i class="bi bi-arrow-up"></i> Moderado';
+        } else {
+            cardCat.className = 'advanced-insight-card danger';
+            badgeCat.className = 'advanced-insight-badge negative';
+            badgeCat.innerHTML = '<i class="bi bi-arrow-up"></i> Alto';
+        }
+    }
+
+    function renderTabela(incidencias) {
+        const tbody = document.querySelector('#ultimasIncidencias tbody');
+
+        if (!incidencias || incidencias.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Nenhuma incidência pendente</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = incidencias.map(i => `
+            <tr>
+                <td>
+                    <a href="/incidencias/${i.incidencia_id}">
+                        <img src="/fotos/${i.foto}" class="incident-photo" alt="${i.bairro || ''}" onerror="this.src='/static/images/no-image.png'">
+                    </a>
+                </td>
+                <td><strong>${i.categoria_nome}</strong></td>
+                <td>${i.bairro || '-'}</td>
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${i.endereco || '-'}</td>
+                <td><span class="status-badge ${getStatusClass(i.status_nome)}">${i.status_nome}</span></td>
+                <td>${formatarData(i.data_hora)}</td>
+                <td>
+                    <a href="/incidencias/${i.incidencia_id}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderGrafico(dados) {
+        if (!dados || dados.length === 0) return;
+
+        const ctx = document.getElementById('categoriasChart');
+        if (!ctx) return;
+
+        // Destruir grafico anterior se existir
+        if (categoriasChartInstance) {
+            categoriasChartInstance.destroy();
+        }
+
+        categoriasChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: dados.map(d => d.categoria),
+                datasets: [{
+                    data: dados.map(d => d.total),
+                    backgroundColor: [
+                        '#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+                        '#0ea5e9', '#ec4899', '#f97316', '#14b8a6', '#6366f1'
+                    ],
+                    borderWidth: 0,
+                    spacing: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 16,
+                            usePointStyle: true,
+                            font: { size: 12 }
+                        }
+                    }
+                },
+                cutout: '68%'
+            }
+        });
+    }
+
+    function renderMapa(data) {
+        const mapContainer = document.getElementById('mapaIncidencias');
+        if (!mapContainer) return;
+
+        // Inicializar mapa
+        if (!mapa) {
+            mapa = L.map('mapaIncidencias').setView([data.centro.lat, data.centro.lng], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(mapa);
+
+            markersLayer = L.layerGroup().addTo(mapa);
+        }
+
+        // Limpar marcadores anteriores
+        markersLayer.clearLayers();
+
+        const incidencias = data.incidencias || [];
+        document.getElementById('totalMapa').textContent = `${incidencias.length} pontos`;
+
+        if (incidencias.length === 0) {
+            return;
+        }
+
+        // Adicionar marcadores
+        incidencias.forEach(inc => {
+            const cor = getMarkerColor(inc.status);
+
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="
+                    background: ${cor};
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                "></div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+
+            const popupContent = `
+                <div class="popup-content">
+                    ${inc.foto ? `<img src="/fotos/${inc.foto}" onerror="this.style.display='none'" alt="">` : ''}
+                    <h6>${inc.categoria}</h6>
+                    <p><i class="bi bi-geo-alt"></i> ${inc.bairro || 'Sem bairro'}</p>
+                    <p><i class="bi bi-pin-map"></i> ${inc.endereco || 'Sem endereco'}</p>
+                    <p><i class="bi bi-calendar"></i> ${inc.data}</p>
+                    <span class="badge ${getStatusBadgeClass(inc.status)}">${inc.status_nome}</span>
+                    <br><br>
+                    <a href="/incidencias/${inc.id}" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-eye me-1"></i>Ver Detalhes
+                    </a>
+                </div>
+            `;
+
+            L.marker([inc.lat, inc.lng], { icon: customIcon })
+                .bindPopup(popupContent)
+                .addTo(markersLayer);
+        });
+
+        // Ajustar zoom para mostrar todos os pontos
+        if (incidencias.length > 1) {
+            const bounds = L.latLngBounds(incidencias.map(i => [i.lat, i.lng]));
+            mapa.fitBounds(bounds, { padding: [50, 50] });
+        }
+    }
+
+    function getMarkerColor(status) {
+        switch(status) {
+            case 1: return '#ef4444'; // Novo - Vermelho
+            case 2: return '#f59e0b'; // Em Andamento - Amarelo
+            case 3: return '#10b981'; // Resolvido - Verde
+            default: return '#64748b'; // Cinza
+        }
+    }
+
+    function getStatusBadgeClass(status) {
+        switch(status) {
+            case 1: return 'bg-danger';
+            case 2: return 'bg-warning text-dark';
+            case 3: return 'bg-success';
+            default: return 'bg-secondary';
+        }
+    }
+
+    function getStatusClass(status) {
+        const s = status.toLowerCase();
+        if (s.includes('novo') || s.includes('aberto') || s.includes('pendente')) return 'novo';
+        if (s.includes('andamento') || s.includes('analise')) return 'andamento';
+        if (s.includes('resolv') || s.includes('conclu') || s.includes('finaliz')) return 'resolvido';
+        return 'andamento';
+    }
+
+    function formatarData(dataStr) {
+        if (!dataStr) return '-';
+        const data = new Date(dataStr);
+        return data.toLocaleDateString('pt-BR');
+    }
+
+    function animateValue(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+
+        const range = end - start;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const value = Math.floor(start + range * easeOutQuart(progress));
+            obj.textContent = value.toLocaleString('pt-BR');
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    function easeOutQuart(x) {
+        return 1 - Math.pow(1 - x, 4);
+    }
+
+    function carregarBairros(incidencias) {
+        const select = document.getElementById('filtroBairro');
+        if (!select) return;
+
+        const bairros = [...new Set(incidencias.map(i => i.bairro).filter(b => b))].sort();
+
+        bairros.forEach(bairro => {
+            const option = document.createElement('option');
+            option.value = bairro;
+            option.textContent = bairro;
+            select.appendChild(option);
+        });
+    }
+
+    function filtrarPorBairro() {
+        const bairro = document.getElementById('filtroBairro').value;
+
+        let incidenciasFiltradas = todasIncidenciasMapa;
+        if (bairro) {
+            incidenciasFiltradas = todasIncidenciasMapa.filter(i => i.bairro === bairro);
+        }
+
+        renderMapa({
+            centro: { lat: -22.9068, lng: -43.1729 },
+            incidencias: incidenciasFiltradas
+        });
+    }
+
+    // Event listener para filtro de bairro
+    document.getElementById('filtroBairro')?.addEventListener('change', filtrarPorBairro);
+
+    // Carregar dashboard
+    loadDashboard();
+
+    // Atualizar a cada 60 segundos
+    setInterval(loadDashboard, 60000);
+</script>
+{% endblock %}

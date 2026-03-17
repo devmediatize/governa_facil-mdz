@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Governa Fácil</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #086218;
+            --primary-dark: #064d13;
+            --primary-light: #0a8f22;
+            --secondary: #001F5B;
+            --dark: #1e293b;
+            --darker: #0f172a;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            overflow: hidden;
+        }
+
+        /* Left Side - Branding */
+        .branding-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .branding-side::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        .branding-side::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            right: -30%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+            animation: pulse 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .branding-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .branding-logo {
+            margin-bottom: 40px;
+        }
+
+        .branding-logo img {
+            max-height: 160px;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.3));
+        }
+
+        .branding-title {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 10px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .branding-title span {
+            color: #fef08a;
+        }
+
+        .branding-subtitle {
+            font-size: 18px;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 50px;
+        }
+
+        .features-list {
+            text-align: left;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            color: rgba(255,255,255,0.9);
+            font-size: 15px;
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fef08a;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        /* Right Side - Login Form */
+        .login-side {
+            width: 650px;
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 80px;
+            position: relative;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .login-logo img {
+            max-height: 180px;
+            max-width: 400px;
+        }
+
+        .login-header {
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .login-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            font-size: 15px;
+            color: var(--gray-500);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 15px;
+            color: var(--dark);
+            transition: all 0.2s;
+            background: var(--gray-100);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(8, 98, 24, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: var(--gray-400);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--gray-600);
+            cursor: pointer;
+        }
+
+        .remember-me input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(8, 98, 24, 0.3);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-login .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .btn-login.loading .spinner {
+            display: block;
+        }
+
+        .btn-login.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .login-footer {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .login-footer p {
+            font-size: 12px;
+            color: var(--gray-400);
+        }
+
+        /* Floating Elements */
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.1;
+        }
+
+        .shape-1 {
+            width: 300px;
+            height: 300px;
+            background: white;
+            top: -100px;
+            right: -100px;
+        }
+
+        .shape-2 {
+            width: 200px;
+            height: 200px;
+            background: white;
+            bottom: -50px;
+            left: -50px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            body {
+                flex-direction: column;
+            }
+
+            .branding-side {
+                padding: 40px 20px;
+                min-height: auto;
+            }
+
+            .branding-content {
+                max-width: 100%;
+            }
+
+            .branding-title {
+                font-size: 36px;
+            }
+
+            .features-list {
+                display: none;
+            }
+
+            .login-side {
+                width: 100%;
+                padding: 40px 30px;
+            }
+        }
+
+        /* Stats */
+        .stats-row {
+            display: flex;
+            gap: 40px;
+            margin-top: 50px;
+            justify-content: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+        }
+    </style>
+
+    <script>
+        // Aplicar cores salvas antes do render
+        (function() {
+            var cores = localStorage.getItem('cores_cliente');
+            if (cores) {
+                try {
+                    var c = JSON.parse(cores);
+                    document.write('<style>body { background: linear-gradient(135deg, ' + c.primaria + ' 0%, ' + c.secundaria + ' 100%) !important; } .btn-login { background: linear-gradient(135deg, ' + c.primaria + ' 0%, ' + c.secundaria + ' 100%) !important; } .form-control:focus { border-color: ' + c.primaria + ' !important; box-shadow: 0 0 0 4px ' + c.primaria + '1a !important; } .remember-me input { accent-color: ' + c.primaria + ' !important; }</style>');
+                } catch(e) {}
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- Left Side -->
+    <div class="branding-side">
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+        </div>
+
+        <div class="branding-content">
+            <div class="branding-logo">
+                <img src="/static/images/logogestaointerativa_branco.png" alt="Governa Fácil">
+            </div>
+            <p class="branding-subtitle">Sistema Inteligente de Gestão de Incidências Urbanas</p>
+
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <span>Geolocalização de todas as ocorrências</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <span>Registro fotográfico das incidências</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <span>Relatórios e dashboards em tempo real</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <span>Assistente com Inteligência Artificial</span>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value">100+</div>
+                    <div class="stat-label">Municípios</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">50k+</div>
+                    <div class="stat-label">Incidências</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">99%</div>
+                    <div class="stat-label">Satisfação</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side - Login Form -->
+    <div class="login-side">
+        <div class="login-logo">
+            <img id="logocliente" alt="Logo" style="opacity: 0; transition: opacity 0.3s;">
+            <script>
+                // Carregar logo salva imediatamente antes do render
+                (function() {
+                    var logoSalva = localStorage.getItem('logo_cliente');
+                    var logoImg = document.getElementById('logocliente');
+                    if (logoImg) {
+                        logoImg.src = logoSalva || '/static/images/logo.png';
+                        logoImg.style.opacity = '1';
+                    }
+                })();
+            </script>
+        </div>
+
+        <div class="login-header">
+            <h2>Bem-vindo!</h2>
+            <p>Faça login para acessar o sistema</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label">E-mail</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" class="form-control" id="email" placeholder="seu@email.com" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Senha</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" class="form-control" id="password" placeholder="Digite sua senha" required>
+                </div>
+            </div>
+
+            <div class="form-options">
+                <label class="remember-me">
+                    <input type="checkbox" id="remember-me">
+                    Lembrar-me
+                </label>
+            </div>
+
+            <button type="submit" class="btn-login" id="btnLogin">
+                <span class="spinner"></span>
+                <span class="btn-text"><i class="fas fa-sign-in-alt"></i> Entrar</span>
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p>Desenvolvido por Mediatize &copy; 2025</p>
+        </div>
+    </div>
+
+    <script>
+        // Carregar logo e cores do cliente salvo
+        async function carregarLogoLogin() {
+            const clienteId = localStorage.getItem('cliente_id');
+            const logoImg = document.getElementById('logocliente');
+
+            // Se nao tem cliente_id, mostra logo padrao
+            if (!clienteId) {
+                if (logoImg) {
+                    logoImg.src = '/static/images/logo.png';
+                    logoImg.style.opacity = '1';
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/configuracao/logo-publica/${clienteId}`);
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Atualizar logo e salvar no localStorage
+                    if (data.logo) {
+                        const logoUrl = data.logo + '?t=' + new Date().getTime();
+                        localStorage.setItem('logo_cliente', logoUrl);
+                        if (logoImg) {
+                            logoImg.src = logoUrl;
+                            logoImg.style.opacity = '1';
+                        }
+                    }
+
+                    // Salvar e aplicar cores
+                    if (data.cor_primaria) {
+                        localStorage.setItem('cores_cliente', JSON.stringify({
+                            primaria: data.cor_primaria,
+                            secundaria: data.cor_secundaria || data.cor_primaria
+                        }));
+
+                        document.body.style.background = `linear-gradient(135deg, ${data.cor_primaria} 0%, ${data.cor_secundaria || data.cor_primaria} 100%)`;
+
+                        const btnLogin = document.querySelector('.btn-login');
+                        if (btnLogin) {
+                            btnLogin.style.background = `linear-gradient(135deg, ${data.cor_primaria} 0%, ${data.cor_secundaria || data.cor_primaria} 100%)`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar logo:', error);
+                // Em caso de erro, garantir que a logo apareca
+                if (logoImg && !logoImg.src) {
+                    logoImg.src = '/static/images/logo.png';
+                    logoImg.style.opacity = '1';
+                }
+            }
+        }
+
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `
+                <div class="alert alert-${type}">
+                    <i class="fas fa-exclamation-circle"></i>
+                    ${message}
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            carregarLogoLogin();
+
+            const savedUsername = localStorage.getItem('savedUsername');
+            const rememberChecked = localStorage.getItem('rememberMe') === 'true';
+
+            if (savedUsername && rememberChecked) {
+                document.getElementById('email').value = savedUsername;
+                document.getElementById('remember-me').checked = true;
+            }
+
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const btn = document.getElementById('btnLogin');
+                const emailInput = document.getElementById('email');
+                const passwordInput = document.getElementById('password');
+                const rememberMe = document.getElementById('remember-me').checked;
+
+                btn.classList.add('loading');
+                btn.disabled = true;
+                document.getElementById('alertContainer').innerHTML = '';
+
+                try {
+                    const response = await fetch('/token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            'username': emailInput.value,
+                            'password': passwordInput.value,
+                        }),
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        localStorage.setItem('token', data.access_token);
+
+                        if (data.cliente_id) {
+                            localStorage.setItem('cliente_id', data.cliente_id);
+                        }
+
+                        if (rememberMe) {
+                            localStorage.setItem('savedUsername', emailInput.value);
+                            localStorage.setItem('rememberMe', 'true');
+                        } else {
+                            localStorage.removeItem('savedUsername');
+                            localStorage.removeItem('rememberMe');
+                        }
+
+                        window.location.href = '/dashboard';
+                    } else {
+                        try {
+                            const errorData = await response.json();
+                            showAlert('danger', errorData.detail || "E-mail ou senha incorretos");
+                        } catch (parseError) {
+                            showAlert('danger', 'Erro ao fazer login');
+                        }
+                        btn.classList.remove('loading');
+                        btn.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Erro ao fazer login:', error);
+                    showAlert('danger', 'Erro de conexão. Tente novamente.');
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

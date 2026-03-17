@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Governa Fácil{% endblock %}</title>
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/css/assistente-ia.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #818cf8;
+            --secondary: #0ea5e9;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --darker: #0f172a;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --white: #ffffff;
+            --sidebar-width: 260px;
+            --sidebar-bg: var(--darker);
+            --sidebar-bg-end: var(--dark);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--gray-100);
+            color: var(--dark);
+            min-height: 100vh;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-end) 100%);
+            padding: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--white);
+            text-decoration: none;
+        }
+
+        .logo-img {
+            height: 120px;
+            max-width: 220px;
+            object-fit: contain;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .logo-text span {
+            color: var(--primary-light);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            color: var(--gray-500);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: #ffffff;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .nav-link.active {
+            color: #ffffff;
+            background: rgba(255,255,255,0.2);
+            border-left-color: #ffffff;
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--primary);
+            color: var(--white);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            color: var(--white);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-role {
+            color: var(--gray-500);
+            font-size: 12px;
+        }
+
+        .logout-btn-full {
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: rgba(255,255,255,0.8);
+            cursor: pointer;
+            padding: 12px 16px;
+            border-radius: 10px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .logout-btn-full:hover {
+            color: #ffffff;
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Header Center */
+        .header-center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 0;
+        }
+
+        #assistente-ia-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Header User Info */
+        .header-user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-greeting {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .user-client {
+            font-size: 12px;
+            color: var(--gray-400);
+        }
+
+        /* User Dropdown */
+        .user-dropdown {
+            position: relative;
+        }
+
+        .user-avatar-btn-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-avatar-btn-wrapper:hover {
+            background: var(--gray-100);
+        }
+
+        .user-info-header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        .user-name-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .user-client-header {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .avatar-img-header {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 3px solid var(--gray-200);
+            object-fit: cover;
+        }
+
+        .user-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 260px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+            z-index: 1000;
+        }
+
+        .user-dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-header {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dropdown-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .dropdown-name {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        .dropdown-email {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--gray-200);
+            margin: 0 16px;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: var(--gray-600);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: var(--gray-100);
+            color: var(--dark);
+        }
+
+        .dropdown-item i {
+            font-size: 16px;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ============ HEADER ============ */
+        .top-header {
+            background: var(--white);
+            padding: 16px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--gray-100);
+            border-radius: 10px;
+            padding: 8px 15px;
+            gap: 10px;
+            width: 280px;
+        }
+
+        .search-box input {
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 14px;
+            width: 100%;
+            color: var(--dark);
+        }
+
+        .search-box i {
+            color: var(--gray-400);
+        }
+
+        .header-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: none;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: var(--gray-200);
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+        }
+
+        .client-logo {
+            height: 100px;
+            max-width: 250px;
+            object-fit: contain;
+        }
+
+        /* ============ PAGE CONTENT ============ */
+        .page-content {
+            padding: 30px;
+            flex: 1;
+        }
+
+        /* ============ CARDS ============ */
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: none;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: transparent;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* ============ BUTTONS ============ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-600);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* ============ TABLES ============ */
+        .table {
+            margin: 0;
+            width: 100%;
+        }
+
+        .table thead th {
+            background: var(--gray-100);
+            border-bottom: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            color: var(--gray-500);
+            padding: 12px 16px;
+        }
+
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 14px;
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tbody tr:hover {
+            background: var(--gray-100);
+        }
+
+        /* ============ BADGES ============ */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* ============ FORMS ============ */
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1px solid var(--gray-300);
+            padding: 10px 14px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-600);
+            margin-bottom: 6px;
+        }
+
+        /* ============ MODALS ============ */
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--gray-200);
+            padding: 20px 24px;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--gray-200);
+            padding: 16px 24px;
+        }
+
+        /* ============ LOADER ============ */
+        #loader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #loader.show {
+            display: flex;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 991px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .search-box {
+                display: none;
+            }
+        }
+    </style>
+
+    <script>
+        // Carregar cores do localStorage antes do render
+        (function() {
+            var cores = localStorage.getItem('cores_cliente');
+            if (cores) {
+                try {
+                    var c = JSON.parse(cores);
+                    document.documentElement.style.setProperty('--sidebar-bg', c.primaria || '#0f172a');
+                    document.documentElement.style.setProperty('--sidebar-bg-end', c.secundaria || '#1e293b');
+                } catch(e) {}
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="/dashboard" class="logo">
+                <img src="/static/images/logogestaointerativa.png" alt="Governa Fácil" class="logo-img" id="sidebarLogo">
+            </a>
+        </div>
+
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Menu Principal</div>
+                <a class="nav-link {% if request.path == '/dashboard' %}active{% endif %}" href="/dashboard">
+                    <i class="bi bi-speedometer2"></i>
+                    Dashboard
+                </a>
+                <a class="nav-link {% if request.path.startswith('/incidencias') %}active{% endif %}" href="/incidencias">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Incidências
+                </a>
+                <a class="nav-link {% if request.path.startswith('/mapa') %}active{% endif %}" href="/mapa">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    Mapa
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Análise</div>
+                <a class="nav-link {% if request.path.startswith('/relatorios') %}active{% endif %}" href="/relatorios">
+                    <i class="bi bi-bar-chart-line"></i>
+                    Relatórios
+                </a>
+            </div>
+
+            {%if request.state.nivel == 1 %}
+            <div class="nav-section">
+                <div class="nav-section-title">Administração</div>
+                <a class="nav-link {% if request.path.startswith('/usuarios') %}active{% endif %}" href="/usuarios">
+                    <i class="bi bi-people"></i>
+                    Usuários
+                </a>
+                <a class="nav-link {% if request.path.startswith('/categorias') %}active{% endif %}" href="/categorias">
+                    <i class="bi bi-tags"></i>
+                    Categorias
+                </a>
+                <a class="nav-link {% if request.path.startswith('/configuracao') %}active{% endif %}" href="/configuracao">
+                    <i class="bi bi-gear"></i>
+                    Configuração
+                </a>
+            </div>
+            {%endif%}
+        </div>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn-full" id="logoutBtn">
+                <i class="bi bi-box-arrow-right"></i>
+                Sair do Sistema
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="top-header">
+            <div class="header-left">
+                <img src="/static/images/logo.png" alt="Cliente" class="client-logo" id="clientLogo">
+            </div>
+            <div class="header-center">
+                <div id="assistente-ia-container">
+                    <!-- Botao do Assistente IA sera inserido aqui -->
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="user-dropdown">
+                    <button class="user-avatar-btn-wrapper" id="userAvatarBtn">
+                        <div class="user-info-header">
+                            <span class="user-name-header" id="userName">Usuário</span>
+                            <span class="user-client-header" id="userClient"></span>
+                        </div>
+                        <img src="/static/images/default-avatar.png" alt="Avatar" id="userAvatarImg" class="avatar-img-header">
+                    </button>
+                    <div class="user-dropdown-menu" id="userDropdownMenu">
+                        <div class="dropdown-header">
+                            <img src="/static/images/default-avatar.png" alt="Avatar" id="dropdownAvatarImg" class="dropdown-avatar">
+                            <div>
+                                <div class="dropdown-name" id="dropdownUserName">Usuário</div>
+                                <div class="dropdown-email" id="dropdownUserEmail">email@exemplo.com</div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalPerfil">
+                            <i class="bi bi-person"></i> Meu Perfil
+                        </a>
+                        <a href="#" class="dropdown-item" id="btnLogout">
+                            <i class="bi bi-box-arrow-right"></i> Sair
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <div id="loader">
+                <div class="spinner-border text-light" role="status"></div>
+            </div>
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Modal Perfil -->
+    <div class="modal fade" id="modalPerfil" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-circle me-2"></i>Meu Perfil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="profile-avatar-container">
+                            <img src="/static/images/default-avatar.png" alt="Avatar" id="profileAvatarImg" class="profile-avatar">
+                            <label for="inputFotoPerfil" class="profile-avatar-edit">
+                                <i class="bi bi-camera"></i>
+                            </label>
+                            <input type="file" id="inputFotoPerfil" accept="image/*" style="display: none;">
+                        </div>
+                    </div>
+                    <form id="formPerfil">
+                        <div class="mb-3">
+                            <label class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="perfilNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="perfilEmail" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                            <small class="text-muted">O email não pode ser alterado</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Celular</label>
+                            <input type="text" class="form-control" id="perfilCelular">
+                        </div>
+                        <hr>
+                        <h6 class="mb-3">Alterar Senha</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Senha Atual</label>
+                            <input type="password" class="form-control" id="perfilSenhaAtual">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nova Senha</label>
+                            <input type="password" class="form-control" id="perfilSenhaNova">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnSalvarPerfil">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .profile-avatar-container {
+            position: relative;
+            display: inline-block;
+        }
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--gray-200);
+        }
+        .profile-avatar-edit {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .profile-avatar-edit:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return false;
+            }
+            return true;
+        }
+
+        function getToken() {
+            return localStorage.getItem("token") || "";
+        }
+
+        function addAuthHeader(headers = {}) {
+            const token = localStorage.getItem('token');
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            return headers;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkAuth()) return;
+            carregarDadosUsuario();
+            carregarLogoCliente();
+            carregarCoresSidebar();
+        });
+
+        async function carregarDadosUsuario() {
+            try {
+                const headers = addAuthHeader();
+                const response = await fetch('/dados-usuarios', { headers });
+                if (response.ok) {
+                    const usuarios = await response.json();
+                    if (usuarios && usuarios.length > 0) {
+                        const user = usuarios[0];
+                        const nome = user.nome || 'Usuario';
+                        const cliente = user.nome_cliente || '';
+                        const email = user.email || '';
+                        const foto = user.foto || null;
+
+                        // Header
+                        const userNameEl = document.getElementById('userName');
+                        const userClientEl = document.getElementById('userClient');
+                        if (userNameEl) userNameEl.textContent = nome;
+                        if (userClientEl) userClientEl.textContent = cliente;
+
+                        // Dropdown
+                        const dropdownName = document.getElementById('dropdownUserName');
+                        const dropdownEmail = document.getElementById('dropdownUserEmail');
+                        if (dropdownName) dropdownName.textContent = nome;
+                        if (dropdownEmail) dropdownEmail.textContent = email;
+
+                        // Atualizar fotos de avatar
+                        const defaultAvatar = '/static/images/default-avatar.png';
+                        const avatarUrl = foto ? '/' + foto + '?t=' + Date.now() : defaultAvatar;
+
+                        // Avatar no header
+                        const userAvatarImg = document.getElementById('userAvatarImg');
+                        if (userAvatarImg) userAvatarImg.src = avatarUrl;
+
+                        // Avatar no dropdown
+                        const dropdownAvatarImg = document.getElementById('dropdownAvatarImg');
+                        if (dropdownAvatarImg) dropdownAvatarImg.src = avatarUrl;
+
+                        // Avatar no modal de perfil
+                        const profileAvatarImg = document.getElementById('profileAvatarImg');
+                        if (profileAvatarImg) profileAvatarImg.src = avatarUrl;
+
+                        // Salvar para o perfil
+                        window.currentUser = user;
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do usuario:', error);
+            }
+        }
+
+        async function carregarLogoCliente() {
+            const logoSalva = localStorage.getItem('logo_cliente');
+            const clientLogo = document.getElementById('clientLogo');
+
+            if (logoSalva && clientLogo) {
+                clientLogo.src = logoSalva;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                const response = await fetch('/api/configuracao/logo', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const logoUrl = (data.logo || '/static/images/logo.png') + '?t=' + Date.now();
+                    localStorage.setItem('logo_cliente', logoUrl);
+
+                    if (clientLogo) clientLogo.src = logoUrl;
+
+                    // Salvar cores
+                    if (data.cor_primaria) {
+                        localStorage.setItem('cores_cliente', JSON.stringify({
+                            primaria: data.cor_primaria,
+                            secundaria: data.cor_secundaria || data.cor_primaria
+                        }));
+                        carregarCoresSidebar();
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar logo:', error);
+            }
+        }
+
+        function carregarCoresSidebar() {
+            const cores = localStorage.getItem('cores_cliente');
+            if (cores) {
+                try {
+                    const c = JSON.parse(cores);
+                    document.documentElement.style.setProperty('--sidebar-bg', c.primaria || '#0f172a');
+                    document.documentElement.style.setProperty('--sidebar-bg-end', c.secundaria || '#1e293b');
+                } catch(e) {}
+            }
+        }
+
+        // Logout
+        document.getElementById('logoutBtn')?.addEventListener('click', function() {
+            localStorage.removeItem('token');
+            window.location.href = '/logout';
+        });
+
+        document.getElementById('btnLogout')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = '/logout';
+        });
+
+        // User Dropdown Toggle
+        document.getElementById('userAvatarBtn')?.addEventListener('click', function() {
+            document.getElementById('userDropdownMenu').classList.toggle('show');
+        });
+
+        // Fechar dropdown ao clicar fora
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('userDropdownMenu');
+            const btn = document.getElementById('userAvatarBtn');
+            if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Carregar dados no modal de perfil
+        document.getElementById('modalPerfil')?.addEventListener('show.bs.modal', function() {
+            if (window.currentUser) {
+                document.getElementById('perfilNome').value = window.currentUser.nome || '';
+                document.getElementById('perfilEmail').value = window.currentUser.email || '';
+                document.getElementById('perfilCelular').value = window.currentUser.celular || '';
+            }
+        });
+
+        // Salvar perfil
+        document.getElementById('btnSalvarPerfil')?.addEventListener('click', async function() {
+            const dados = {
+                nome: document.getElementById('perfilNome').value,
+                email: document.getElementById('perfilEmail').value,
+                celular: document.getElementById('perfilCelular').value,
+                senha_atual: document.getElementById('perfilSenhaAtual').value,
+                senha_nova: document.getElementById('perfilSenhaNova').value
+            };
+
+            try {
+                const response = await fetch('/api/usuario/perfil', {
+                    method: 'PUT',
+                    headers: addAuthHeader({'Content-Type': 'application/json'}),
+                    body: JSON.stringify(dados)
+                });
+
+                if (response.ok) {
+                    alert('Perfil atualizado com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('modalPerfil')).hide();
+                    carregarDadosUsuario();
+                } else {
+                    const data = await response.json();
+                    alert(data.detail || 'Erro ao atualizar perfil');
+                }
+            } catch (error) {
+                alert('Erro ao salvar perfil');
+            }
+        });
+
+        // Upload de foto de perfil
+        document.getElementById('inputFotoPerfil')?.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validar tipo de arquivo
+            const tiposPermitidos = ['image/png', 'image/jpeg', 'image/jpg'];
+            if (!tiposPermitidos.includes(file.type)) {
+                alert('Formato de arquivo nao permitido. Use PNG, JPG ou JPEG.');
+                return;
+            }
+
+            // Validar tamanho (max 5MB)
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert('Arquivo muito grande. O tamanho maximo e 5MB.');
+                return;
+            }
+
+            // Mostrar preview imediato
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const profileAvatarImg = document.getElementById('profileAvatarImg');
+                if (profileAvatarImg) profileAvatarImg.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Fazer upload
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                showLoader();
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/usuario/foto', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                hideLoader();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('Foto de perfil atualizada com sucesso!');
+                    // Recarregar dados do usuario para atualizar todos os avatares
+                    carregarDadosUsuario();
+                } else {
+                    const data = await response.json();
+                    alert(data.detail || 'Erro ao enviar foto');
+                }
+            } catch (error) {
+                hideLoader();
+                console.error('Erro ao enviar foto:', error);
+                alert('Erro ao enviar foto de perfil');
+            }
+
+            // Limpar o input para permitir selecionar o mesmo arquivo novamente
+            e.target.value = '';
+        });
+
+        function showLoader() {
+            document.getElementById('loader').classList.add('show');
+        }
+
+        function hideLoader() {
+            document.getElementById('loader').classList.remove('show');
+        }
+
+        // Handler global de erros de autenticacao
+        const originalFetch = window.fetch;
+        window.fetch = async function(url, options) {
+            const response = await originalFetch(url, options);
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+            return response;
+        };
+    </script>
+    {% block scripts %}{% endblock %}
+    <script src="/static/js/assistente-ia.js"></script>
+</body>
+</html>

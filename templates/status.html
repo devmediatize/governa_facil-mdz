@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Status - Governa Fácil{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Status</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#statusModal">
+        Novo Status
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="statusTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Ativo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Status -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Novo Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="statusForm">
+                    <input type="hidden" id="statusId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ativo" checked>
+                            <label class="form-check-label">
+                                Ativo
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarStatus()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function loadStatus() {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch('/status/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const statusList = await response.json();
+            renderTable(statusList);
+        } catch (error) {
+            console.error('Erro ao carregar status:', error);
+        }
+    }
+
+    function renderTable(statusList) {
+        const tbody = document.querySelector('#statusTable tbody');
+        tbody.innerHTML = statusList.map(s => `
+        <tr>
+            <td>${s.status_id}</td>
+            <td>${s.nome}</td>
+            <td>${s.ativo ? 'Ativo' : 'Inativo'}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="editarStatus(${s.status_id})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deletarStatus(${s.status_id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    }
+
+    async function salvarStatus() {
+        const token = localStorage.getItem('token');
+        const statusData = {
+            nome: document.getElementById('nome').value,
+            ativo: document.getElementById('ativo').checked ? 1 : 0
+        };
+
+        try {
+            const id = document.getElementById('statusId').value;
+            const url = id ? `/status/${id}` : '/status/';
+            const method = id ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(statusData)
+            });
+
+            if (response.ok) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
+                modal.hide();
+                loadStatus();
+            }
+        } catch (error) {
+            console.error('Erro ao salvar status:', error);
+        }
+    }
+
+    function editarStatus(id) {
+        const status = statusList.find(s => s.status_id === id);
+        if (status) {
+            document.getElementById('statusId').value = status.status_id;
+            document.getElementById('nome').value = status.nome;
+            document.getElementById('ativo').checked = status.ativo === 1;
+
+            const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+            modal.show();
+        }
+    }
+
+    async function deletarStatus(id) {
+        if (confirm('Deseja realmente excluir este status?')) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/status/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadStatus();
+                }
+            } catch (error) {
+                console.error('Erro ao deletar status:', error);
+            }
+        }
+    }
+
+    loadStatus();
+</script>
+{% endblock %}

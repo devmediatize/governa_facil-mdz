@@ -1,0 +1,26 @@
+sistema_incidencias/
+├── README.md
+├── requirements.txt
+├── .env
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── database.py
+│   └── auth.py
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── main.js
+│   └── fotos/
+└── templates/
+    ├── base.html
+    ├── login.html
+    ├── dashboard.html
+    ├── incidencias.html
+    ├── categorias.html
+    ├── usuarios.html
+    ├── status.html
+    └── admin.html

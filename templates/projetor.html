@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Governa Fácil</title>
+
+    <!-- CSS Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.css" />
+
+    <!-- Leaflet JS (no final do body ou no head com defer) -->
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <style>
+        body {
+            font-size: 30px !important;
+        }
+    </style>
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Inicialização dos painéis
+            let currentPanel = 1;
+            const totalPanels = 4;
+            let autoRotate = true;
+            const rotationInterval = 15000; // 15 segundos por painel
+
+            // Configuração e inicialização dos gráficos
+            initCharts();
+
+            // Atualizar data e hora em todos os painéis
+            updateDateTime();
+
+            // Iniciar rotação automática
+            let rotationTimer = setInterval(rotatePanel, rotationInterval);
+
+            // Manipuladores de eventos para os indicadores de paginação
+            document.querySelectorAll('.pagination-dot').forEach(dot => {
+                dot.addEventListener('click', function () {
+                    // Parar rotação automática temporariamente
+                    clearInterval(rotationTimer);
+                    autoRotate = false;
+
+                    // Mudar para o painel selecionado
+                    const panelNumber = parseInt(this.getAttribute('data-panel'));
+                    if (panelNumber !== currentPanel) {
+                        changePanel(panelNumber);
+                    }
+
+                    // Reiniciar rotação automática após 1 minuto
+                    setTimeout(() => {
+                        autoRotate = true;
+                        rotationTimer = setInterval(rotatePanel, rotationInterval);
+                    }, 60000);
+                });
+            });
+
+            // Função para atualizar a data e hora
+            function updateDateTime() {
+                const now = new Date();
+                const options = {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                const formattedDate = now.toLocaleDateString('pt-BR', options);
+
+                document.querySelectorAll('[id^="datetime"]').forEach(element => {
+                    element.textContent = formattedDate;
+                });
+
+                // Atualizar a cada minuto
+                setTimeout(updateDateTime, 60000);
+            }
+
+            // Função para rotacionar automaticamente os painéis
+            function rotatePanel() {
+                if (autoRotate) {
+                    let nextPanel = currentPanel + 1;
+                    if (nextPanel > totalPanels) {
+                        nextPanel = 1;
+                    }
+                    changePanel(nextPanel);
+                }
+            }
+
+            // Função para mudar para um painel específico
+            function changePanel(newPanel) {
+                // Remover classes atuais
+                document.getElementById(`panel${currentPanel}`).classList.remove('active');
+
+                // Determinar posição relativa dos painéis
+                for (let i = 1; i <= totalPanels; i++) {
+                    const panel = document.getElementById(`panel${i}`);
+
+                    if (i === newPanel) {
+                        panel.classList.remove('before', 'after');
+                        panel.classList.add('active');
+                    } else if (
+                        (i < newPanel) ||
+                        (i > newPanel && newPanel === 1 && i === totalPanels)
+                    ) {
+                        panel.classList.remove('active', 'after');
+                        panel.classList.add('before');
+                    } else {
+                        panel.classList.remove('active', 'before');
+                        panel.classList.add('after');
+                    }
+                }
+
+                // Atualizar indicador de paginação
+                document.querySelectorAll('.pagination-dot').forEach(dot => {
+                    dot.classList.remove('active');
+                    if (parseInt(dot.getAttribute('data-panel')) === newPanel) {
+                        dot.classList.add('active');
+                    }
+                });
+
+                // Atualizar painel atual
+                currentPanel = newPanel;
+            }
+
+            // Função para inicializar todos os gráficos
+            function initCharts() {
+                // Painel 1: Visão Geral
+                createIncidenciasPorMesChart();
+                createCategoriasChart();
+
+                // Painel 2: Desempenho
+                createTempoPorCategoriaChart();
+                createDesempenhoMensalChart();
+
+                // Painel 3: Distribuição Geográfica
+                createIncidenciasPorBairroChart();
+                createTiposPorRegiaoChart();
+                createResolucaoPorBairroChart();
+
+                // Atualizar estatísticas
+                fetchStatistics();
+
+                createHeatmap();
+            }
+
+            function addCategoriasParam(url) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const categoriasParam = urlParams.get('categorias');
+
+                if (categoriasParam) {
+                    const separator = url.includes('?') ? '&' : '?';
+                    return `${url}${separator}categorias=${categoriasParam}`;
+                }
+                return url;
+            }
+
+            // Função para criar o mapa de calor
+            async function createHeatmap() {
+                try {
+                    const url = addCategoriasParam('/api/dashboard/public/data');
+                    const response = await fetch(url);
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar dados do mapa de calor');
+                    }
+
+                    const data = await response.json();
+
+                    // Inicializar o mapa
+                    const map = L.map('heatmapContainer').setView([data.centro.lat, data.centro.lng], 13);
+
+                    // Adicionar camada base do mapa
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(map);
+
+                    // Preparar dados para o mapa de calor
+                    const heatData = data.pontos.map(p => [p.lat, p.lng, 1]); // Latitude, Longitude, Intensidade
+
+                    // Adicionar mapa de calor
+                    L.heatLayer(heatData, {
+                        radius: 25,
+                        blur: 15,
+                        maxZoom: 17,
+                        gradient: { 0.4: 'blue', 0.65: 'lime', 1: 'red' }
+                    }).addTo(map);
+
+                    // Criar grupos de marcadores por categoria
+                    const categoriaGrupos = {};
+                    const categoriasCores = {
+                        1: 'blue',
+                        2: 'green',
+                        3: 'red',
+                        4: 'purple',
+                        5: 'orange'
+                    };
+
+                    // Processamento dos pontos para marcadores
+                    data.pontos.forEach(ponto => {
+                        const categoriaId = ponto.categoria_id;
+                        const categoriaNome = ponto.categoria_nome;
+
+                        // Criar grupo se não existir
+                        if (!categoriaGrupos[categoriaId]) {
+                            categoriaGrupos[categoriaId] = L.layerGroup().addTo(map);
+
+                            // Adicionar ao controle de camadas depois
+                        }
+
+                        // Criar marcador
+                        const marker = L.circleMarker([ponto.lat, ponto.lng], {
+                            radius: 5,
+                            fillColor: categoriasCores[categoriaId] || 'gray',
+                            color: '#000',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+
+                        // Adicionar popup
+                        marker.bindPopup(`<b>${categoriaNome}</b><br>Latitude: ${ponto.lat}<br>Longitude: ${ponto.lng}`);
+
+                        // Adicionar ao grupo
+                        marker.addTo(categoriaGrupos[categoriaId]);
+                    });
+
+                    // Adicionar controle de camadas
+                    const overlays = {};
+                    for (const catId in categoriaGrupos) {
+                        const catName = data.pontos.find(p => p.categoria_id == catId)?.categoria_nome || `Categoria ${catId}`;
+                        overlays[catName] = categoriaGrupos[catId];
+                    }
+
+                    L.control.layers(null, overlays).addTo(map);
+
+                    // Ajustar o mapa após carregar
+                    setTimeout(() => {
+                        map.invalidateSize();
+                    }, 100);
+
+                } catch (error) {
+                    console.error('Erro ao criar mapa de calor:', error);
+                    document.getElementById('heatmapContainer').innerHTML =
+                        '<div class="alert alert-danger">Erro ao carregar o mapa de calor</div>';
+                }
+            }
+
+            // Buscar estatísticas da API
+            async function fetchStatistics() {
+                try {
+                    const response = await fetch('/api/dashboard/public/statistics');
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar estatísticas');
+                    }
+
+                    const data = await response.json();
+
+                    // Atualizar os elementos HTML
+                    document.getElementById('totalIncidencias').textContent = data.total_incidencias;
+                    document.getElementById('incidenciasEmAndamento').textContent = data.em_andamento;
+                    document.getElementById('incidenciasResolvidas').textContent = data.resolvidas;
+                    document.getElementById('incidenciasPendentes').textContent = data.pendentes;
+                    document.getElementById('tempoMedioResolucao').textContent = data.tempo_medio_resolucao;
+                    document.getElementById('taxaResolucao').textContent = data.taxa_resolucao + '%';
+                    document.getElementById('satisfacaoMedia').textContent = data.satisfacao_media;
+
+                } catch (error) {
+                    console.error('Erro ao buscar estatísticas:', error);
+                    // Usar dados de fallback em caso de erro
+                    const fallbackData = {
+                        total_incidencias: 248,
+                        em_andamento: 42,
+                        resolvidas: 195,
+                        pendentes: 11,
+                        tempo_medio_resolucao: 3.2,
+                        taxa_resolucao: 78,
+                        satisfacao_media: 4.7
+                    };
+
+                    document.getElementById('totalIncidencias').textContent = fallbackData.total_incidencias;
+                    document.getElementById('incidenciasEmAndamento').textContent = fallbackData.em_andamento;
+                    document.getElementById('incidenciasResolvidas').textContent = fallbackData.resolvidas;
+                    document.getElementById('incidenciasPendentes').textContent = fallbackData.pendentes;
+                    document.getElementById('tempoMedioResolucao').textContent = fallbackData.tempo_medio_resolucao;
+                    document.getElementById('taxaResolucao').textContent = fallbackData.taxa_resolucao + '%';
+                    document.getElementById('satisfacaoMedia').textContent = fallbackData.satisfacao_media;
+                }
+            }
+
+            // Criar gráfico de incidências por mês
+            async function createIncidenciasPorMesChart() {
+                const ctx = document.getElementById('incidenciasPorMes').getContext('2d');
+
+                try {
+                    const response = await fetch('/api/dashboard/public/incidencias-por-mes');
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar dados de incidências por mês');
+                    }
+
+                    const chartData = await response.json();
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Erro ao criar gráfico de incidências por mês:', error);
+                    // Dados de fallback em caso de erro
+                    const fallbackData = {
+                        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                        datasets: [
+                            {
+                                label: 'Incidências Registradas',
+                                data: [18, 25, 30, 22, 17, 29, 32, 27, 19, 15, 23, 28],
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 2,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Incidências Resolvidas',
+                                data: [15, 20, 25, 18, 15, 27, 29, 25, 16, 13, 19, 22],
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 2,
+                                tension: 0.4
+                            }
+                        ]
+                    };
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: fallbackData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Criar gráfico de distribuição por categoria
+            async function createCategoriasChart() {
+                const ctx = document.getElementById('categoriasChart').getContext('2d');
+
+                try {
+                    const response = await fetch('/api/dashboard/public/categorias');
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar dados de categorias');
+                    }
+
+                    const chartData = await response.json();
+
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right'
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Erro ao criar gráfico de categorias:', error);
+                    // Dados de fallback em caso de erro
+                    const fallbackData = {
+                        labels: ['Buracos', 'Iluminação', 'Lixo', 'Árvores', 'Água/Esgoto'],
+                        datasets: [{
+                            data: [35, 25, 15, 10, 15],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.7)',
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)',
+                                'rgba(153, 102, 255, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    };
+
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: fallbackData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right'
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Criar gráfico de tempo por categoria
+            async function createTempoPorCategoriaChart() {
+                const ctx = document.getElementById('tempoPorCategoria').getContext('2d');
+
+                try {
+                    const response = await fetch('/api/dashboard/public/tempo-por-categoria');
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar dados de tempo por categoria');
+                    }
+
+                    const chartData = await response.json();
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            scales: {
+                                x: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Erro ao criar gráfico de tempo por categoria:', error);
+                    // Dados de fallback em caso de erro
+                    const fallbackData = {
+                        labels: ['Buracos', 'Iluminação', 'Lixo', 'Árvores', 'Água/Esgoto'],
+                        datasets: [{
+                            label: 'Tempo Médio (dias)',
+                            data: [4.2, 2.5, 1.8, 3.5, 5.1],
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    };
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: fallbackData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            scales: {
+                                x: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Criar gráfico de desempenho mensal
+            async function createDesempenhoMensalChart() {
+                const ctx = document.getElementById('desempenhoMensal').getContext('2d');
+
+                try {
+                    const response = await fetch('/api/dashboard/public/desempenho-mensal');
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar dados de desempenho mensal');
+                    }
+
+                    const chartData = await response.json();
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: 'Taxa de Resolução (%)'
+                                    },
+                                    min: 0,
+                                    max: 100
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    grid: {
+                                        drawOnChartArea: false
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Tempo Médio (dias)'
+                                    },
+                                    min: 0
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Erro ao criar gráfico de desempenho mensal:', error);
+                    // Dados de fallback em caso de erro
+                    const fallbackData = {
+                        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                        datasets: [
+                            {
+                                label: 'Taxa de Resolução (%)',
+                                data: [72, 75, 80, 70, 78, 82, 85, 79, 77, 72, 75, 78],
+                                backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                                borderColor: 'rgba(255, 159, 64, 1)',
+                                borderWidth: 2,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Tempo Médio (dias)',
+                                data: [4.5, 4.1, 3.5, 3.8, 3.2, 3.0, 2.9, 3.1, 3.3, 3.7, 3.5, 3.2],
+                                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                                borderColor: 'rgba(153, 102, 255, 1)',
+                                borderWidth: 2,
+                                type: 'line',
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    };
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: fallbackData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: 'Taxa de Resolução (%)'
+                                    },
+                                    min: 0,
+                                    max: 100
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    grid: {
+                                        drawOnChartArea: false
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Tempo Médio (dias)'
+                                    },
+                                    min: 0
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Criar gráfico de incidências por bairro
+            async function createIncidenciasPorBairroChart() {
+                const ctx = document.getElementById('incidenciasPorBairro').getContext('2d');
+
+                try {
+                    const response = await fetch('/api/dashboard/public/incidencias-por-bairro');
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar dados de incidências por bairro');
+                    }
+
+                    const chartData = await response.json();
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Erro ao criar gráfico de incidências por bairro:', error);
+                    // Dados de fallback em caso de erro
+                    const fallbackData = {
+                        labels: ['Centro', 'Jardim das Flores', 'Vila Esperança', 'Santana', 'Boa Vista', 'Santa Tereza', 'Nova Cidade', 'São José', 'Industrial', 'Paulista'],
+                        datasets: [{
+                            label: 'Número de Incidências',
+                            data: [45, 38, 32, 30, 28, 25, 23, 19, 17, 15],
+                            backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    };
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: fallbackData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Criar gráfico de tipos por região
+            async function createTiposPorRegiaoChart() {
+                const ctx = document.getElementById('tiposPorRegiao').getContext('2d');
+
+                try {
+                    const response = await fetch('/api/dashboard/public/tipos-por-regiao');
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar dados de tipos por região');
+                    }
+
+                    const chartData = await response.json();
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    stacked: true
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Erro ao criar gráfico de tipos por região:', error);
+                    // Dados de fallback em caso de erro
+                    const fallbackData = {
+                        labels: ['Zona Norte', 'Zona Sul', 'Zona Leste', 'Zona Oeste', 'Centro'],
+                        datasets: [
+                            {
+                                label: 'Buracos',
+                                data: [15, 12, 18, 10, 5],
+                                backgroundColor: 'rgba(255, 99, 132, 0.7)'
+                            },
+                            {
+                                label: 'Iluminação',
+                                data: [8, 15, 12, 7, 8],
+                                backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                            },
+                            {
+                                label: 'Lixo',
+                                data: [5, 7, 6, 9, 10],
+                                backgroundColor: 'rgba(255, 206, 86, 0.7)'
+                            },
+                            {
+                                label: 'Árvores',
+                                data: [3, 5, 4, 6, 2],
+                                backgroundColor: 'rgba(75, 192, 192, 0.7)'
+                            },
+                            {
+                                label: 'Água/Esgoto',
+                                data: [6, 4, 8, 5, 3],
+                                backgroundColor: 'rgba(153, 102, 255, 0.7)'
+                            }
+                        ]
+                    };
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: fallbackData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    stacked: true
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Criar gráfico de resolução por bairro
+            async function createResolucaoPorBairroChart() {
+                const ctx = document.getElementById('resolucaoPorBairro').getContext('2d');
+
+                try {
+                    const response = await fetch('/api/dashboard/public/resolucao-por-bairro');
+
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar dados de resolução por bairro');
+                    }
+
+                    const chartData = await response.json();
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Erro ao criar gráfico de resolução por bairro:', error);
+                    // Dados de fallback em caso de erro
+                    const fallbackData = {
+                        labels: ['Centro', 'Jardim das Flores', 'Vila Esperança', 'Santana', 'Boa Vista'],
+                        datasets: [{
+                            label: 'Taxa de Resolução (%)',
+                            data: [92, 85, 78, 75, 70],
+                            backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    };
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: fallbackData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Inicializar atualização periódica dos dados
+            setInterval(async function () {
+                try {
+                    fetchStatistics();
+                } catch (error) {
+                    console.error('Erro ao atualizar dados:', error);
+                }
+            }, 300000); // Atualizar dados a cada 5 minutos
+        });
+
+    </script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            overflow: hidden;
+            color: #FFF !important
+        }
+
+        .dashboard-container {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: transform 1s ease-in-out;
+            background-color: #333;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel.active {
+            transform: translateX(0);
+            z-index: 10;
+        }
+
+        .panel.before {
+            transform: translateX(-100%);
+            z-index: 5;
+        }
+
+        .panel.after {
+            transform: translateX(100%);
+            z-index: 5;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        .panel-header h2 {
+            color: #fdf !important;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .panel-header .date-time {
+            font-size: 1.2rem;
+            color: #FFF;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .stat-card .icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+
+        .logo {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.8;
+            max-height: 60px;
+        }
+
+        .pagination-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .pagination-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ccc;
+            cursor: pointer;
+        }
+
+        .pagination-dot.active {
+            background-color: #007bff;
+            transform: scale(1.2);
+        }
+
+        /* Responsivo para diferentes tamanhos de tela */
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 250px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 2rem;
+            }
+
+            .panel-header h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Painel 1: Visão Geral -->
+        <div id="panel1" class="panel active">
+            <div class="panel-header">
+                <h2>Visão Geral de Incidências</h2>
+                <div class="date-time" id="datetime1"></div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="stat-value" id="totalIncidencias">248</div>
+                        <div class="stat-label">Total de Incidências</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stat-value" id="incidenciasEmAndamento">42</div>
+                        <div class="stat-label">Em Andamento</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-value" id="incidenciasResolvidas">195</div>
+                        <div class="stat-label">Resolvidas</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-value" id="incidenciasPendentes">11</div>
+                        <div class="stat-label">Pendentes</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            Incidências por Mês
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="incidenciasPorMes"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            Distribuição por Categoria
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="categoriasChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel 2: Desempenho -->
+        <div id="panel2" class="panel after">
+            <div class="panel-header">
+                <h2>Desempenho e Resolução</h2>
+                <div class="date-time" id="datetime2"></div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-value" id="tempoMedioResolucao">3.2</div>
+                        <div class="stat-label">Tempo Médio de Resolução (dias)</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-value" id="taxaResolucao">78%</div>
+                        <div class="stat-label">Taxa de Resolução</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="icon">
+                            <i class="fas fa-thumbs-up"></i>
+                        </div>
+                        <div class="stat-value" id="satisfacaoMedia">4.7</div>
+                        <div class="stat-label">Satisfação Média (0-5)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            Tempo Médio por Categoria
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="tempoPorCategoria"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            Desempenho Mensal
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="desempenhoMensal"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel 3: Distribuição Geográfica -->
+        <div id="panel3" class="panel after">
+            <div class="panel-header" style="display: none;">
+                <h2>Distribuição Geográfica</h2>
+                <div class="date-time" id="datetime3"></div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            Incidências por Bairro (Top 10)
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="incidenciasPorBairro"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            Tipo de Incidência por Região
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="tiposPorRegiao"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            Taxa de Resolução por Bairro
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="resolucaoPorBairro"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div id="panel4" class="panel after">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            Mapa de calor
+                        </div>
+                        <div class="card-body">
+                            <div id="heatmapContainer" style="height: 800px; width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicadores de paginação -->
+        <div class="pagination-indicator">
+            <div class="pagination-dot active" data-panel="1"></div>
+            <div class="pagination-dot" data-panel="2"></div>
+            <div class="pagination-dot" data-panel="3"></div>
+            <div class="pagination-dot" data-panel="4"></div>
+        </div>
+
+        <!-- Logo -->
+        <img src="/static/logo.png" alt="Governa Fácil" class="logo">
+    </div>
+
+    <!-- JS Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        font = 24;
+        // Configuração global para aumentar o tamanho das fontes em todos os gráficos
+        Chart.defaults.font.size = font; // Aumente este valor conforme necessário
+        Chart.defaults.color = '#000'; // Cor do texto para melhor legibilidade
+        Chart.defaults.plugins.title.font.size = font; // Tamanho do título
+        Chart.defaults.plugins.legend.labels.font.size = font; // Tamanho das legendas
+
+        // Para os valores nos eixos
+        Chart.defaults.scales.x.ticks.font.size = font;
+        Chart.defaults.scales.y.ticks.font.size = font;
+
+        // Para os títulos dos eixos
+        Chart.defaults.scales.x.title.font.size = font;
+        Chart.defaults.scales.y.title.font.size = font;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1060 @@
+{% extends "base.html" %}
+
+{% block title %}Incidências - Governa Fácil{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment/min/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+<div class="row">
+    <div class="col-md-2 mb-3">
+        <h2>Incidências</h2>
+    </div>
+    <div class="col-md-1 mb-3" style="width: 140px;">
+        <select id="fcategoria" class="form-select">
+            <option value="">por categoria</option>
+        </select>
+    </div>
+
+    <!-- Filtro de Status -->
+    <div class="col-md-1 mb-3" style="width: 120px;">
+        <select id="fstatus" class="form-select">
+            <option value="">por status</option>
+        </select>
+    </div>
+
+    <!-- Filtro de Prioridade -->
+    <div class="col-md-1 mb-3" style="width: 150px;">
+
+        <select id="fprioridade" class="form-select">
+            <option value="">por prioridade</option>
+        </select>
+    </div>
+
+    <div class="col-md-2 mb-3" style="width: 250px;">
+        <input type="text" id="fperiodo" class="form-control" placeholder="Selecione o período">
+    </div>
+
+    <div class="col-md-2 mb-3">
+        <input type="text" id="fdescricao" class="form-control" placeholder="Pesquisar por texto">
+    </div>
+
+    <div class="col-md-2 mb-3">
+        <button id="btnbusca" class="btn btn-primary" onclick="loadIncidencias();"><i class="bi bi-search"></i>
+            Procurar</button>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <!-- Botão na sua tabela -->
+            <div class="row mb-3">
+                <div class="col">
+                    <span class="text-muted">Total de Incidências: <span id="totalIncidencias"
+                            class="badge bg-secondary">0</span></span>
+                </div>
+                <div class="col text-end">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="novaIncidencia();">
+                        <i class="bi bi-plus-lg me-1"></i> Nova Incidência
+                    </button>
+
+                    <button class="btn btn-sm btn-success" type="button" id="btnExportar">
+                        <i class="bi bi-file-excel me-1"></i> Exportar Excel
+                    </button>
+                </div>
+            </div>
+            <table class="table table-striped" id="incidenciasTable">
+                <thead>
+                    <tr style="text-align: center;">
+                        <th>ID</th>
+                        <th>Foto</th>
+                        <th>Categoria</th>
+                        <th>Bairro</th>
+                        <th>Descrição</th>
+                        <th>Status</th>
+                        <th>Prioridade</th>
+                        <th>Data</th>
+                        <th width='120' style="display: none;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div id="pagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Incidência -->
+<div class="modal fade" id="incidenciaModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle" style="color:#000080 !important">Incidência</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <!-- Formulário lado esquerdo -->
+                    <div class="col-md-7" id="divF">
+                        <form id="incidenciaForm">
+                            <input type="hidden" id="incidenciaId">
+                            <input type="hidden" id="hddstatus">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Categoria</label>
+                                    <select class="form-select" id="categoriaId" required>
+                                        <option value="">Selecione...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Prioridade</label>
+                                    <select class="form-select" id="prioridade" required>
+                                        <option value="">Selecione...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descrição</label>
+                                <textarea class="form-control" id="descricao" rows="3" required></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">Endereço</label>
+                                    <input type="text" class="form-control" id="endereco" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Bairro</label>
+                                    <input type="text" class="form-control" id="bairro" required>
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">Cidade</label>
+                                    <input type="text" class="form-control" id="cidade" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Estado</label>
+                                    <input type="text" class="form-control" id="estado" maxlength="2" required>
+                                </div>
+                            </div>
+                            <div class="row" style="display: none;">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Latitude</label>
+                                    <input type="text" class="form-control" id="lat">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Longitude</label>
+                                    <input type="text" class="form-control" id="long">
+                                </div>
+                            </div>
+                            <div class="mb-3" id="divUpFoto" style="display: none;">
+                                <label class="form-label">Foto</label>
+                                <input type="file" class="form-control" id="foto" accept="image/*">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="mb-3" id="divFoto" style="display: none;">
+                            <img src="" id="imgFoto" width="100%" height="380">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div id="map" style="border: 1px solid #CCC"></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: flex-start;">
+                <button type="button" class="btn btn-primary" onclick="salvarIncidencia()"
+                    id="btnSalvar">Salvar</button>
+                <button type="button" class="btn btn-info" onclick="abrirInteracao()"
+                    id="btnAbrirInteracao">Interagir</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Interação -->
+<div class="modal fade" id="interacaoModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Interação</h5>
+                <!-- Remover data-bs-dismiss para controlar o fechamento via JavaScript -->
+                <button type="button" class="btn-close" onclick="cancelarInteracao()"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Aqui você mostra alguns dados do primeiro modal -->
+                <div class="row">
+                    <div class="col-md-7 mb-3">
+                        <div class="mb-3">
+                            <img id="fotoInteracao" src="" style="width: 200px;padding-left:10px;" align="right" />
+                            Incidência: <b><span id="tipoInteracao"></span></b>
+                            <div id="descricaoInteracao" style="white-space: pre-wrap;"></div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Campos para interação -->
+                            <div class="mb-3">
+                                <label for="novoStatus" class="form-label">Status</label>
+                                <select class="form-select" id="novoStatus"></select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="mb-3">
+                                <label for="textoInteracao" class="form-label">Observações</label>
+                                <textarea class="form-control" id="textoInteracao" rows="5"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <b class="mb-0">Interações</b>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="listaInteracoes">
+                                    {% if interacoes %}
+                                    <ul class="list-group list-group-flush">
+                                        {% for interacao in interacoes %}
+                                        <li class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                Autor: <b class="mb-1">{{ interacao.usuario.nome }}</b>
+                                                <small class="text-muted">{{ interacao.data_hora.strftime('%d/%m/%Y
+                                                    %H:%M') }}</small>
+                                            </div>
+                                            <p class="mb-1">{{ interacao.comentario }}</p>
+                                            <div class="d-flex gap-2">
+                                                <span class="badge bg-info">Status: {{ interacao.status.nome }}</span>
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% else %}
+                                    <div class="text-center py-3">
+                                        <p class="text-muted mb-0">Nenhuma interação registrada para esta incidência.
+                                        </p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <!-- Botão para enviar a interação -->
+                <button type="button" class="btn btn-primary" onclick="salvarInteracao()">Interagir</button>
+                <!-- Botão para cancelar e voltar ao modal anterior -->
+                <button type="button" class="btn btn-secondary" onclick="cancelarInteracao()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+
+
+<script>
+    let incidencias = [];
+    let currentPage = 1;
+    const itemsPerPage = 15; // ou o número que preferir
+    let totalPages = 0;
+
+    async function loadCategorias(campo, select1) {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch('/lista_categorias/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const categorias = await response.json();
+            const select = document.getElementById(campo);
+            select.innerHTML = '<option value="">' + select1 + '</option>' +
+                categorias.map(c => `<option value="${c.categoria_id}">${c.nome}</option>`).join('');
+        } catch (error) {
+            console.error('Erro ao carregar categorias:', error);
+        }
+    }
+
+    async function loadPrioridade(campo, select1) {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch('/lista_prioridades/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const prioridades = await response.json();
+            const select = document.getElementById(campo);
+            select.innerHTML = '<option value="">' + select1 + '</option>' +
+                prioridades.map(c => `<option value="${c.prioridade_id}">${c.nome}</option>`).join('');
+        } catch (error) {
+            console.error('Erro ao carregar prioridades:', error);
+        }
+    }
+
+    async function loadStatus(campo, select1) {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch('/lista_status/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const status = await response.json();
+            const select = document.getElementById(campo);
+            select.innerHTML = '<option value="">' + select1 + '</option>' +
+                status.map(c => `<option value="${c.status_id}">${c.nome}</option>`).join('');
+        } catch (error) {
+            console.error('Erro ao carregar status:', error);
+        }
+    }
+
+    async function loadIncidencias() {
+        const token = localStorage.getItem('token');
+        const categoria_id = document.getElementById('fcategoria').value;
+        const status_id = document.getElementById('fstatus').value;
+        const prioridade_id = document.getElementById('fprioridade').value;
+        const periodo = document.getElementById('fperiodo').value;
+        const texto = document.getElementById('fdescricao').value;
+
+        try {
+            const params = new URLSearchParams();
+            if (categoria_id) params.append('categoria_id', categoria_id);
+            if (status_id) params.append('status_id', status_id);
+            if (prioridade_id) params.append('prioridade_id', prioridade_id);
+            if (periodo) params.append('data_hora', periodo);
+            if (texto) params.append('texto', texto);
+
+            const response = await fetch(`/lista_incidencias/?${params.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            incidencias = data;
+            currentPage = 1;
+            renderTable();
+
+            // Retorna os dados para poder ser usado em outras funções
+            return data;
+        } catch (error) {
+            console.error('Erro ao carregar incidências:', error);
+            return null;
+        }
+    }
+
+
+    function renderTable() {
+        const tbody = document.querySelector('#incidenciasTable tbody');
+        if (!tbody) {
+            console.error('Elemento tbody não encontrado');
+            return;
+        }
+
+        // Calcular índices da página atual
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedData = incidencias.slice(startIndex, endIndex);
+
+        // Atualizar total de páginas
+        totalPages = Math.ceil(incidencias.length / itemsPerPage);
+
+        // Atualizar contador de total
+        const totalElement = document.getElementById('totalIncidencias');
+        if (totalElement) {
+            totalElement.textContent = incidencias.length;
+        }
+
+        // Verificar se há dados
+        console.log('Dados paginados:', paginatedData);
+
+        tbody.innerHTML = paginatedData.length ? paginatedData.map(inc => `
+        <tr style="text-align: center;">
+            <td>${inc.incidencia_id}</td>
+            <td>
+                ${inc.foto ? `<img src="/fotos/${inc.foto}" width="48" height="48" 
+                    class="d-block rounded-2 border border-translucent">` : ''}
+            </td>
+            <td>${inc.categoria_nome || ''}</td>
+            <td>${inc.bairro || ''}</td>
+            <td style="text-align: justify;">
+                <a href='javascript:void(0)' onclick="editarIncidencia(${inc.incidencia_id})">
+                    ${inc.descricao || ''}
+                </a>
+            </td>
+            <td>${inc.status_nome || 'Pendente'}</td>
+            <td>${inc.prioridade_nome || ''}</td>
+            <td>${inc.data_hora ? new Date(inc.data_hora).toLocaleDateString() : ''}</td>
+        </tr>
+    `).join('') : '<tr><td colspan="7" class="text-center">Nenhuma incidência encontrada</td></tr>';
+
+        renderPagination();
+    }
+
+    function renderPagination() {
+        const paginationElement = document.getElementById('pagination');
+        if (!paginationElement) return;
+
+        // Calcular índices aqui também
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+
+        let paginationHTML = `
+        <nav aria-label="Navegação de página">
+            <ul class="pagination justify-content-end mb-0">
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">
+                        Anterior
+                    </a>
+                </li>
+    `;
+
+        // Adicionar números das páginas
+        for (let i = 1; i <= totalPages; i++) {
+            if (
+                i === 1 ||
+                i === totalPages ||
+                (i >= currentPage - 2 && i <= currentPage + 2)
+            ) {
+                paginationHTML += `
+                <li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${i}); return false;">
+                        ${i}
+                    </a>
+                </li>
+            `;
+            } else if (
+                i === currentPage - 3 ||
+                i === currentPage + 3
+            ) {
+                paginationHTML += `
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            `;
+            }
+        }
+
+        paginationHTML += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">
+                    Próximo
+                </a>
+            </li>
+        </ul>
+    </nav>
+    `;
+
+        paginationElement.innerHTML = paginationHTML;
+
+        // Adicionar informação sobre os registros mostrados
+        if (incidencias.length > 0) {
+            const infoElement = document.createElement('div');
+            infoElement.className = 'mt-2 text-muted';
+            infoElement.innerHTML = `
+            Mostrando ${startIndex + 1} a ${Math.min(endIndex, incidencias.length)} 
+            de ${incidencias.length} registros
+        `;
+            paginationElement.appendChild(infoElement);
+        }
+    }
+
+    // Adicionar a função changePage que estava faltando
+    function changePage(page) {
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            renderTable();
+        }
+    }
+
+    // Chamar loadIncidencias quando a página carregar
+    document.addEventListener('DOMContentLoaded', async function () {
+        // Carrega os dados primeiro e espera a conclusão
+        await loadIncidencias();
+
+        // Verifica se tem ID na URL
+        const incidenciaId = getIdFromUrl();
+        if (incidenciaId) {
+            // Agora que os dados estão carregados, podemos abrir o modal
+            editarIncidencia(incidenciaId);
+        }
+
+        // Adicionar listeners para os filtros
+        /*const filters = ['fcategoria', 'fstatus', 'fprioridade', 'fperiodo'];
+        filters.forEach(filterId => {
+            const element = document.getElementById(filterId);
+            if (element) {
+                element.addEventListener('change', loadIncidencias);
+            }
+        });*/
+    });
+
+    async function salvarIncidencia() {
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        const foto = document.getElementById('foto').files[0];
+
+        const incidenciaData = {
+            categoria_id: document.getElementById('categoriaId').value,
+            descricao: document.getElementById('descricao').value,
+            prioridade: document.getElementById('prioridade').value,
+            endereco: document.getElementById('endereco').value,
+            bairro: document.getElementById('bairro').value,
+            cidade: document.getElementById('cidade').value,
+            estado: document.getElementById('estado').value,
+            lat: document.getElementById('lat').value,
+            long: document.getElementById('long').value
+        };
+
+        try {
+            if (foto) {
+                formData.append('file', foto);
+                const uploadResponse = await fetch('/upload-foto/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                const uploadResult = await uploadResponse.json();
+                incidenciaData.foto = uploadResult.filename;
+            }
+
+            const id = document.getElementById('incidenciaId').value;
+            const url = id ? `/incidencias/${id}` : '/incidencias/';
+            const method = id ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(incidenciaData)
+            });
+
+            if (response.ok) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('incidenciaModal'));
+                modal.hide();
+                loadIncidencias();
+            }
+        } catch (error) {
+            console.error('Erro ao salvar incidência:', error);
+        }
+    }
+
+    async function editarIncidencia(id) {
+        let incidencia = incidencias.find(i => i.incidencia_id === id);
+
+        // Se não encontrou a incidência, tenta carregar os dados novamente
+        if (!incidencia) {
+            await loadIncidencias();
+            incidencia = incidencias.find(i => i.incidencia_id === id);
+        }
+
+        if (incidencia) {
+
+            document.getElementById('incidenciaId').value = incidencia.incidencia_id;
+            document.getElementById('hddstatus').value = incidencia.status_nome;
+            document.getElementById('categoriaId').value = incidencia.categoria_id;
+            document.getElementById('descricao').value = incidencia.descricao;
+            document.getElementById('prioridade').value = incidencia.prioridade;
+            document.getElementById('endereco').value = incidencia.endereco;
+            document.getElementById('bairro').value = incidencia.bairro;
+            document.getElementById('cidade').value = incidencia.cidade;
+            document.getElementById('estado').value = incidencia.estado;
+            document.getElementById('lat').value = incidencia.lat || '';
+            document.getElementById('long').value = incidencia.long || '';
+            document.getElementById('divFoto').style.display = 'block';
+            document.getElementById('divUpFoto').style.display = 'none';
+            document.getElementById('imgFoto').src = "/fotos/" + incidencia.foto;
+            document.getElementById('divF').className = 'col-md-7';
+            document.getElementById('btnAbrirInteracao').style.display = 'block';
+
+            if (document.getElementById('hddstatus').value == 'Resolvido') {
+                document.getElementById('categoriaId').disabled = true;
+                document.getElementById('descricao').disabled = true;
+                document.getElementById('prioridade').disabled = true;
+                document.getElementById('endereco').disabled = true;
+                document.getElementById('bairro').disabled = true;
+                document.getElementById('cidade').disabled = true;
+                document.getElementById('estado').disabled = true;
+                document.getElementById('btnAbrirInteracao').style.display = 'none';
+                document.getElementById('btnSalvar').style.display = 'none';
+            }
+            else {
+                document.getElementById('categoriaId').disabled = false;
+                document.getElementById('descricao').disabled = false;
+                document.getElementById('prioridade').disabled = false;
+                document.getElementById('endereco').disabled = false;
+                document.getElementById('bairro').disabled = false;
+                document.getElementById('cidade').disabled = false;
+                document.getElementById('estado').disabled = false;
+                document.getElementById('btnAbrirInteracao').style.display = 'block';
+                document.getElementById('btnSalvar').style.display = 'block';
+            }
+
+            document.getElementById('map').innerHTML = '<iframe src = "https://maps.google.com/maps?q=' + incidencia.lat
+                + ',' + incidencia.long + '&z=16&amp;output=embed" style="height: 350px; width: 100%;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>';
+            const modal = new bootstrap.Modal(document.getElementById('incidenciaModal'));
+            modal.show();
+        } else {
+            console.error('Incidência não encontrada:', id);
+        }
+    }
+
+    // Adicione esta função para obter parâmetros da URL
+    function getIdFromUrl() {
+        const pathArray = window.location.pathname.split('/');
+        const id = parseInt(pathArray[pathArray.length - 1]);
+        return !isNaN(id) ? id : null;
+    }
+
+    function novaIncidencia() {
+
+        document.getElementById('incidenciaId').value = "";
+        document.getElementById('categoriaId').value = "";
+        document.getElementById('descricao').value = ""
+        document.getElementById('prioridade').value = "";
+        document.getElementById('endereco').value = "";
+        document.getElementById('bairro').value = "";
+        document.getElementById('cidade').value = "";
+        document.getElementById('estado').value = "";
+        document.getElementById('lat').value = "";
+        document.getElementById('long').value = "";
+        document.getElementById('divFoto').style.display = 'none';
+        document.getElementById('map').innerHTML = '';
+        document.getElementById('divUpFoto').style.display = 'block';
+        document.getElementById('divF').className = 'col-md-12';
+        document.getElementById('btnAbrirInteracao').style.display = 'none';
+
+        document.getElementById('categoriaId').disabled = false;
+        document.getElementById('descricao').disabled = false;
+        document.getElementById('prioridade').disabled = false;
+        document.getElementById('endereco').disabled = false;
+        document.getElementById('bairro').disabled = false;
+        document.getElementById('cidade').disabled = false;
+        document.getElementById('estado').disabled = false;
+        document.getElementById('btnAbrirInteracao').style.display = 'block';
+        document.getElementById('btnSalvar').style.display = 'block';
+
+        const modal = new bootstrap.Modal(document.getElementById('incidenciaModal'));
+        modal.show();
+
+    }
+
+    async function deletarIncidencia(id) {
+        if (confirm('Deseja realmente excluir esta incidência?')) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/incidencias/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadIncidencias();
+                }
+            } catch (error) {
+                console.error('Erro ao deletar incidência:', error);
+            }
+        }
+    }
+
+    // Carregar dados iniciais
+    loadCategorias('categoriaId', 'Selecione...');
+    loadCategorias('fcategoria', 'Categoria');
+    loadPrioridade('prioridade', 'Selecione...');
+    loadPrioridade('fprioridade', 'Prioridade');
+    loadStatus('fstatus', 'Status');
+    loadStatus('novoStatus', 'Selecione');
+
+    // Limpar formulário quando o modal for fechado
+    document.getElementById('incidenciaModal').addEventListener('hidden.bs.modal', function () {
+        //document.getElementById('incidenciaForm').reset();
+        //document.getElementById('incidenciaId').value = '';
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#fperiodo').daterangepicker({
+            autoUpdateInput: false, // Impede a atualização automática do input
+            locale: {
+                format: 'DD/MM/YYYY',
+                separator: " até ",
+                applyLabel: "Aplicar",
+                cancelLabel: "Cancelar",
+                fromLabel: "De",
+                toLabel: "Até",
+                customRangeLabel: "Personalizado",
+                weekLabel: "S",
+                daysOfWeek: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+                monthNames: [
+                    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+                ],
+                firstDay: 1
+            }
+        })
+            .on('apply.daterangepicker', function (ev, picker) {
+                // Atualiza manualmente o valor do input quando o usuário aplica a seleção                
+                $(this).val(picker.startDate.format('DD/MM/YYYY') + " até " + picker.endDate.format('DD/MM/YYYY'));
+                //loadIncidencias();
+            })
+            .on('cancel.daterangepicker', function (ev, picker) {
+                // Garante que, se cancelado, o input ficará vazio
+                $(this).val('');
+            });
+    });
+
+
+    // Adicione este código junto com seus outros scripts
+    document.getElementById('btnExportar').addEventListener('click', function () {
+        if (typeof XLSX === 'undefined') {
+            alert('Biblioteca de exportação não carregada. Por favor, recarregue a página.');
+            return;
+        }
+
+        try {
+            // Criar planilha com todos os dados
+            const ws_data = [
+                ['ID', 'Categoria', 'Descrição', 'Status', 'Prioridade', 'Data', 'Bairro', 'Cidade', 'Estado'] // Headers
+            ];
+
+            // Adicionar todos os dados
+            incidencias.forEach(inc => {
+                ws_data.push([
+                    inc.incidencia_id,
+                    inc.categoria_nome,
+                    inc.descricao,
+                    inc.status_nome || 'Pendente',
+                    inc.prioridade_nome,
+                    new Date(inc.data_hora).toLocaleDateString(),
+                    inc.bairro,
+                    inc.cidade,
+                    inc.estado
+                ]);
+            });
+
+            // Criar workbook
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+            // Ajustar larguras das colunas
+            const wscols = [
+                { wch: 10 },  // ID
+                { wch: 20 },  // Categoria
+                { wch: 50 },  // Descrição
+                { wch: 15 },  // Status
+                { wch: 15 },  // Prioridade
+                { wch: 15 },  // Data
+                { wch: 15 },  // Bairro
+                { wch: 20 },  // Cidade
+                { wch: 10 }   // Estado
+            ];
+            ws['!cols'] = wscols;
+
+            // Adicionar a planilha ao workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Incidências");
+
+            // Gerar e baixar o arquivo
+            const fileName = `incidencias_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+        } catch (error) {
+            console.error('Erro ao exportar:', error);
+            alert('Erro ao gerar o arquivo Excel. Por favor, tente novamente.');
+        }
+    });
+
+    function abrirInteracao() {
+        // Fecha o modal de incidência
+        const modalIncidencia = bootstrap.Modal.getInstance(document.getElementById('incidenciaModal'));
+        if (modalIncidencia) {
+            modalIncidencia.hide();
+        }
+
+        // Pega os dados do modal de incidência (ou da variável global)
+        const descricao = document.getElementById('descricao').value;
+        const selectCategoria = document.getElementById('categoriaId');
+        const tipoIncidencia = selectCategoria.options[selectCategoria.selectedIndex].text;
+        const foto = document.getElementById('imgFoto').src;
+
+        // Preenche o modal de interação
+        document.getElementById('descricaoInteracao').innerHTML = descricao;
+        document.getElementById('tipoInteracao').innerHTML = tipoIncidencia + ' - ' + document.getElementById('bairro').value;
+        document.getElementById('fotoInteracao').src = foto;
+
+        const select = document.getElementById('novoStatus');
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].text === document.getElementById('hddstatus').value) {
+                select.selectedIndex = i;
+                break;
+            }
+        }
+        //alert(document.getElementById('incidenciaId').value);
+        carregarInteracoes(document.getElementById('incidenciaId').value);
+
+        // Abre o modal de interação
+        const modalInteracao = new bootstrap.Modal(document.getElementById('interacaoModal'));
+        modalInteracao.show();
+    }
+
+    // Cancela o modal de Interação e reabre o modal de Incidência
+    function cancelarInteracao() {
+        // Fecha o modal de interação
+        const modalInteracao = bootstrap.Modal.getInstance(document.getElementById('interacaoModal'));
+        if (modalInteracao) {
+            modalInteracao.hide();
+
+            // Limpar os campos do formulário            
+            document.getElementById('novoStatus').value = "";
+            document.getElementById('textoInteracao').value = "";
+        }
+
+        // Reabre o modal de incidência
+        const modalIncidencia = new bootstrap.Modal(document.getElementById('incidenciaModal'));
+        modalIncidencia.show();
+    }
+
+    // Função para enviar a interação para o backend
+    async function salvarInteracao() {
+        const token = localStorage.getItem('token');
+        const incidenciaId = document.getElementById('incidenciaId').value; // ID da incidência, já preenchido ao abrir o modal
+        const novoStatusId = document.getElementById('novoStatus').value;
+        const textoInteracao = document.getElementById('textoInteracao').value;
+
+        if (!incidenciaId) {
+            alert('Incidência não identificada.');
+            return;
+        }
+        if (!novoStatus) {
+            alert('Selecione o novo status.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/interagir', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    incidencia_id: parseInt(incidenciaId),
+                    novo_status_id: parseInt(novoStatusId),
+                    comentario: textoInteracao
+                })
+            });
+
+            //console.log('Status da resposta:', response.status);
+
+            // Tenta obter o corpo da resposta, independente do status
+            const responseText = await response.text();
+            //console.log('Resposta completa:', responseText);
+
+            // Tenta converter para JSON se possível
+            let responseData;
+            try {
+                responseData = JSON.parse(responseText);
+                //console.log('Dados da resposta:', responseData);
+            } catch (e) {
+                //console.log('A resposta não é um JSON válido');
+            }
+
+            if (response.status === 422) {
+                //console.error('Erro de validação:', responseData);
+                alert('Erro de validação dos dados: ' + JSON.stringify(responseData.detail));
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status} - ${responseText}`);
+            }
+            else {
+                alert('Interação salva com sucesso!');
+                document.getElementById('textoInteracao').value = "";
+                document.getElementById('novoStatus').value = "";
+                carregarInteracoes(incidenciaId);
+                loadIncidencias();
+                // Fecha o modal de interação
+                const modalInteracao = bootstrap.Modal.getInstance(document.getElementById('interacaoModal'));
+                if (modalInteracao) {
+                    modalInteracao.hide();
+                    // Reabre o modal de incidência
+                    const modalIncidencia = new bootstrap.Modal(document.getElementById('incidenciaModal'));
+                    modalIncidencia.hide();
+                }
+            }
+
+        } catch (error) {
+            console.error('Erro detalhado:', error);
+            alert('Erro ao salvar a interação: ' + error.message);
+        }
+    }
+
+    async function carregarInteracoes(incidenciaId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token não encontrado');
+                return;
+            }
+
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            const response = await fetch(`/interacoes/${incidenciaId}`, { headers });
+
+            if (!response.ok) {
+                throw new Error(`Erro: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const interacoes = data.interacoes;
+            const usuarioAtual = data.usuario_atual; // Adicionamos o ID do usuário atual na resposta
+
+            const container = document.getElementById('listaInteracoes');
+
+            if (interacoes.length === 0) {
+                container.innerHTML = `
+                <div class="text-center py-3">
+                    <p class="text-muted mb-0">Nenhuma interação registrada para esta incidência.</p>
+                </div>
+            `;
+                return;
+            }
+
+            let html = '<ul class="list-group list-group-flush">';
+
+            // A última interação é a primeira da lista (assumindo que estão ordenadas por data, mais recentes primeiro)
+            const ultimaInteracao = interacoes[0];
+
+            //alert(usuarioAtual);
+
+            interacoes.forEach((interacao, index) => {
+                const dataFormatada = new Date(interacao.data_hora).toLocaleString('pt-BR');
+                const podeExcluir = (interacao.usuario_id === usuarioAtual) && (index === 0); // Verifica se é a interação mais recente e do usuário atual
+                //alert(interacao.usuario_id);
+                let botaoExcluir = '';
+                if (podeExcluir) {
+                    botaoExcluir = `
+                    <button type="button" class="btn btn-sm btn-danger ms-2" 
+                            onclick="excluirInteracao(${interacao.incidencia_interacao_id}, ${incidenciaId})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `;
+                }
+
+                html += `
+                <li class="list-group-item" style="font-size: 11px;">
+                    <div class="d-flex justify-content-between">
+                        <b class="mb-1">${interacao.usuario.nome}</b>
+                        <div>
+                            <small class="text-muted">${dataFormatada}</small>
+                            ${botaoExcluir}
+                        </div>
+                    </div>
+                    <p class="mb-1">${interacao.comentario}</p>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-info">Status: ${interacao.status.nome}</span>
+                    </div>
+                </li>
+            `;
+            });
+
+            html += '</ul>';
+            container.innerHTML = html;
+
+        } catch (error) {
+            console.error('Erro ao carregar interações:', error);
+        }
+    }
+
+
+    async function excluirInteracao(interacaoId, incidenciaId) {
+        if (!confirm('Tem certeza que deseja excluir esta interação?')) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token não encontrado');
+                return;
+            }
+
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            const response = await fetch(`/interacoes/${interacaoId}`, {
+                method: 'DELETE',
+                headers
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Erro ao excluir interação');
+            }
+
+            // Recarregar as interações após excluir
+            await carregarInteracoes(incidenciaId);
+
+            // Se necessário, atualizar o status da incidência no modal principal
+            const result = await response.json();
+            if (result.status_atual) {
+                document.getElementById('hddstatus').value = result.status_atual;
+                // Atualizar qualquer outro elemento que mostre o status
+            }
+
+            alert('Interação excluída com sucesso!');
+        } catch (error) {
+            console.error('Erro ao excluir interação:', error);
+            alert('Erro ao excluir interação: ' + error.message);
+        }
+    }
+</script>
+
+<style>
+    .btn-delete-interaction {
+        opacity: 0.7;
+        transition: opacity 0.3s;
+    }
+
+    .btn-delete-interaction:hover {
+        opacity: 1;
+    }
+
+    .list-group-item {
+        position: relative;
+    }
+
+    .list-group-item:hover .btn-delete-interaction {
+        display: inline-block;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+{% endblock %}

@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block title %}Mapa de Incidências - Governa Fácil{% endblock %}
+
+{% block content %}
+<style>
+    .mapa-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .mapa-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .mapa-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .mapa-filtros {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filtro-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filtro-group label {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .filtro-group select {
+        min-width: 160px;
+    }
+
+    #mapaCompleto {
+        height: calc(100vh - 220px);
+        min-height: 500px;
+    }
+
+    .mapa-legenda {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1rem 1.25rem;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .legenda-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+        color: #475569;
+        font-weight: 500;
+    }
+
+    .legenda-item .marker {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .legenda-item .marker.novo { background: #ef4444; }
+    .legenda-item .marker.andamento { background: #f59e0b; }
+    .legenda-item .marker.resolvido { background: #10b981; }
+
+    .mapa-stats {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .mapa-stat {
+        padding: 0.35rem 0.75rem;
+        background: #f1f5f9;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: #475569;
+        font-weight: 500;
+    }
+
+    .mapa-stat strong {
+        color: #1e293b;
+    }
+
+    .popup-content {
+        padding: 8px;
+        min-width: 240px;
+    }
+
+    .popup-content h6 {
+        margin: 0 0 8px 0;
+        color: #1e293b;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .popup-content p {
+        margin: 4px 0;
+        font-size: 0.8rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .popup-content img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .leaflet-popup-content-wrapper {
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+
+    @media (max-width: 768px) {
+        .mapa-filtros {
+            width: 100%;
+        }
+        .filtro-group {
+            flex: 1;
+        }
+        .filtro-group select {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="mapa-container">
+    <div class="mapa-header">
+        <h4><i class="bi bi-geo-alt-fill text-primary"></i> Mapa de Incidências</h4>
+        <div class="mapa-filtros">
+            <div class="filtro-group">
+                <label>Bairro:</label>
+                <select class="form-select form-select-sm" id="filtroBairro">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="filtro-group">
+                <label>Status:</label>
+                <select class="form-select form-select-sm" id="filtroStatus">
+                    <option value="">Todos</option>
+                    <option value="1">Novos</option>
+                    <option value="2">Em Andamento</option>
+                    <option value="3">Resolvidos</option>
+                </select>
+            </div>
+            <div class="filtro-group">
+                <label>Categoria:</label>
+                <select class="form-select form-select-sm" id="filtroCategoria">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+        </div>
+        <div class="mapa-stats">
+            <div class="mapa-stat"><strong id="totalPontos">0</strong> incidências</div>
+        </div>
+    </div>
+
+    <div id="mapaCompleto"></div>
+
+    <div class="mapa-legenda">
+        <div class="legenda-item"><div class="marker novo"></div> Novo</div>
+        <div class="legenda-item"><div class="marker andamento"></div> Em Andamento</div>
+        <div class="legenda-item"><div class="marker resolvido"></div> Resolvido</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let mapa = null;
+    let markersLayer = null;
+    let todasIncidencias = [];
+
+    async function carregarMapa() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+            const response = await fetch('/api/dashboard/mapa-incidencias', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                todasIncidencias = data.incidencias || [];
+
+                // Inicializar mapa
+                if (!mapa) {
+                    mapa = L.map('mapaCompleto').setView([data.centro.lat, data.centro.lng], 13);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap'
+                    }).addTo(mapa);
+
+                    markersLayer = L.layerGroup().addTo(mapa);
+                }
+
+                // Carregar filtros
+                carregarFiltros(todasIncidencias);
+
+                // Renderizar marcadores
+                renderizarMarcadores(todasIncidencias);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar mapa:', error);
+        }
+    }
+
+    function carregarFiltros(incidencias) {
+        // Bairros
+        const selectBairro = document.getElementById('filtroBairro');
+        const bairros = [...new Set(incidencias.map(i => i.bairro).filter(b => b))].sort();
+        bairros.forEach(bairro => {
+            if (!selectBairro.querySelector(`option[value="${bairro}"]`)) {
+                const option = document.createElement('option');
+                option.value = bairro;
+                option.textContent = bairro;
+                selectBairro.appendChild(option);
+            }
+        });
+
+        // Categorias
+        const selectCategoria = document.getElementById('filtroCategoria');
+        const categorias = [...new Set(incidencias.map(i => i.categoria).filter(c => c))].sort();
+        categorias.forEach(categoria => {
+            if (!selectCategoria.querySelector(`option[value="${categoria}"]`)) {
+                const option = document.createElement('option');
+                option.value = categoria;
+                option.textContent = categoria;
+                selectCategoria.appendChild(option);
+            }
+        });
+    }
+
+    function filtrar() {
+        const bairro = document.getElementById('filtroBairro').value;
+        const status = document.getElementById('filtroStatus').value;
+        const categoria = document.getElementById('filtroCategoria').value;
+
+        let filtradas = todasIncidencias;
+
+        if (bairro) {
+            filtradas = filtradas.filter(i => i.bairro === bairro);
+        }
+        if (status) {
+            filtradas = filtradas.filter(i => i.status == status);
+        }
+        if (categoria) {
+            filtradas = filtradas.filter(i => i.categoria === categoria);
+        }
+
+        renderizarMarcadores(filtradas);
+    }
+
+    function renderizarMarcadores(incidencias) {
+        markersLayer.clearLayers();
+        document.getElementById('totalPontos').textContent = incidencias.length;
+
+        incidencias.forEach(inc => {
+            const cor = getMarkerColor(inc.status);
+
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="
+                    background: ${cor};
+                    width: 26px;
+                    height: 26px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                "></div>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13]
+            });
+
+            const popupContent = `
+                <div class="popup-content">
+                    ${inc.foto ? `<img src="/fotos/${inc.foto}" onerror="this.style.display='none'" alt="">` : ''}
+                    <h6>${inc.categoria}</h6>
+                    <p><i class="bi bi-geo-alt"></i> ${inc.bairro || 'Sem bairro'}</p>
+                    <p><i class="bi bi-pin-map"></i> ${inc.endereco || 'Sem endereço'}</p>
+                    <p><i class="bi bi-calendar"></i> ${inc.data}</p>
+                    <span class="badge ${getStatusBadgeClass(inc.status)}">${inc.status_nome}</span>
+                    <br><br>
+                    <a href="/incidencias/${inc.id}" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-eye me-1"></i>Ver Detalhes
+                    </a>
+                </div>
+            `;
+
+            L.marker([inc.lat, inc.lng], { icon: customIcon })
+                .bindPopup(popupContent)
+                .addTo(markersLayer);
+        });
+
+        // Ajustar zoom
+        if (incidencias.length > 1) {
+            const bounds = L.latLngBounds(incidencias.map(i => [i.lat, i.lng]));
+            mapa.fitBounds(bounds, { padding: [50, 50] });
+        } else if (incidencias.length === 1) {
+            mapa.setView([incidencias[0].lat, incidencias[0].lng], 15);
+        }
+    }
+
+    function getMarkerColor(status) {
+        switch(status) {
+            case 1: return '#ef4444';
+            case 2: return '#f59e0b';
+            case 3: return '#10b981';
+            default: return '#64748b';
+        }
+    }
+
+    function getStatusBadgeClass(status) {
+        switch(status) {
+            case 1: return 'bg-danger';
+            case 2: return 'bg-warning text-dark';
+            case 3: return 'bg-success';
+            default: return 'bg-secondary';
+        }
+    }
+
+    // Event listeners
+    document.getElementById('filtroBairro')?.addEventListener('change', filtrar);
+    document.getElementById('filtroStatus')?.addEventListener('change', filtrar);
+    document.getElementById('filtroCategoria')?.addEventListener('change', filtrar);
+
+    // Carregar mapa
+    carregarMapa();
+</script>
+{% endblock %}

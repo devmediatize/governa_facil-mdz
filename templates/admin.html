@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Administradores - Governa Fácil{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Administradores</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#adminModal">
+        Novo Administrador
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="adminsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Data Cadastro</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Administrador -->
+<div class="modal fade" id="adminModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Novo Administrador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="adminForm">
+                    <input type="hidden" id="adminId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="senha">
+                        <small class="text-muted">Deixe em branco para manter a senha atual ao editar</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ativo" checked>
+                            <label class="form-check-label">
+                                Ativo
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarAdmin()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function loadAdmins() {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch('/admin/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const admins = await response.json();
+            renderTable(admins);
+        } catch (error) {
+            console.error('Erro ao carregar administradores:', error);
+        }
+    }
+
+    function renderTable(admins) {
+        const tbody = document.querySelector('#adminsTable tbody');
+        tbody.innerHTML = admins.map(a => `
+        <tr>
+            <td>${a.admin_id}</td>
+            <td>${a.nome}</td>
+            <td>${a.email}</td>
+            <td>${a.ativo ? 'Ativo' : 'Inativo'}</td>
+            <td>${new Date(a.data_hora_cadastro).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="editarAdmin(${a.admin_id})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deletarAdmin(${a.admin_id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    }
+
+    async function salvarAdmin() {
+        const token = localStorage.getItem('token');
+        const adminData = {
+            nome: document.getElementById('nome').value,
+            email: document.getElementById('email').value,
+            ativo: document.getElementById('ativo').checked ? 1 : 0
+        };
+
+        const senha = document.getElementById('senha').value;
+        if (senha) {
+            adminData.senha = senha;
+        }
+
+        try {
+            const id = document.getElementById('adminId').value;
+            const url = id ? `/admin/${id}` : '/admin/';
+            const method = id ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(adminData)
+            });
+
+            if (response.ok) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('adminModal'));
+                modal.hide();
+                loadAdmins();
+            }
+        } catch (error) {
+            console.error('Erro ao salvar administrador:', error);
+        }
+    }
+
+    function editarAdmin(id) {
+        const admin = admins.find(a => a.admin_id === id);
+        if (admin) {
+            document.getElementById('adminId').value = admin.admin_id;
+            document.getElementById('nome').value = admin.nome;
+            document.getElementById('email').value = admin.email;
+            document.getElementById('senha').value = '';
+            document.getElementById('ativo').checked = admin.ativo === 1;
+
+            const modal = new bootstrap.Modal(document.getElementById('adminModal'));
+            modal.show();
+        }
+    }
+
+    async function deletarAdmin(id) {
+        if (confirm('Deseja realmente excluir este administrador?')) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/admin/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadAdmins();
+                }
+            } catch (error) {
+                console.error('Erro ao deletar administrador:', error);
+            }
+        }
+    }
+
+    loadAdmins();
+</script>
+{% endblock %}

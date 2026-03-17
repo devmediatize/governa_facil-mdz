@@ -1,0 +1,603 @@
+{% extends "base.html" %}
+
+{% block title %}Categorias - Governa Fácil{% endblock %}
+
+{% block content %}
+<style>
+    .icon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+        gap: 8px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid var(--gray-200);
+        border-radius: 10px;
+        background: var(--gray-100);
+    }
+
+    .icon-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 45px;
+        height: 45px;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+    }
+
+    .icon-item:hover {
+        border-color: var(--primary-light);
+        background: var(--gray-100);
+    }
+
+    .icon-item.selected {
+        border-color: var(--primary);
+        background: rgba(79, 70, 229, 0.1);
+    }
+
+    .icon-item i {
+        font-size: 20px;
+        color: var(--gray-600);
+    }
+
+    .icon-item.selected i {
+        color: var(--primary);
+    }
+
+    .icon-preview {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: var(--gray-100);
+        border-radius: 10px;
+        margin-top: 15px;
+    }
+
+    .icon-preview-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-preview-circle i {
+        font-size: 24px;
+        color: white;
+    }
+
+    .icon-preview-text {
+        font-size: 14px;
+        color: var(--gray-600);
+    }
+
+    .icon-preview-name {
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .color-picker-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .color-picker-wrapper input[type="color"] {
+        width: 50px;
+        height: 40px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .color-preview {
+        flex: 1;
+        padding: 10px 15px;
+        border-radius: 8px;
+        background: var(--gray-100);
+        font-family: monospace;
+        font-size: 14px;
+    }
+
+    .categoria-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .categoria-icon i {
+        font-size: 18px;
+        color: white;
+    }
+
+    .icon-search {
+        margin-bottom: 10px;
+    }
+
+    .btn-action {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-edit {
+        background: rgba(14, 165, 233, 0.1);
+        color: #0ea5e9;
+    }
+
+    .btn-edit:hover {
+        background: rgba(14, 165, 233, 0.2);
+    }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .btn-delete:hover {
+        background: rgba(239, 68, 68, 0.2);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Categorias</h2>
+        <p class="text-muted mb-0">Gerencie as categorias de incidencias do sistema</p>
+    </div>
+    <button type="button" class="btn btn-primary" onclick="abrirModalNovo()">
+        <i class="bi bi-plus-lg me-1"></i> Nova Categoria
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0" id="categoriasTable">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Icone</th>
+                        <th>Nome</th>
+                        <th style="width: 100px;">Cor</th>
+                        <th style="width: 100px;">Status</th>
+                        <th style="width: 120px;">Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            <span class="ms-2">Carregando categorias...</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Categoria -->
+<div class="modal fade" id="categoriaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">
+                    <i class="bi bi-tags me-2"></i>Nova Categoria
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="categoriaForm">
+                    <input type="hidden" id="categoriaId">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nome da Categoria *</label>
+                                <input type="text" class="form-control" id="nome" required placeholder="Ex: Iluminacao Publica">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Cor</label>
+                                <div class="color-picker-wrapper">
+                                    <input type="color" id="cor" value="#6366f1" onchange="atualizarPreview()">
+                                    <input type="text" class="form-control color-preview" id="corHex" value="#6366f1" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="ativo" checked>
+                                    <label class="form-check-label">Categoria Ativa</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Icone</label>
+                                <input type="text" class="form-control icon-search" id="iconSearch" placeholder="Buscar icone...">
+                                <input type="hidden" id="icone" value="bi-tag">
+                                <div class="icon-grid" id="iconGrid">
+                                    <!-- Icones serao inseridos via JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="icon-preview">
+                        <div class="icon-preview-circle" id="previewCircle" style="background-color: #6366f1;">
+                            <i class="bi bi-tag" id="previewIcon"></i>
+                        </div>
+                        <div>
+                            <div class="icon-preview-name" id="previewName">Nova Categoria</div>
+                            <div class="icon-preview-text">Visualizacao de como a categoria aparecera</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarCategoria()">
+                    <i class="bi bi-check-lg me-1"></i>Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmacao de Exclusao -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Excluir
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Deseja realmente excluir a categoria <strong id="deleteCategoriaNome"></strong>?</p>
+                <p class="text-muted small mb-0">Esta acao nao pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="confirmarExclusao()">
+                    <i class="bi bi-trash me-1"></i>Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Lista de icones disponiveis para incidencias urbanas
+    const icones = [
+        // Infraestrutura
+        'bi-house', 'bi-building', 'bi-buildings', 'bi-hospital', 'bi-bank',
+        // Transporte
+        'bi-car-front', 'bi-bus-front', 'bi-bicycle', 'bi-truck', 'bi-scooter',
+        // Iluminacao e Energia
+        'bi-lightbulb', 'bi-lightbulb-fill', 'bi-lamp', 'bi-lightning', 'bi-plug',
+        // Limpeza e Meio Ambiente
+        'bi-trash', 'bi-trash3', 'bi-recycle', 'bi-tree', 'bi-tree-fill', 'bi-flower1',
+        // Agua e Saneamento
+        'bi-water', 'bi-droplet', 'bi-droplet-fill', 'bi-moisture',
+        // Alertas e Seguranca
+        'bi-exclamation-triangle', 'bi-exclamation-triangle-fill', 'bi-shield-exclamation',
+        'bi-cone-striped', 'bi-sign-stop', 'bi-sign-stop-fill',
+        // Manutencao
+        'bi-tools', 'bi-wrench', 'bi-hammer', 'bi-gear', 'bi-gear-fill',
+        // Sinalizacao e Vias
+        'bi-signpost', 'bi-signpost-2', 'bi-signpost-split', 'bi-sign-turn-right',
+        'bi-stoplights', 'bi-traffic-cone',
+        // Parques e Lazer
+        'bi-flower2', 'bi-flower3', 'bi-sun', 'bi-cloud-sun',
+        // Saude
+        'bi-heart-pulse', 'bi-bandaid', 'bi-capsule',
+        // Comunicacao
+        'bi-telephone', 'bi-wifi', 'bi-broadcast',
+        // Outros
+        'bi-fire', 'bi-snow', 'bi-wind', 'bi-thermometer-half',
+        'bi-map', 'bi-geo-alt', 'bi-pin-map', 'bi-compass',
+        'bi-flag', 'bi-megaphone', 'bi-bell', 'bi-alarm',
+        'bi-calendar-event', 'bi-clock', 'bi-hourglass',
+        'bi-person-walking', 'bi-person-wheelchair', 'bi-universal-access',
+        'bi-tag', 'bi-tags', 'bi-bookmark', 'bi-star',
+        'bi-hand-thumbs-up', 'bi-hand-thumbs-down', 'bi-chat-dots',
+        'bi-camera', 'bi-image', 'bi-file-text', 'bi-folder',
+        'bi-box', 'bi-archive', 'bi-inbox', 'bi-mailbox'
+    ];
+
+    let categoriasData = [];
+    let categoriaParaExcluir = null;
+
+    // Inicializar grid de icones
+    function inicializarIcones() {
+        const grid = document.getElementById('iconGrid');
+        grid.innerHTML = icones.map(icon => `
+            <div class="icon-item" data-icon="${icon}" onclick="selecionarIcone('${icon}')">
+                <i class="bi ${icon}"></i>
+            </div>
+        `).join('');
+
+        // Selecionar icone padrao
+        selecionarIcone('bi-tag');
+    }
+
+    // Filtrar icones
+    document.getElementById('iconSearch')?.addEventListener('input', function(e) {
+        const termo = e.target.value.toLowerCase();
+        const items = document.querySelectorAll('.icon-item');
+        items.forEach(item => {
+            const icon = item.dataset.icon.toLowerCase();
+            item.style.display = icon.includes(termo) ? 'flex' : 'none';
+        });
+    });
+
+    // Selecionar icone
+    function selecionarIcone(icon) {
+        // Remover selecao anterior
+        document.querySelectorAll('.icon-item').forEach(item => item.classList.remove('selected'));
+
+        // Selecionar novo
+        const item = document.querySelector(`.icon-item[data-icon="${icon}"]`);
+        if (item) item.classList.add('selected');
+
+        document.getElementById('icone').value = icon;
+        atualizarPreview();
+    }
+
+    // Atualizar preview
+    function atualizarPreview() {
+        const nome = document.getElementById('nome').value || 'Nova Categoria';
+        const cor = document.getElementById('cor').value;
+        const icone = document.getElementById('icone').value;
+
+        document.getElementById('previewCircle').style.backgroundColor = cor;
+        document.getElementById('previewIcon').className = `bi ${icone}`;
+        document.getElementById('previewName').textContent = nome;
+        document.getElementById('corHex').value = cor;
+    }
+
+    // Atualizar cor do input hex
+    document.getElementById('cor')?.addEventListener('input', function() {
+        atualizarPreview();
+    });
+
+    document.getElementById('nome')?.addEventListener('input', function() {
+        atualizarPreview();
+    });
+
+    // Carregar categorias
+    async function loadCategorias() {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch('/api/categorias', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                categoriasData = await response.json();
+                renderTable(categoriasData);
+            } else {
+                throw new Error('Erro ao carregar categorias');
+            }
+        } catch (error) {
+            console.error('Erro ao carregar categorias:', error);
+            document.querySelector('#categoriasTable tbody').innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-circle me-2"></i>Erro ao carregar categorias
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    // Renderizar tabela
+    function renderTable(categorias) {
+        const tbody = document.querySelector('#categoriasTable tbody');
+
+        if (categorias.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-4">
+                        <i class="bi bi-inbox text-muted" style="font-size: 48px;"></i>
+                        <p class="text-muted mt-2 mb-0">Nenhuma categoria cadastrada</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = categorias.map(c => `
+            <tr>
+                <td>
+                    <div class="categoria-icon" style="background-color: ${c.cor || '#6366f1'};">
+                        <i class="bi ${c.icone || 'bi-tag'}"></i>
+                    </div>
+                </td>
+                <td>
+                    <strong>${c.nome}</strong>
+                </td>
+                <td>
+                    <span style="display: inline-flex; align-items: center; gap: 8px;">
+                        <span style="width: 20px; height: 20px; border-radius: 4px; background-color: ${c.cor || '#6366f1'};"></span>
+                        <code>${c.cor || '#6366f1'}</code>
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${c.ativo ? 'badge-success' : 'badge-danger'}">
+                        ${c.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-action btn-edit me-1" onclick="editarCategoria(${c.categoria_id})" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn-action btn-delete" onclick="abrirModalExcluir(${c.categoria_id}, '${c.nome}')" title="Excluir">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Abrir modal para nova categoria
+    function abrirModalNovo() {
+        document.getElementById('modalTitle').innerHTML = '<i class="bi bi-tags me-2"></i>Nova Categoria';
+        document.getElementById('categoriaForm').reset();
+        document.getElementById('categoriaId').value = '';
+        document.getElementById('cor').value = '#6366f1';
+        document.getElementById('ativo').checked = true;
+        selecionarIcone('bi-tag');
+        atualizarPreview();
+
+        const modal = new bootstrap.Modal(document.getElementById('categoriaModal'));
+        modal.show();
+    }
+
+    // Editar categoria
+    function editarCategoria(id) {
+        const categoria = categoriasData.find(c => c.categoria_id === id);
+        if (categoria) {
+            document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Editar Categoria';
+            document.getElementById('categoriaId').value = categoria.categoria_id;
+            document.getElementById('nome').value = categoria.nome;
+            document.getElementById('cor').value = categoria.cor || '#6366f1';
+            document.getElementById('ativo').checked = categoria.ativo === 1;
+            selecionarIcone(categoria.icone || 'bi-tag');
+            atualizarPreview();
+
+            const modal = new bootstrap.Modal(document.getElementById('categoriaModal'));
+            modal.show();
+        }
+    }
+
+    // Salvar categoria
+    async function salvarCategoria() {
+        const token = localStorage.getItem('token');
+        const categoriaData = {
+            nome: document.getElementById('nome').value,
+            icone: document.getElementById('icone').value,
+            cor: document.getElementById('cor').value,
+            ativo: document.getElementById('ativo').checked ? 1 : 0
+        };
+
+        if (!categoriaData.nome.trim()) {
+            alert('Por favor, informe o nome da categoria.');
+            return;
+        }
+
+        try {
+            const id = document.getElementById('categoriaId').value;
+            const url = id ? `/api/categorias/${id}` : '/api/categorias';
+            const method = id ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(categoriaData)
+            });
+
+            if (response.ok) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('categoriaModal'));
+                modal.hide();
+                loadCategorias();
+
+                // Mostrar mensagem de sucesso
+                const msg = id ? 'Categoria atualizada com sucesso!' : 'Categoria criada com sucesso!';
+                mostrarToast(msg, 'success');
+            } else {
+                const data = await response.json();
+                alert(data.detail || 'Erro ao salvar categoria');
+            }
+        } catch (error) {
+            console.error('Erro ao salvar categoria:', error);
+            alert('Erro ao salvar categoria');
+        }
+    }
+
+    // Abrir modal de exclusao
+    function abrirModalExcluir(id, nome) {
+        categoriaParaExcluir = id;
+        document.getElementById('deleteCategoriaNome').textContent = nome;
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+    }
+
+    // Confirmar exclusao
+    async function confirmarExclusao() {
+        if (!categoriaParaExcluir) return;
+
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch(`/api/categorias/${categoriaParaExcluir}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            modal.hide();
+
+            if (response.ok) {
+                loadCategorias();
+                mostrarToast('Categoria excluida com sucesso!', 'success');
+            } else {
+                const data = await response.json();
+                alert(data.detail || 'Erro ao excluir categoria');
+            }
+        } catch (error) {
+            console.error('Erro ao deletar categoria:', error);
+            alert('Erro ao excluir categoria');
+        }
+
+        categoriaParaExcluir = null;
+    }
+
+    // Mostrar toast de notificacao
+    function mostrarToast(mensagem, tipo) {
+        // Criar toast simples
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px;';
+        toast.innerHTML = `
+            <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            ${mensagem}
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', function() {
+        inicializarIcones();
+        loadCategorias();
+    });
+</script>
+{% endblock %}
