@@ -6,14 +6,15 @@
 {% block content %}
 <style>
     :root {
-        --primary: #4f46e5;
-        --primary-dark: #4338ca;
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
         --primary-light: #818cf8;
         --secondary: #0ea5e9;
-        --success: #10b981;
+        --success: #22c55e;
         --warning: #f59e0b;
         --danger: #ef4444;
         --dark: #1e293b;
+        --gray-50: #f8fafc;
         --gray-100: #f1f5f9;
         --gray-200: #e2e8f0;
         --gray-300: #cbd5e1;
@@ -22,8 +23,16 @@
         --gray-600: #475569;
     }
 
+    /* ===== LAYOUT GERAL ===== */
+    .dashboard-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* ===== HEADER ===== */
     .page-header {
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.5rem;
     }
 
     .page-header h2 {
@@ -35,316 +44,127 @@
 
     .page-header p {
         color: var(--gray-500);
-        font-size: 0.9rem;
+        font-size: 0.875rem;
         margin: 0;
     }
 
-    /* Stats Grid */
-    .stats-grid {
+    /* ===== CARDS PRINCIPAIS (TOPO) ===== */
+    .stats-row {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 1.25rem;
-        margin-bottom: 1.5rem;
+        gap: 1rem;
     }
 
     .stat-card {
         background: white;
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-
-    .stat-card-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1rem;
-    }
-
-    .stat-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-    }
-
-    .stat-icon.blue {
-        background: rgba(79, 70, 229, 0.1);
-        color: var(--primary);
-    }
-
-    .stat-icon.red {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger);
-    }
-
-    .stat-icon.orange {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--warning);
-    }
-
-    .stat-icon.green {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-    }
-
-    .stat-trend {
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .stat-trend.up {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-    }
-
-    .stat-trend.down {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger);
-    }
-
-    .stat-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--dark);
-        margin-bottom: 0.25rem;
-        line-height: 1.2;
-    }
-
-    .stat-label {
-        font-size: 0.875rem;
-        color: var(--gray-500);
-        font-weight: 500;
-    }
-
-    /* Insights Grid */
-    .insights-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.25rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .insight-card {
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        border-radius: 14px;
+        border-radius: 12px;
         padding: 1.25rem;
-        border-left: 4px solid var(--secondary);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        border: 1px solid var(--gray-100);
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         gap: 1rem;
     }
 
-    .insight-icon {
-        width: 50px;
-        height: 50px;
-        background: white;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        color: var(--secondary);
-        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transform: translateY(-2px);
     }
 
-    .insight-content h4 {
-        font-size: 0.8rem;
-        color: var(--gray-600);
-        margin-bottom: 0.25rem;
-        font-weight: 600;
+    /* Stat cards clicaveis */
+    .stat-card.clickable {
+        cursor: pointer;
+        user-select: none;
     }
 
-    .insight-content .value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--dark);
+    .stat-card.clickable:active {
+        transform: translateY(0);
     }
 
-    /* Advanced Insights Grid */
-    .advanced-insights-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 1.25rem;
-        margin-bottom: 1.5rem;
+    .stat-card.clickable.active {
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4), 0 4px 12px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
     }
 
-    .advanced-insight-card {
-        background: white;
-        border-radius: 14px;
-        padding: 1.25rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
+    .stat-card.clickable.active .stat-icon.novo {
+        background: var(--danger);
+        color: white;
     }
 
-    .advanced-insight-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    .stat-card.clickable.active .stat-icon.andamento {
+        background: var(--warning);
+        color: white;
     }
 
-    .advanced-insight-card.success {
-        border-left: 4px solid var(--success);
+    .stat-card.clickable.active .stat-icon.resolvido {
+        background: var(--success);
+        color: white;
     }
 
-    .advanced-insight-card.warning {
-        border-left: 4px solid var(--warning);
+    .stat-card.clickable.active .stat-icon.hoje {
+        background: var(--secondary);
+        color: white;
     }
 
-    .advanced-insight-card.danger {
-        border-left: 4px solid var(--danger);
-    }
-
-    .advanced-insight-card.info {
-        border-left: 4px solid var(--secondary);
-    }
-
-    .advanced-insight-card.primary {
-        border-left: 4px solid var(--primary);
-    }
-
-    .advanced-insight-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 0.75rem;
-    }
-
-    .advanced-insight-icon {
-        width: 42px;
-        height: 42px;
+    .stat-icon {
+        width: 48px;
+        height: 48px;
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.1rem;
+        font-size: 1.25rem;
+        flex-shrink: 0;
     }
 
-    .advanced-insight-icon.success {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
+    .stat-icon.total { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
+    .stat-icon.novo { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .stat-icon.andamento { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .stat-icon.resolvido { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+
+    .stat-content {
+        flex: 1;
+        min-width: 0;
     }
 
-    .advanced-insight-icon.warning {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--warning);
-    }
-
-    .advanced-insight-icon.danger {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger);
-    }
-
-    .advanced-insight-icon.info {
-        background: rgba(14, 165, 233, 0.1);
-        color: var(--secondary);
-    }
-
-    .advanced-insight-icon.primary {
-        background: rgba(79, 70, 229, 0.1);
-        color: var(--primary);
-    }
-
-    .advanced-insight-badge {
-        font-size: 0.7rem;
-        font-weight: 600;
-        padding: 3px 8px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        gap: 3px;
-    }
-
-    .advanced-insight-badge.positive {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-    }
-
-    .advanced-insight-badge.negative {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger);
-    }
-
-    .advanced-insight-badge.neutral {
-        background: rgba(100, 116, 139, 0.1);
-        color: var(--gray-500);
-    }
-
-    .advanced-insight-value {
-        font-size: 1.5rem;
+    .stat-value {
+        font-size: 1.75rem;
         font-weight: 700;
         color: var(--dark);
-        margin-bottom: 0.25rem;
         line-height: 1.2;
     }
 
-    .advanced-insight-label {
+    .stat-label {
         font-size: 0.8rem;
         color: var(--gray-500);
         font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .advanced-insight-sublabel {
-        font-size: 0.7rem;
-        color: var(--gray-400);
-        margin-top: 0.25rem;
-    }
-
-    @media (max-width: 1400px) {
-        .advanced-insights-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-
-    @media (max-width: 991px) {
-        .advanced-insights-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    @media (max-width: 576px) {
-        .advanced-insights-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* Cards */
-    .dashboard-card {
+    /* ===== SECAO DO MAPA (DESTAQUE) ===== */
+    .mapa-section {
         background: white;
         border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border: 1px solid var(--gray-100);
         overflow: hidden;
-        height: 100%;
     }
 
-    .dashboard-card .card-header {
-        padding: 1.25rem;
-        border-bottom: 1px solid var(--gray-200);
+    .mapa-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--gray-100);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: transparent;
+        flex-wrap: wrap;
+        gap: 1rem;
     }
 
-    .dashboard-card .card-header h5 {
-        font-size: 1rem;
+    .mapa-header h3 {
+        font-size: 1.1rem;
         font-weight: 600;
         color: var(--dark);
         margin: 0;
@@ -353,19 +173,57 @@
         gap: 0.5rem;
     }
 
-    .dashboard-card .card-header h5 i {
-        color: var(--gray-500);
+    .mapa-header h3 i {
+        color: var(--primary);
     }
 
-    .dashboard-card .card-body {
-        padding: 1.25rem;
+    .mapa-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
     }
 
-    /* Mapa */
+    .mapa-legenda {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .legenda-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.75rem;
+        color: var(--gray-600);
+        font-weight: 500;
+    }
+
+    .legenda-item .marker {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .legenda-item .marker.novo { background: var(--danger); }
+    .legenda-item .marker.andamento { background: var(--warning); }
+    .legenda-item .marker.resolvido { background: var(--success); }
+
     #mapaIncidencias {
-        height: 380px;
-        border-radius: 12px;
+        height: 520px;
         z-index: 1;
+    }
+
+    /* Ajuste para o mapa ocupar altura total no layout side-by-side */
+    .mapa-section.h-100 {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mapa-section.h-100 #mapaIncidencias {
+        flex: 1;
+        min-height: 480px;
     }
 
     .leaflet-popup-content-wrapper {
@@ -375,429 +233,942 @@
 
     .popup-content {
         padding: 8px;
-        min-width: 220px;
+        min-width: 200px;
     }
 
     .popup-content h6 {
         margin: 0 0 8px 0;
         color: var(--dark);
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
 
     .popup-content p {
         margin: 4px 0;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: var(--gray-500);
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
     }
 
     .popup-content img {
         width: 100%;
-        height: 90px;
+        height: 80px;
         object-fit: cover;
-        border-radius: 8px;
-        margin-bottom: 10px;
+        border-radius: 6px;
+        margin-bottom: 8px;
     }
 
-    .mapa-legenda {
-        display: flex;
-        gap: 1.25rem;
-        padding: 1rem;
-        background: var(--gray-100);
-        border-radius: 10px;
-        margin-top: 1rem;
+    .popup-content .btn-primary {
+        background-color: var(--primary) !important;
+        color: #ffffff !important;
+        border: none !important;
     }
 
-    .legenda-item {
+    .popup-content .btn-primary:hover {
+        background-color: var(--primary-dark) !important;
+    }
+
+    /* ===== SECAO SECUNDARIA (GRID FLEXIVEL) ===== */
+    .secondary-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .dashboard-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        border: 1px solid var(--gray-100);
+        overflow: hidden;
+    }
+
+    .dashboard-card .card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--gray-100);
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 0.85rem;
-        color: var(--gray-600);
+        justify-content: space-between;
+        background: transparent;
+    }
+
+    .dashboard-card .card-header h5 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .dashboard-card .card-header h5 i {
+        color: var(--gray-400);
+    }
+
+    .dashboard-card .card-body {
+        padding: 1rem 1.25rem;
+    }
+
+    /* ===== INSIGHTS COMPACTOS ===== */
+    .insights-compact {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .insight-mini {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.75rem;
+        background: var(--gray-50);
+        border-radius: 10px;
+        border: 1px solid var(--gray-100);
+    }
+
+    .insight-mini-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        background: white;
+        color: var(--secondary);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .insight-mini-content h4 {
+        font-size: 0.7rem;
+        color: var(--gray-500);
+        margin: 0 0 2px 0;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .insight-mini-content .value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    /* Insight mini clicavel */
+    .insight-mini.clickable {
+        transition: all 0.2s ease;
+    }
+
+    .insight-mini.clickable:hover {
+        background: var(--gray-100);
+        transform: translateX(4px);
+    }
+
+    .insight-mini.clickable.active {
+        background: rgba(14, 165, 233, 0.15);
+        border-color: var(--secondary);
+        box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3);
+    }
+
+    .insight-mini.clickable.active .insight-mini-icon.hoje {
+        background: var(--secondary);
+        color: white;
+    }
+
+    /* ===== METRICAS E ALERTAS (COMPACTOS) ===== */
+    .metrics-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+
+    .metric-card {
+        background: white;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        border: 1px solid var(--gray-100);
+        border-left: 3px solid var(--gray-300);
+    }
+
+    /* Metricas no painel lateral - mais compactas */
+    .col-lg-4 .metric-card {
+        padding: 0.6rem 0.75rem;
+    }
+
+    .col-lg-4 .metric-card .metric-value {
+        font-size: 1.25rem;
+    }
+
+    .col-lg-4 .metric-card .metric-label {
+        font-size: 0.65rem;
+    }
+
+    .col-lg-4 .metric-card .metric-sublabel {
+        font-size: 0.65rem;
+    }
+
+    .metric-card.success { border-left-color: var(--success); }
+    .metric-card.warning { border-left-color: var(--warning); }
+    .metric-card.danger { border-left-color: var(--danger); }
+    .metric-card.primary { border-left-color: var(--primary); }
+
+    .metric-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+        font-size: 0.75rem;
+        color: var(--gray-500);
         font-weight: 500;
     }
 
-    .legenda-item .marker {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    .metric-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-weight: 600;
     }
 
-    .legenda-item .marker.novo { background: var(--danger); }
-    .legenda-item .marker.andamento { background: var(--warning); }
-    .legenda-item .marker.resolvido { background: var(--success); }
+    .metric-badge.positive { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+    .metric-badge.negative { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .metric-badge.neutral { background: rgba(100, 116, 139, 0.1); color: var(--gray-500); }
 
-    /* Tabela moderna */
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark);
+        line-height: 1.2;
+    }
+
+    .metric-sublabel {
+        font-size: 0.7rem;
+        color: var(--gray-400);
+        margin-top: 0.25rem;
+    }
+
+    /* ===== GRAFICO DE CATEGORIAS ===== */
+    .chart-container {
+        position: relative;
+        height: 100%;
+        min-height: 400px;
+    }
+
+    /* ===== EVOLUCAO TEMPORAL ===== */
+    .evolucao-chart-container {
+        position: relative;
+        height: 220px;
+    }
+
+    .evolucao-legend {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--gray-100);
+    }
+
+    .evolucao-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        color: var(--gray-600);
+    }
+
+    .evolucao-legend-item .line {
+        width: 16px;
+        height: 3px;
+        border-radius: 2px;
+    }
+
+    /* ===== RANKING BAIRROS ===== */
+    .ranking-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .ranking-table thead th {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--gray-500);
+        padding: 0.6rem 0.5rem;
+        border-bottom: 1px solid var(--gray-200);
+        text-align: left;
+    }
+
+    .ranking-table tbody td {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.8rem;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: middle;
+    }
+
+    .ranking-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .ranking-position {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.7rem;
+    }
+
+    .ranking-position.pos-1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .ranking-position.pos-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: white; }
+    .ranking-position.pos-3 { background: linear-gradient(135deg, #d97706, #b45309); color: white; }
+    .ranking-position.pos-other { background: var(--gray-100); color: var(--gray-600); }
+
+    .ranking-bairro {
+        font-weight: 500;
+        color: var(--dark);
+    }
+
+    .ranking-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .ranking-count.high { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .ranking-count.medium { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .ranking-count.low { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+
+    .ranking-bar-container {
+        width: 100%;
+        height: 5px;
+        background: var(--gray-100);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .ranking-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.5s ease-out;
+    }
+
+    /* ===== TABELA ULTIMAS INCIDENCIAS ===== */
+    .table-section {
+        margin-top: 0;
+    }
+
     .table-modern {
         margin: 0;
         width: 100%;
     }
 
     .table-modern thead th {
-        background: var(--gray-100);
+        background: var(--gray-50);
         border-bottom: none;
         font-weight: 600;
         text-transform: uppercase;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         letter-spacing: 0.5px;
         color: var(--gray-500);
-        padding: 1rem;
+        padding: 0.75rem 1rem;
     }
 
     .table-modern tbody td {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
         vertical-align: middle;
         border-bottom: 1px solid var(--gray-100);
-        font-size: 0.875rem;
+        font-size: 0.8rem;
     }
 
     .table-modern tbody tr:hover {
-        background-color: var(--gray-100);
+        background-color: var(--gray-50);
     }
 
     .table-modern .incident-photo {
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
         object-fit: cover;
-        border: 2px solid var(--gray-200);
+        border: 1px solid var(--gray-200);
     }
 
     .status-badge {
         display: inline-flex;
         align-items: center;
-        padding: 0.35rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
         font-weight: 500;
     }
 
-    .status-badge.novo {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger);
+    .status-badge.novo { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .status-badge.andamento { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .status-badge.resolvido { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+
+    .tr-hover {
+        cursor: pointer;
+        transition: background-color 0.15s ease;
     }
 
-    .status-badge.andamento {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--warning);
+    .tr-hover:hover {
+        background-color: var(--gray-50) !important;
     }
 
-    .status-badge.resolvido {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-    }
-
-    .chart-container {
-        position: relative;
-        height: 260px;
-    }
-
-    /* Activity List */
-    .activity-list {
+    /* ===== ALERTAS COMPACTOS ===== */
+    .alertas-list {
         list-style: none;
         padding: 0;
         margin: 0;
+        max-height: 160px;
+        overflow-y: auto;
     }
 
-    .activity-item {
+    .alertas-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .alertas-list::-webkit-scrollbar-track {
+        background: var(--gray-100);
+        border-radius: 2px;
+    }
+
+    .alertas-list::-webkit-scrollbar-thumb {
+        background: var(--gray-300);
+        border-radius: 2px;
+    }
+
+    .alerta-item {
         display: flex;
-        gap: 1rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--gray-200);
+        gap: 0.75rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 0.4rem;
     }
 
-    .activity-item:last-child {
-        border-bottom: none;
+    .alerta-item:last-child {
+        margin-bottom: 0;
     }
 
-    .activity-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
+    .alerta-item.critico { background: rgba(239, 68, 68, 0.06); border-left: 2px solid var(--danger); }
+    .alerta-item.atencao { background: rgba(245, 158, 11, 0.06); border-left: 2px solid var(--warning); }
+    .alerta-item.info { background: rgba(99, 102, 241, 0.06); border-left: 2px solid var(--primary); }
+
+    .alerta-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
         flex-shrink: 0;
+        font-size: 0.8rem;
     }
 
-    .activity-icon.new {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger);
+    .alerta-item.critico .alerta-icon { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+    .alerta-item.atencao .alerta-icon { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+    .alerta-item.info .alerta-icon { background: rgba(99, 102, 241, 0.12); color: var(--primary); }
+
+    .alerta-content { flex: 1; min-width: 0; }
+
+    .alerta-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .activity-icon.progress {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--warning);
+    .alerta-desc {
+        font-size: 0.7rem;
+        color: var(--gray-500);
+        line-height: 1.3;
     }
 
-    .activity-icon.done {
-        background: rgba(16, 185, 129, 0.1);
+    .alertas-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        text-align: center;
+        color: var(--gray-400);
+    }
+
+    .alertas-empty i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
         color: var(--success);
     }
 
-    .activity-content {
-        flex: 1;
-    }
-
-    .activity-title {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--dark);
-        margin-bottom: 2px;
-    }
-
-    .activity-meta {
+    .alertas-empty p {
         font-size: 0.8rem;
+        margin: 0;
+    }
+
+    /* ===== TOP CIDADAOS ===== */
+    .top-cidadaos-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .top-cidadao-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: 10px;
+        background: var(--gray-50);
+        border: 1px solid var(--gray-100);
+        transition: all 0.2s ease;
+    }
+
+    .top-cidadao-item:hover {
+        background: var(--gray-100);
+        transform: translateX(4px);
+    }
+
+    .top-cidadao-item.primeiro {
+        background: linear-gradient(90deg, rgba(255, 215, 0, 0.12) 0%, var(--gray-50) 100%);
+        border-color: rgba(255, 215, 0, 0.3);
+    }
+
+    .top-cidadao-item.segundo {
+        background: linear-gradient(90deg, rgba(192, 192, 192, 0.12) 0%, var(--gray-50) 100%);
+        border-color: rgba(192, 192, 192, 0.3);
+    }
+
+    .top-cidadao-item.terceiro {
+        background: linear-gradient(90deg, rgba(205, 127, 50, 0.12) 0%, var(--gray-50) 100%);
+        border-color: rgba(205, 127, 50, 0.3);
+    }
+
+    .top-cidadao-medal {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+        border: 2px solid white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .top-cidadao-medal.ouro {
+        background: linear-gradient(135deg, #FFD700, #DAA520);
+        color: white;
+    }
+
+    .top-cidadao-medal.prata {
+        background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+        color: white;
+    }
+
+    .top-cidadao-medal.bronze {
+        background: linear-gradient(135deg, #CD7F32, #B8732E);
+        color: white;
+    }
+
+    .top-cidadao-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .top-cidadao-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .top-cidadao-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .top-cidadao-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--dark);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .top-cidadao-level {
+        font-size: 0.7rem;
         color: var(--gray-500);
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
-    /* Grids */
-    .grid-2-1 {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
+    .top-cidadao-points {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--primary);
+        white-space: nowrap;
     }
 
-    .grid-equal {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
+    .top-cidadaos-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        text-align: center;
+        color: var(--gray-400);
     }
 
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
+    .top-cidadaos-empty i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.5;
     }
 
-    .loading-pulse {
-        animation: pulse 1.5s ease-in-out infinite;
+    .top-cidadaos-empty p {
+        font-size: 0.75rem;
+        margin: 0;
     }
 
-    /* Responsivo */
+    /* ===== RESPONSIVO ===== */
     @media (max-width: 1200px) {
-        .stats-grid {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .metrics-row {
             grid-template-columns: repeat(2, 1fr);
         }
     }
 
     @media (max-width: 991px) {
-        .insights-grid {
+        .secondary-section {
             grid-template-columns: 1fr;
         }
-        .grid-2-1 {
-            grid-template-columns: 1fr;
-        }
-        .grid-equal {
+        .insights-compact {
             grid-template-columns: 1fr;
         }
         #mapaIncidencias {
-            height: 300px;
+            height: 350px;
+        }
+        .mapa-section.h-100 #mapaIncidencias {
+            min-height: 350px;
+        }
+        /* Cards laterais ficam abaixo do mapa em telas menores */
+        .col-lg-4 .d-flex.flex-column {
+            margin-top: 1rem;
         }
     }
 
-    @media (max-width: 576px) {
-        .stats-grid {
+    @media (max-width: 768px) {
+        .stats-row {
             grid-template-columns: 1fr;
+        }
+        .metrics-row {
+            grid-template-columns: 1fr;
+        }
+        .mapa-controls {
+            width: 100%;
+            justify-content: space-between;
+        }
+        .mapa-legenda {
+            order: 2;
+        }
+        /* Metricas compactas em coluna unica no mobile */
+        .col-lg-4 .row.g-2 .col-6 {
+            width: 100%;
         }
     }
 </style>
 
-<!-- Page Header -->
-<div class="page-header">
-    <h2><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
-    <p>Visão geral das incidências - Atualizado em tempo real</p>
-</div>
+<div class="dashboard-container">
+    <!-- HEADER -->
+    <div class="page-header" style="display: none;">
+    </div>
 
-<!-- Stats Grid -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-card-header">
-            <div class="stat-icon blue">
+    <!-- TOPO: CARDS PRINCIPAIS -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon total">
                 <i class="bi bi-list-check"></i>
             </div>
-            <span class="stat-trend up" id="trendTotal" style="display: none;">
-                <i class="bi bi-arrow-up"></i> <span>0%</span>
-            </span>
+            <div class="stat-content">
+                <div class="stat-value" id="incidenciasCount">-</div>
+                <div class="stat-label">Total de Incidências</div>
+            </div>
         </div>
-        <div class="stat-value" id="incidenciasCount">-</div>
-        <div class="stat-label">Total de Incidências</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-card-header">
-            <div class="stat-icon red">
+        <div class="stat-card clickable" data-filter="status" data-status="1" onclick="filtrarMapaPorStatus(this)" title="Clique para filtrar no mapa">
+            <div class="stat-icon novo">
                 <i class="bi bi-exclamation-triangle"></i>
             </div>
+            <div class="stat-content">
+                <div class="stat-value" id="NovosCount">-</div>
+                <div class="stat-label">Novas (Aguardando)</div>
+            </div>
         </div>
-        <div class="stat-value" id="NovosCount">-</div>
-        <div class="stat-label">Novas (Aguardando)</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-card-header">
-            <div class="stat-icon orange">
+        <div class="stat-card clickable" data-filter="status" data-status="2" onclick="filtrarMapaPorStatus(this)" title="Clique para filtrar no mapa">
+            <div class="stat-icon andamento">
                 <i class="bi bi-clock-history"></i>
             </div>
+            <div class="stat-content">
+                <div class="stat-value" id="EmAndamentoCount">-</div>
+                <div class="stat-label">Em Andamento</div>
+            </div>
         </div>
-        <div class="stat-value" id="EmAndamentoCount">-</div>
-        <div class="stat-label">Em Andamento</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-card-header">
-            <div class="stat-icon green">
+        <div class="stat-card clickable" data-filter="status" data-status="3" onclick="filtrarMapaPorStatus(this)" title="Clique para filtrar no mapa">
+            <div class="stat-icon resolvido">
                 <i class="bi bi-check-circle"></i>
             </div>
-        </div>
-        <div class="stat-value" id="ResolvidosCount">-</div>
-        <div class="stat-label">Resolvidas</div>
-    </div>
-</div>
-
-<!-- Insights Grid -->
-<div class="insights-grid">
-    <div class="insight-card">
-        <div class="insight-icon">
-            <i class="bi bi-calendar-day"></i>
-        </div>
-        <div class="insight-content">
-            <h4>Incidencias Hoje</h4>
-            <div class="value" id="totalHoje">-</div>
-        </div>
-    </div>
-    <div class="insight-card">
-        <div class="insight-icon">
-            <i class="bi bi-geo-alt-fill"></i>
-        </div>
-        <div class="insight-content">
-            <h4>Bairro Mais Ativo</h4>
-            <div class="value" id="bairroMais">-</div>
-        </div>
-    </div>
-    <div class="insight-card">
-        <div class="insight-icon">
-            <i class="bi bi-tag-fill"></i>
-        </div>
-        <div class="insight-content">
-            <h4>Categoria Principal</h4>
-            <div class="value" id="categoriaMais">-</div>
-        </div>
-    </div>
-</div>
-
-<!-- Advanced Insights Grid - Estatisticas Inteligentes -->
-<div class="advanced-insights-grid">
-    <!-- Taxa de Resolucao -->
-    <div class="advanced-insight-card success" id="cardTaxaResolucao">
-        <div class="advanced-insight-header">
-            <div class="advanced-insight-icon success">
-                <i class="bi bi-check2-all"></i>
-            </div>
-            <span class="advanced-insight-badge positive" id="badgeTaxaResolucao">
-                <i class="bi bi-arrow-up"></i> Bom
-            </span>
-        </div>
-        <div class="advanced-insight-value" id="taxaResolucao">-</div>
-        <div class="advanced-insight-label">Taxa de Resolucao</div>
-        <div class="advanced-insight-sublabel" id="taxaResolucaoDetalhe">Resolvidas vs Total</div>
-    </div>
-
-    <!-- Tempo Medio de Resolucao -->
-    <div class="advanced-insight-card info" id="cardTempoMedio">
-        <div class="advanced-insight-header">
-            <div class="advanced-insight-icon info">
-                <i class="bi bi-hourglass-split"></i>
-            </div>
-            <span class="advanced-insight-badge neutral" id="badgeTempoMedio">
-                <i class="bi bi-clock"></i> Media
-            </span>
-        </div>
-        <div class="advanced-insight-value" id="tempoMedioResolucao">-</div>
-        <div class="advanced-insight-label">Tempo Medio de Resolucao</div>
-        <div class="advanced-insight-sublabel">Dias para resolver</div>
-    </div>
-
-    <!-- Comparativo Semanal -->
-    <div class="advanced-insight-card warning" id="cardComparativoSemanal">
-        <div class="advanced-insight-header">
-            <div class="advanced-insight-icon warning">
-                <i class="bi bi-graph-up-arrow"></i>
-            </div>
-            <span class="advanced-insight-badge neutral" id="badgeComparativo">
-                <i class="bi bi-dash"></i> Estavel
-            </span>
-        </div>
-        <div class="advanced-insight-value" id="comparativoSemanal">-</div>
-        <div class="advanced-insight-label">Comparativo Semanal</div>
-        <div class="advanced-insight-sublabel" id="comparativoDetalhe">vs semana anterior</div>
-    </div>
-
-    <!-- Bairro Critico -->
-    <div class="advanced-insight-card danger" id="cardBairroCritico">
-        <div class="advanced-insight-header">
-            <div class="advanced-insight-icon danger">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-            </div>
-            <span class="advanced-insight-badge negative" id="badgeBairroCritico">
-                <i class="bi bi-geo-alt"></i> Alerta
-            </span>
-        </div>
-        <div class="advanced-insight-value" id="bairroCritico" style="font-size: 1.1rem;">-</div>
-        <div class="advanced-insight-label">Bairro Critico</div>
-        <div class="advanced-insight-sublabel" id="bairroCriticoQtd">Mais incidencias pendentes</div>
-    </div>
-
-    <!-- Categoria em Alta -->
-    <div class="advanced-insight-card primary" id="cardCategoriaAlta">
-        <div class="advanced-insight-header">
-            <div class="advanced-insight-icon primary">
-                <i class="bi bi-trending-up"></i>
-            </div>
-            <span class="advanced-insight-badge negative" id="badgeCategoriaAlta">
-                <i class="bi bi-arrow-up"></i> Alta
-            </span>
-        </div>
-        <div class="advanced-insight-value" id="categoriaEmAlta" style="font-size: 1.1rem;">-</div>
-        <div class="advanced-insight-label">Categoria em Alta</div>
-        <div class="advanced-insight-sublabel" id="categoriaAltaCrescimento">Mais cresceu no periodo</div>
-    </div>
-</div>
-
-<!-- Main Content Grid -->
-<div class="grid-2-1">
-    <!-- Mapa -->
-    <div class="dashboard-card">
-        <div class="card-header">
-            <h5><i class="bi bi-map"></i> Mapa de Incidências</h5>
-            <div class="d-flex align-items-center gap-2">
-                <select class="form-select form-select-sm" id="filtroBairro" style="width: 180px;">
-                    <option value="">Todos os Bairros</option>
-                </select>
-                <span class="badge bg-primary" id="totalMapa">0 pontos</span>
-                <a href="/mapa" class="btn btn-sm btn-outline-primary" title="Abrir mapa em tela cheia">
-                    <i class="bi bi-arrows-fullscreen"></i>
-                </a>
-            </div>
-        </div>
-        <div class="card-body">
-            <div id="mapaIncidencias"></div>
-            <div class="mapa-legenda">
-                <div class="legenda-item"><div class="marker novo"></div> Novo</div>
-                <div class="legenda-item"><div class="marker andamento"></div> Em Andamento</div>
-                <div class="legenda-item"><div class="marker resolvido"></div> Resolvido</div>
+            <div class="stat-content">
+                <div class="stat-value" id="ResolvidosCount">-</div>
+                <div class="stat-label">Resolvidas</div>
             </div>
         </div>
     </div>
 
-    <!-- Chart + Activity -->
-    <div class="d-flex flex-column gap-4">
+    <!-- SECAO PRINCIPAL: MAPA (2/3) + CARDS LATERAIS (1/3) -->
+    <div class="row g-3">
+        <!-- MAPA - 2/3 do espaco -->
+        <div class="col-lg-8">
+            <div class="mapa-section h-100">
+                <div class="mapa-header">
+                    <h3><i class="bi bi-map-fill"></i> Mapa de Incidências</h3>
+                    <div class="mapa-controls">
+                        <div class="mapa-legenda">
+                            <div class="legenda-item"><div class="marker novo"></div> Novo</div>
+                            <div class="legenda-item"><div class="marker andamento"></div> Andamento</div>
+                            <div class="legenda-item"><div class="marker resolvido"></div> Resolvido</div>
+                        </div>
+                        <select class="form-select form-select-sm" id="filtroBairro" style="width: 160px;">
+                            <option value="">Todos os Bairros</option>
+                        </select>
+                        <span class="badge bg-primary" id="totalMapa">0 pontos</span>
+                        <a href="/mapa" class="btn btn-sm btn-outline-primary" title="Abrir mapa em tela cheia">
+                            <i class="bi bi-arrows-fullscreen"></i>
+                        </a>
+                    </div>
+                </div>
+                <div id="mapaIncidencias"></div>
+            </div>
+        </div>
+
+        <!-- CARDS SECUNDARIOS - 1/3 do espaco -->
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-3">
+                <!-- Insights Compactos -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-lightning"></i> Insights Rápidos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-column gap-2">
+                            <div class="insight-mini clickable" data-filter="hoje" onclick="filtrarMapaPorHoje(this)" title="Clique para filtrar incidências de hoje no mapa" style="cursor: pointer;">
+                                <div class="insight-mini-icon hoje">
+                                    <i class="bi bi-calendar-day"></i>
+                                </div>
+                                <div class="insight-mini-content">
+                                    <h4>Incidências Hoje</h4>
+                                    <div class="value" id="totalHoje">-</div>
+                                </div>
+                            </div>
+                            <div class="insight-mini">
+                                <div class="insight-mini-icon">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                </div>
+                                <div class="insight-mini-content">
+                                    <h4>Bairro Mais Ativo</h4>
+                                    <div class="value" id="bairroMais">-</div>
+                                </div>
+                            </div>
+                            <div class="insight-mini">
+                                <div class="insight-mini-icon">
+                                    <i class="bi bi-tag-fill"></i>
+                                </div>
+                                <div class="insight-mini-content">
+                                    <h4>Categoria Principal</h4>
+                                    <div class="value" id="categoriaMais">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-bell"></i> Alertas</h5>
+                        <span class="badge bg-danger" id="alertasCount" style="display: none;">0</span>
+                    </div>
+                    <div class="card-body p-2">
+                        <ul class="alertas-list" id="alertasList">
+                            <li class="alertas-empty">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <p>Carregando alertas...</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Top 3 Cidadaos Ativos -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-trophy-fill" style="color: #FFD700;"></i> Top 3 Cidadaos</h5>
+                        <a href="/ranking" class="btn btn-sm btn-outline-primary" title="Ver ranking completo">
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="top-cidadaos-list" id="topCidadaosList">
+                            <div class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-primary"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ranking de Bairros Compacto -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-trophy"></i> Top 5 Bairros</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="ranking-table" id="rankingBairrosTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 36px;">#</th>
+                                    <th>Bairro</th>
+                                    <th style="width: 60px;">Qtd</th>
+                                    <th style="width: 60px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" class="text-center py-2">
+                                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Card de Feedback -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-star-fill" style="color: #f59e0b;"></i> Feedbacks</h5>
+                        <a href="/feedbacks" class="btn btn-sm btn-outline-primary" title="Ver todos feedbacks">
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2 text-center">
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <div class="fs-4 fw-bold text-warning" id="feedbackMediaAvaliacao">-</div>
+                                    <div class="small text-muted">Media</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <div class="fs-4 fw-bold text-primary" id="feedbackTotal">-</div>
+                                    <div class="small text-muted">Total</div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-center gap-1 mt-2" id="feedbackEstrelas">
+                                    <i class="bi bi-star text-muted"></i>
+                                    <i class="bi bi-star text-muted"></i>
+                                    <i class="bi bi-star text-muted"></i>
+                                    <i class="bi bi-star text-muted"></i>
+                                    <i class="bi bi-star text-muted"></i>
+                                </div>
+                                <div class="small text-muted mt-1">Taxa satisfacao: <span id="feedbackTaxaSatisfacao">-%</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metricas Compactas (2x2) -->
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="metric-card primary h-100">
+                            <div class="metric-header">
+                                <span class="metric-label">Taxa Resolucao</span>
+                                <span class="metric-badge positive" id="badgeResolucao">-</span>
+                            </div>
+                            <div class="metric-value" id="gaugeResolucaoValue">0%</div>
+                            <div class="metric-sublabel"><span id="gaugeResolvidasCount">0</span> de <span id="gaugeTotalCount">0</span></div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-card warning h-100">
+                            <div class="metric-header">
+                                <span class="metric-label">Tempo Medio</span>
+                                <span class="metric-badge neutral" id="tempoMedioTrendBadge">-</span>
+                            </div>
+                            <div class="metric-value"><span id="tempoMedioDias">-</span> <span style="font-size: 0.7rem; font-weight: 500; color: var(--gray-500);">dias</span></div>
+                            <div class="metric-sublabel">para resolver</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-card success h-100" id="cardComparativoSemanal">
+                            <div class="metric-header">
+                                <span class="metric-label">Comp. Semanal</span>
+                                <span class="metric-badge neutral" id="badgeComparativo">Estavel</span>
+                            </div>
+                            <div class="metric-value" id="comparativoSemanal">-</div>
+                            <div class="metric-sublabel" id="comparativoDetalhe">vs anterior</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-card danger h-100" id="cardBairroCritico">
+                            <div class="metric-header">
+                                <span class="metric-label">Bairro Critico</span>
+                                <span class="metric-badge negative" id="badgeBairroCritico">Alerta</span>
+                            </div>
+                            <div class="metric-value" id="bairroCritico" style="font-size: 0.85rem;">-</div>
+                            <div class="metric-sublabel" id="bairroCriticoQtd">pendentes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECAO SECUNDARIA: GRAFICOS -->
+    <div class="secondary-section">
+        <!-- Grafico de Categorias -->
         <div class="dashboard-card">
             <div class="card-header">
-                <h5><i class="bi bi-pie-chart"></i> Por Categoria</h5>
+                <h5><i class="bi bi-pie-chart"></i> Incidências por Categoria</h5>
             </div>
             <div class="card-body">
                 <div class="chart-container">
@@ -805,40 +1176,87 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Tabela de Últimas Incidências -->
-<div class="dashboard-card">
-    <div class="card-header">
-        <h5><i class="bi bi-clock"></i> Últimas Incidências Pendentes</h5>
-        <a href="/incidencias" class="btn btn-sm btn-primary">
-            <i class="bi bi-list me-1"></i>Ver Todas
-        </a>
+        <!-- Evolucao + Categoria em Alta -->
+        <div class="d-flex flex-column gap-3">
+            <!-- Evolucao Temporal Compacto -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5><i class="bi bi-graph-up"></i> Evolução (30 dias)</h5>
+                    <select class="form-select form-select-sm" id="evolucaoFiltro" style="width: 120px;">
+                        <option value="todas">Todas</option>
+                        <option value="novas">Novas</option>
+                        <option value="resolvidas">Resolvidas</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div class="evolucao-chart-container">
+                        <canvas id="evolucaoChart"></canvas>
+                    </div>
+                    <div class="evolucao-legend">
+                        <div class="evolucao-legend-item">
+                            <div class="line" style="background: var(--primary);"></div>
+                            <span>Total</span>
+                        </div>
+                        <div class="evolucao-legend-item">
+                            <div class="line" style="background: var(--success);"></div>
+                            <span>Resolvidas</span>
+                        </div>
+                        <div class="evolucao-legend-item">
+                            <div class="line" style="background: var(--danger);"></div>
+                            <span>Novas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categoria em Alta -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5><i class="bi bi-trending-up"></i> Categoria em Alta</h5>
+                    <span class="metric-badge negative" id="badgeCategoriaAlta">Alta</span>
+                </div>
+                <div class="card-body text-center py-4">
+                    <div style="font-size: 2.5rem; font-weight: 700; color: var(--dark);" id="categoriaEmAlta">-</div>
+                    <div style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.5rem;" id="categoriaAltaCrescimento">Mais cresceu no periodo</div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-modern" id="ultimasIncidencias">
-                <thead>
-                    <tr>
-                        <th>Foto</th>
-                        <th>Categoria</th>
-                        <th>Bairro</th>
-                        <th>Endereco</th>
-                        <th>Status</th>
-                        <th>Data</th>
-                        <th>Ação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colspan="7" class="text-center py-4">
-                            <div class="spinner-border text-primary spinner-border-sm me-2"></div>
-                            Carregando...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+
+    <!-- TABELA DE ULTIMAS INCIDENCIAS -->
+    <div class="dashboard-card table-section">
+        <div class="card-header">
+            <h5><i class="bi bi-clock"></i> Últimas Incidências Pendentes</h5>
+            <a href="/incidencias" class="btn btn-sm btn-primary">
+                <i class="bi bi-list me-1"></i>Ver Todas
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0" id="ultimasIncidencias">
+                    <thead>
+                        <tr style="text-align: center;">
+                            <th>ID</th>
+                            <th>Foto</th>
+                            <th>Categoria</th>
+                            <th>Bairro</th>
+                            <th>Descrição</th>
+                            <th>Status</th>
+                            <th>Prioridade</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8" class="text-center py-3">
+                                <div class="spinner-border text-primary spinner-border-sm me-2"></div>
+                                Carregando...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -849,27 +1267,34 @@
 <script>
     let mapa = null;
     let markersLayer = null;
+    let bairroPolygonLayer = null;
     let categoriasChartInstance = null;
+    let evolucaoChartInstance = null;
     let todasIncidenciasMapa = [];
     let bairrosCarregados = false;
+    let cidadePadrao = 'Cuiabá, MT, Brasil'; // Será atualizado dinamicamente
 
     async function loadDashboard() {
         const token = localStorage.getItem('token');
         if (!token) {
-            console.error('Token nao encontrado');
+            console.error('Token não encontrado');
             return;
         }
         const headers = { 'Authorization': `Bearer ${token}` };
 
         try {
-            // Carregar todos os dados em paralelo
-            const [counters, incidencias, categorias, mapaData, insights, estatisticasAvancadas] = await Promise.all([
+            const [counters, incidencias, categorias, mapaData, insights, estatisticasAvancadas, rankingBairros, evolucaoTemporal, alertas, topCidadaos, feedbackStats] = await Promise.all([
                 fetch(`/api/dashboard/counters2?t=${Date.now()}`, { headers }).then(r => r.json()),
                 fetch('/api/dashboard/ultimas-incidencias', { headers }).then(r => r.json()),
                 fetch('/api/dashboard/incidencias-por-categoria', { headers }).then(r => r.json()),
                 fetch('/api/dashboard/mapa-incidencias', { headers }).then(r => r.json()),
                 fetch('/api/dashboard/estatisticas-rapidas', { headers }).then(r => r.json()),
-                fetch('/api/dashboard/estatisticas-avancadas', { headers }).then(r => r.json())
+                fetch('/api/dashboard/estatisticas-avancadas', { headers }).then(r => r.json()),
+                fetch('/api/dashboard/ranking-bairros', { headers }).then(r => r.json()).catch(() => ({ bairros: [] })),
+                fetch('/api/dashboard/evolucao-temporal', { headers }).then(r => r.json()).catch(() => ({ dados: [] })),
+                fetch('/api/dashboard/alertas', { headers }).then(r => r.json()).catch(() => ({ alertas: [] })),
+                fetch('/api/ranking?limite=3', { headers }).then(r => r.json()).catch(() => []),
+                fetch('/api/feedback/estatisticas', { headers }).then(r => r.json()).catch(() => ({ total_feedbacks: 0, media_avaliacao: 0, taxa_satisfacao: 0 }))
             ]);
 
             // Animacao dos contadores
@@ -885,18 +1310,19 @@
 
             // Estatisticas Avancadas
             renderEstatisticasAvancadas(estatisticasAvancadas);
-
-            // Tabela de ultimas incidencias
+            renderMetricas(estatisticasAvancadas);
+            renderAlertas(alertas);
+            renderRankingBairros(rankingBairros);
+            renderEvolucaoTemporal(evolucaoTemporal);
             renderTabela(incidencias);
-
-            // Grafico de categorias
             renderGrafico(categorias);
+            renderTopCidadaos(topCidadaos);
+            renderFeedbackStats(feedbackStats);
 
             // Mapa
             todasIncidenciasMapa = mapaData.incidencias || [];
             renderMapa(mapaData);
 
-            // Carregar bairros no filtro
             if (!bairrosCarregados) {
                 carregarBairros(todasIncidenciasMapa);
                 bairrosCarregados = true;
@@ -907,53 +1333,34 @@
         }
     }
 
+    function renderFeedbackStats(dados) {
+        if (!dados) return;
+
+        // Media de avaliacao
+        const media = dados.media_avaliacao || 0;
+        document.getElementById('feedbackMediaAvaliacao').textContent = media.toFixed(1);
+        document.getElementById('feedbackTotal').textContent = dados.total_feedbacks || 0;
+        document.getElementById('feedbackTaxaSatisfacao').textContent = (dados.taxa_satisfacao || 0) + '%';
+
+        // Renderizar estrelas baseado na media
+        const estrelasContainer = document.getElementById('feedbackEstrelas');
+        let estrelasHtml = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= Math.floor(media)) {
+                estrelasHtml += '<i class="bi bi-star-fill" style="color: #f59e0b;"></i>';
+            } else if (i - 0.5 <= media) {
+                estrelasHtml += '<i class="bi bi-star-half" style="color: #f59e0b;"></i>';
+            } else {
+                estrelasHtml += '<i class="bi bi-star" style="color: var(--gray-300);"></i>';
+            }
+        }
+        estrelasContainer.innerHTML = estrelasHtml;
+    }
+
     function renderEstatisticasAvancadas(dados) {
         if (!dados) return;
 
-        // 1. Taxa de Resolucao
-        const taxaResolucao = dados.taxa_resolucao || 0;
-        document.getElementById('taxaResolucao').textContent = taxaResolucao + '%';
-        document.getElementById('taxaResolucaoDetalhe').textContent =
-            `${dados.total_resolvidas || 0} de ${dados.total_incidencias || 0} resolvidas`;
-
-        const cardTaxa = document.getElementById('cardTaxaResolucao');
-        const badgeTaxa = document.getElementById('badgeTaxaResolucao');
-        if (taxaResolucao >= 70) {
-            cardTaxa.className = 'advanced-insight-card success';
-            badgeTaxa.className = 'advanced-insight-badge positive';
-            badgeTaxa.innerHTML = '<i class="bi bi-check-circle"></i> Otimo';
-        } else if (taxaResolucao >= 50) {
-            cardTaxa.className = 'advanced-insight-card warning';
-            badgeTaxa.className = 'advanced-insight-badge neutral';
-            badgeTaxa.innerHTML = '<i class="bi bi-dash-circle"></i> Regular';
-        } else {
-            cardTaxa.className = 'advanced-insight-card danger';
-            badgeTaxa.className = 'advanced-insight-badge negative';
-            badgeTaxa.innerHTML = '<i class="bi bi-x-circle"></i> Baixa';
-        }
-
-        // 2. Tempo Medio de Resolucao
-        const tempoMedio = dados.tempo_medio_resolucao || 0;
-        document.getElementById('tempoMedioResolucao').textContent =
-            tempoMedio === 0 ? 'N/A' : tempoMedio + ' dias';
-
-        const cardTempo = document.getElementById('cardTempoMedio');
-        const badgeTempo = document.getElementById('badgeTempoMedio');
-        if (tempoMedio <= 3) {
-            cardTempo.className = 'advanced-insight-card success';
-            badgeTempo.className = 'advanced-insight-badge positive';
-            badgeTempo.innerHTML = '<i class="bi bi-lightning"></i> Rapido';
-        } else if (tempoMedio <= 7) {
-            cardTempo.className = 'advanced-insight-card warning';
-            badgeTempo.className = 'advanced-insight-badge neutral';
-            badgeTempo.innerHTML = '<i class="bi bi-clock"></i> Normal';
-        } else {
-            cardTempo.className = 'advanced-insight-card danger';
-            badgeTempo.className = 'advanced-insight-badge negative';
-            badgeTempo.innerHTML = '<i class="bi bi-hourglass"></i> Lento';
-        }
-
-        // 3. Comparativo Semanal
+        // Comparativo Semanal
         const comparativo = dados.comparativo_semanal || 0;
         const isPositivo = dados.comparativo_positivo;
 
@@ -968,142 +1375,469 @@
 
         const cardComp = document.getElementById('cardComparativoSemanal');
         const badgeComp = document.getElementById('badgeComparativo');
-        const iconComp = cardComp.querySelector('.advanced-insight-icon');
 
         if (isPositivo) {
-            cardComp.className = 'advanced-insight-card success';
-            badgeComp.className = 'advanced-insight-badge positive';
-            badgeComp.innerHTML = '<i class="bi bi-arrow-down"></i> Reducao';
-            iconComp.className = 'advanced-insight-icon success';
-            iconComp.innerHTML = '<i class="bi bi-graph-down-arrow"></i>';
+            cardComp.className = 'metric-card success';
+            badgeComp.className = 'metric-badge positive';
+            badgeComp.textContent = 'Redução';
         } else if (comparativo > 0) {
-            cardComp.className = 'advanced-insight-card danger';
-            badgeComp.className = 'advanced-insight-badge negative';
-            badgeComp.innerHTML = '<i class="bi bi-arrow-up"></i> Aumento';
-            iconComp.className = 'advanced-insight-icon danger';
-            iconComp.innerHTML = '<i class="bi bi-graph-up-arrow"></i>';
+            cardComp.className = 'metric-card danger';
+            badgeComp.className = 'metric-badge negative';
+            badgeComp.textContent = 'Aumento';
         } else {
-            cardComp.className = 'advanced-insight-card info';
-            badgeComp.className = 'advanced-insight-badge neutral';
-            badgeComp.innerHTML = '<i class="bi bi-dash"></i> Estavel';
-            iconComp.className = 'advanced-insight-icon info';
+            cardComp.className = 'metric-card primary';
+            badgeComp.className = 'metric-badge neutral';
+            badgeComp.textContent = 'Estável';
         }
 
-        // 4. Bairro Critico
+        // Bairro Critico
         const bairroCritico = dados.bairro_critico || 'N/A';
         const bairroCriticoQtd = dados.bairro_critico_qtd || 0;
         document.getElementById('bairroCritico').textContent = bairroCritico;
         document.getElementById('bairroCriticoQtd').textContent =
-            bairroCriticoQtd > 0 ? `${bairroCriticoQtd} incidencias pendentes` : 'Sem pendencias';
+            bairroCriticoQtd > 0 ? `${bairroCriticoQtd} incidências pendentes` : 'Sem pendências';
 
         const cardBairro = document.getElementById('cardBairroCritico');
         const badgeBairro = document.getElementById('badgeBairroCritico');
         if (bairroCriticoQtd === 0 || bairroCritico === 'N/A') {
-            cardBairro.className = 'advanced-insight-card success';
-            badgeBairro.className = 'advanced-insight-badge positive';
-            badgeBairro.innerHTML = '<i class="bi bi-check"></i> OK';
+            cardBairro.className = 'metric-card success';
+            badgeBairro.className = 'metric-badge positive';
+            badgeBairro.textContent = 'OK';
         } else if (bairroCriticoQtd <= 5) {
-            cardBairro.className = 'advanced-insight-card warning';
-            badgeBairro.className = 'advanced-insight-badge neutral';
-            badgeBairro.innerHTML = '<i class="bi bi-exclamation"></i> Atencao';
+            cardBairro.className = 'metric-card warning';
+            badgeBairro.className = 'metric-badge neutral';
+            badgeBairro.textContent = 'Atenção';
         } else {
-            cardBairro.className = 'advanced-insight-card danger';
-            badgeBairro.className = 'advanced-insight-badge negative';
-            badgeBairro.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Critico';
+            cardBairro.className = 'metric-card danger';
+            badgeBairro.className = 'metric-badge negative';
+            badgeBairro.textContent = 'Crítico';
         }
 
-        // 5. Categoria em Alta
+        // Categoria em Alta
         const categoriaAlta = dados.categoria_em_alta || 'N/A';
         const crescimento = dados.categoria_em_alta_crescimento || 0;
         document.getElementById('categoriaEmAlta').textContent = categoriaAlta;
         document.getElementById('categoriaAltaCrescimento').textContent =
-            crescimento > 0 ? `+${crescimento}% esta semana` : 'Sem variacao significativa';
+            crescimento > 0 ? `+${crescimento}% esta semana` : 'Sem variação significativa';
 
-        const cardCat = document.getElementById('cardCategoriaAlta');
         const badgeCat = document.getElementById('badgeCategoriaAlta');
         if (crescimento === 0 || categoriaAlta === 'N/A') {
-            cardCat.className = 'advanced-insight-card info';
-            badgeCat.className = 'advanced-insight-badge neutral';
-            badgeCat.innerHTML = '<i class="bi bi-dash"></i> Estavel';
+            badgeCat.className = 'metric-badge neutral';
+            badgeCat.textContent = 'Estável';
         } else if (crescimento <= 20) {
-            cardCat.className = 'advanced-insight-card warning';
-            badgeCat.className = 'advanced-insight-badge neutral';
-            badgeCat.innerHTML = '<i class="bi bi-arrow-up"></i> Moderado';
+            badgeCat.className = 'metric-badge neutral';
+            badgeCat.textContent = 'Moderado';
         } else {
-            cardCat.className = 'advanced-insight-card danger';
-            badgeCat.className = 'advanced-insight-badge negative';
-            badgeCat.innerHTML = '<i class="bi bi-arrow-up"></i> Alto';
+            badgeCat.className = 'metric-badge negative';
+            badgeCat.textContent = 'Alto';
         }
     }
+
+    function renderMetricas(dados) {
+        if (!dados) return;
+
+        // Taxa de Resolucao
+        const taxaResolucao = dados.taxa_resolucao || 0;
+        const totalResolvidas = dados.total_resolvidas || 0;
+        const totalIncidencias = dados.total_incidencias || 0;
+
+        document.getElementById('gaugeResolucaoValue').textContent = taxaResolucao + '%';
+        document.getElementById('gaugeResolvidasCount').textContent = totalResolvidas;
+        document.getElementById('gaugeTotalCount').textContent = totalIncidencias;
+
+        const badgeRes = document.getElementById('badgeResolucao');
+        if (taxaResolucao >= 70) {
+            badgeRes.className = 'metric-badge positive';
+            badgeRes.textContent = 'Ótimo';
+        } else if (taxaResolucao >= 40) {
+            badgeRes.className = 'metric-badge neutral';
+            badgeRes.textContent = 'Regular';
+        } else {
+            badgeRes.className = 'metric-badge negative';
+            badgeRes.textContent = 'Baixa';
+        }
+
+        // Tempo Medio
+        const tempoMedio = dados.tempo_medio_resolucao || 0;
+        const tempoMedioAnterior = dados.tempo_medio_anterior || 0;
+
+        document.getElementById('tempoMedioDias').textContent = tempoMedio === 0 ? '-' : tempoMedio;
+
+        const badgeTempo = document.getElementById('tempoMedioTrendBadge');
+        if (tempoMedioAnterior > 0 && tempoMedio > 0) {
+            const diferenca = tempoMedio - tempoMedioAnterior;
+            if (diferenca < 0) {
+                badgeTempo.className = 'metric-badge positive';
+                badgeTempo.textContent = 'Melhorou';
+            } else if (diferenca > 0) {
+                badgeTempo.className = 'metric-badge negative';
+                badgeTempo.textContent = 'Piorou';
+            } else {
+                badgeTempo.className = 'metric-badge neutral';
+                badgeTempo.textContent = 'Estável';
+            }
+        } else {
+            badgeTempo.className = 'metric-badge neutral';
+            badgeTempo.textContent = 'N/A';
+        }
+    }
+
+    function renderAlertas(dados) {
+        const alertasList = document.getElementById('alertasList');
+        const alertasCountBadge = document.getElementById('alertasCount');
+
+        if (!dados || !dados.alertas || dados.alertas.length === 0) {
+            alertasList.innerHTML = `
+                <li class="alertas-empty">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <p>Nenhum alerta no momento</p>
+                </li>
+            `;
+            alertasCountBadge.style.display = 'none';
+            return;
+        }
+
+        const alertas = dados.alertas;
+        alertasCountBadge.textContent = alertas.length;
+        alertasCountBadge.style.display = 'inline-flex';
+
+        alertasList.innerHTML = alertas.map(alerta => {
+            let tipoClass = 'info';
+            let icone = 'bi-info-circle';
+
+            if (alerta.tipo === 'critico') {
+                tipoClass = 'critico';
+                icone = 'bi-exclamation-triangle-fill';
+            } else if (alerta.tipo === 'atencao') {
+                tipoClass = 'atencao';
+                icone = 'bi-exclamation-circle-fill';
+            }
+
+            return `
+                <li class="alerta-item ${tipoClass}">
+                    <div class="alerta-icon">
+                        <i class="bi ${icone}"></i>
+                    </div>
+                    <div class="alerta-content">
+                        <div class="alerta-title">${alerta.titulo}</div>
+                        <div class="alerta-desc">${alerta.descricao}</div>
+                    </div>
+                </li>
+            `;
+        }).join('');
+    }
+
+    function renderTopCidadaos(dados) {
+        const container = document.getElementById('topCidadaosList');
+
+        if (!dados || dados.length === 0) {
+            container.innerHTML = `
+                <div class="top-cidadaos-empty">
+                    <i class="bi bi-trophy"></i>
+                    <p>Nenhum cidadao no ranking ainda</p>
+                </div>
+            `;
+            return;
+        }
+
+        const NIVEIS = {
+            1: { nome: 'Iniciante', icone: 'bi-1-circle' },
+            2: { nome: 'Colaborador', icone: 'bi-2-circle' },
+            3: { nome: 'Engajado', icone: 'bi-3-circle' },
+            4: { nome: 'Ativo', icone: 'bi-4-circle' },
+            5: { nome: 'Lider', icone: 'bi-5-circle' }
+        };
+
+        container.innerHTML = dados.slice(0, 3).map((cidadao, index) => {
+            const posicao = index + 1;
+            let medalClass = 'ouro';
+            let itemClass = 'primeiro';
+            if (posicao === 2) { medalClass = 'prata'; itemClass = 'segundo'; }
+            if (posicao === 3) { medalClass = 'bronze'; itemClass = 'terceiro'; }
+
+            const iniciais = getIniciaisCidadao(cidadao.nome);
+            const avatarContent = cidadao.foto
+                ? `<img src="${construirUrlFoto(cidadao.foto)}" alt="${cidadao.nome}" onerror="this.parentElement.innerHTML='${iniciais}'">`
+                : iniciais;
+
+            const nivelInfo = NIVEIS[cidadao.nivel] || NIVEIS[1];
+
+            return `
+                <div class="top-cidadao-item ${itemClass}">
+                    <div class="top-cidadao-medal ${medalClass}">
+                        <i class="bi bi-trophy-fill"></i>
+                    </div>
+                    <div class="top-cidadao-avatar">${avatarContent}</div>
+                    <div class="top-cidadao-info">
+                        <div class="top-cidadao-name" title="${cidadao.nome}">${cidadao.nome}</div>
+                        <div class="top-cidadao-level">
+                            <i class="bi ${nivelInfo.icone}"></i>
+                            ${nivelInfo.nome}
+                        </div>
+                    </div>
+                    <div class="top-cidadao-points">${(cidadao.pontos_totais || 0).toLocaleString('pt-BR')} pts</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function getIniciaisCidadao(nome) {
+        if (!nome) return '?';
+        const partes = nome.trim().split(' ');
+        if (partes.length === 1) return partes[0].charAt(0).toUpperCase();
+        return (partes[0].charAt(0) + partes[partes.length - 1].charAt(0)).toUpperCase();
+    }
+
+    function renderRankingBairros(dados) {
+        const tbody = document.querySelector('#rankingBairrosTable tbody');
+
+        if (!dados || !dados.bairros || dados.bairros.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-2 text-muted">
+                        <small>Sem dados de ranking</small>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        const bairros = dados.bairros.slice(0, 5);
+        const maxQtd = bairros[0]?.total || 1;
+
+        tbody.innerHTML = bairros.map((bairro, index) => {
+            const posicao = index + 1;
+            let posClass = 'pos-other';
+            if (posicao === 1) posClass = 'pos-1';
+            else if (posicao === 2) posClass = 'pos-2';
+            else if (posicao === 3) posClass = 'pos-3';
+
+            let countClass = 'low';
+            if (bairro.total >= 10) countClass = 'high';
+            else if (bairro.total >= 5) countClass = 'medium';
+
+            const barWidth = (bairro.total / maxQtd) * 100;
+            let barColor = '#22c55e';
+            if (bairro.total >= 10) barColor = '#ef4444';
+            else if (bairro.total >= 5) barColor = '#f59e0b';
+
+            return `
+                <tr>
+                    <td><div class="ranking-position ${posClass}">${posicao}</div></td>
+                    <td><span class="ranking-bairro">${bairro.nome}</span></td>
+                    <td><span class="ranking-count ${countClass}">${bairro.total}</span></td>
+                    <td>
+                        <div class="ranking-bar-container">
+                            <div class="ranking-bar" style="width: ${barWidth}%; background: ${barColor};"></div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderEvolucaoTemporal(dados) {
+        const ctx = document.getElementById('evolucaoChart');
+        if (!ctx) return;
+
+        if (evolucaoChartInstance) {
+            evolucaoChartInstance.destroy();
+        }
+
+        let labels = [];
+        let dataTotal = [];
+        let dataResolvidas = [];
+        let dataNovas = [];
+
+        if (dados && dados.dados && dados.dados.length > 0) {
+            labels = dados.dados.map(d => {
+                const date = new Date(d.data);
+                return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            });
+            dataTotal = dados.dados.map(d => d.total || 0);
+            dataResolvidas = dados.dados.map(d => d.resolvidas || 0);
+            dataNovas = dados.dados.map(d => d.novas || 0);
+        } else {
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+                dataTotal.push(0);
+                dataResolvidas.push(0);
+                dataNovas.push(0);
+            }
+        }
+
+        evolucaoChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Total',
+                        data: dataTotal,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    },
+                    {
+                        label: 'Resolvidas',
+                        data: dataResolvidas,
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    },
+                    {
+                        label: 'Novas',
+                        data: dataNovas,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        cornerRadius: 6,
+                        padding: 10,
+                        displayColors: true,
+                        boxPadding: 3
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 9 }, color: '#94a3b8', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        ticks: { font: { size: 9 }, color: '#94a3b8', stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+
+    document.getElementById('evolucaoFiltro')?.addEventListener('change', async function() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const filtro = this.value;
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        try {
+            const response = await fetch(`/api/dashboard/evolucao-temporal?filtro=${filtro}`, { headers });
+            const dados = await response.json();
+            renderEvolucaoTemporal(dados);
+        } catch (error) {
+            console.error('Erro ao atualizar evolucao temporal:', error);
+        }
+    });
 
     function renderTabela(incidencias) {
         const tbody = document.querySelector('#ultimasIncidencias tbody');
 
         if (!incidencias || incidencias.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Nenhuma incidência pendente</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-3 text-muted">Nenhuma incidência pendente</td></tr>';
             return;
         }
 
         tbody.innerHTML = incidencias.map(i => `
-            <tr>
+            <tr style="text-align: center; cursor: pointer;" onclick="window.location.href='/incidencias/${i.incidencia_id}'" class="tr-hover">
+                <td>${i.incidencia_id}</td>
                 <td>
-                    <a href="/incidencias/${i.incidencia_id}">
-                        <img src="/fotos/${i.foto}" class="incident-photo" alt="${i.bairro || ''}" onerror="this.src='/static/images/no-image.png'">
-                    </a>
+                    ${i.foto ? `<img src="${construirUrlFoto(i.foto)}" width="40" height="40"
+                        class="d-block rounded-2 border incident-photo" onerror="this.src='/static/images/no-image.png'">` : '-'}
                 </td>
-                <td><strong>${i.categoria_nome}</strong></td>
-                <td>${i.bairro || '-'}</td>
-                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${i.endereco || '-'}</td>
-                <td><span class="status-badge ${getStatusClass(i.status_nome)}">${i.status_nome}</span></td>
-                <td>${formatarData(i.data_hora)}</td>
-                <td>
-                    <a href="/incidencias/${i.incidencia_id}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                </td>
+                <td>${i.categoria_nome || ''}</td>
+                <td>${i.bairro || ''}</td>
+                <td style="text-align: left; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${i.descricao || ''}</td>
+                <td>${i.status_nome || 'Pendente'}</td>
+                <td>${i.prioridade_nome || ''}</td>
+                <td>${i.data_hora ? new Date(i.data_hora).toLocaleDateString() : ''}</td>
             </tr>
         `).join('');
     }
 
     function renderGrafico(dados) {
-        if (!dados || dados.length === 0) return;
+        if (!dados || dados.length === 0) {
+            document.getElementById('categoriasChart').parentElement.innerHTML =
+                '<div class="text-center text-muted py-5"><i class="bi bi-bar-chart fs-1"></i><p class="mt-2">Sem dados para exibir</p></div>';
+            return;
+        }
 
         const ctx = document.getElementById('categoriasChart');
         if (!ctx) return;
 
-        // Destruir grafico anterior se existir
         if (categoriasChartInstance) {
             categoriasChartInstance.destroy();
         }
 
+        // Cores gradientes para barras
+        const cores = [
+            '#4f46e5', '#6366f1', '#818cf8', '#10b981', '#34d399',
+            '#f59e0b', '#fbbf24', '#ef4444', '#f87171', '#8b5cf6'
+        ];
+
         categoriasChartInstance = new Chart(ctx, {
-            type: 'doughnut',
+            type: 'bar',
             data: {
                 labels: dados.map(d => d.categoria),
                 datasets: [{
+                    label: 'Incidências',
                     data: dados.map(d => d.total),
-                    backgroundColor: [
-                        '#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-                        '#0ea5e9', '#ec4899', '#f97316', '#14b8a6', '#6366f1'
-                    ],
-                    borderWidth: 0,
-                    spacing: 2
+                    backgroundColor: dados.map((_, i) => cores[i % cores.length]),
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    barThickness: 32
                 }]
             },
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 16,
-                            usePointStyle: true,
-                            font: { size: 12 }
-                        }
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        cornerRadius: 8
                     }
                 },
-                cutout: '68%'
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { display: false },
+                        ticks: { font: { size: 12 } }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { font: { size: 12, weight: '500' } }
+                    }
+                }
             }
         });
     }
@@ -1112,55 +1846,59 @@
         const mapContainer = document.getElementById('mapaIncidencias');
         if (!mapContainer) return;
 
-        // Inicializar mapa
         if (!mapa) {
             mapa = L.map('mapaIncidencias').setView([data.centro.lat, data.centro.lng], 13);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 20
             }).addTo(mapa);
 
-            markersLayer = L.layerGroup().addTo(mapa);
+            markersLayer = L.markerClusterGroup().addTo(mapa);
         }
 
-        // Limpar marcadores anteriores
         markersLayer.clearLayers();
 
         const incidencias = data.incidencias || [];
         document.getElementById('totalMapa').textContent = `${incidencias.length} pontos`;
 
-        if (incidencias.length === 0) {
-            return;
-        }
+        if (incidencias.length === 0) return;
 
-        // Adicionar marcadores
         incidencias.forEach(inc => {
-            const cor = getMarkerColor(inc.status);
+            const cor = inc.categoria_cor || getMarkerColor(inc.status);
+            const icone = inc.categoria_icone || 'bi-tag';
+            const statusBorder = getMarkerColor(inc.status);
 
             const customIcon = L.divIcon({
                 className: 'custom-marker',
                 html: `<div style="
                     background: ${cor};
-                    width: 24px;
-                    height: 24px;
+                    width: 32px;
+                    height: 32px;
                     border-radius: 50%;
-                    border: 3px solid white;
+                    border: 3px solid ${statusBorder};
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                "></div>`,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <i class="bi ${icone}" style="color: white; font-size: 14px;"></i>
+                </div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
             });
 
             const popupContent = `
                 <div class="popup-content">
-                    ${inc.foto ? `<img src="/fotos/${inc.foto}" onerror="this.style.display='none'" alt="">` : ''}
+                    ${inc.foto ? `<img src="${construirUrlFoto(inc.foto)}" onerror="this.style.display='none'" alt="">` : ''}
                     <h6>${inc.categoria}</h6>
                     <p><i class="bi bi-geo-alt"></i> ${inc.bairro || 'Sem bairro'}</p>
-                    <p><i class="bi bi-pin-map"></i> ${inc.endereco || 'Sem endereco'}</p>
+                    <p><i class="bi bi-pin-map"></i> ${inc.endereco || 'Sem endereço'}</p>
                     <p><i class="bi bi-calendar"></i> ${inc.data}</p>
                     <span class="badge ${getStatusBadgeClass(inc.status)}">${inc.status_nome}</span>
                     <br><br>
-                    <a href="/incidencias/${inc.id}" class="btn btn-sm btn-primary w-100">
+                    <a href="/incidencia/${inc.id}/detalhe" class="btn btn-sm btn-primary w-100">
                         <i class="bi bi-eye me-1"></i>Ver Detalhes
                     </a>
                 </div>
@@ -1171,7 +1909,6 @@
                 .addTo(markersLayer);
         });
 
-        // Ajustar zoom para mostrar todos os pontos
         if (incidencias.length > 1) {
             const bounds = L.latLngBounds(incidencias.map(i => [i.lat, i.lng]));
             mapa.fitBounds(bounds, { padding: [50, 50] });
@@ -1180,10 +1917,10 @@
 
     function getMarkerColor(status) {
         switch(status) {
-            case 1: return '#ef4444'; // Novo - Vermelho
-            case 2: return '#f59e0b'; // Em Andamento - Amarelo
-            case 3: return '#10b981'; // Resolvido - Verde
-            default: return '#64748b'; // Cinza
+            case 1: return '#ef4444';
+            case 2: return '#f59e0b';
+            case 3: return '#10b981';
+            default: return '#64748b';
         }
     }
 
@@ -1194,20 +1931,6 @@
             case 3: return 'bg-success';
             default: return 'bg-secondary';
         }
-    }
-
-    function getStatusClass(status) {
-        const s = status.toLowerCase();
-        if (s.includes('novo') || s.includes('aberto') || s.includes('pendente')) return 'novo';
-        if (s.includes('andamento') || s.includes('analise')) return 'andamento';
-        if (s.includes('resolv') || s.includes('conclu') || s.includes('finaliz')) return 'resolvido';
-        return 'andamento';
-    }
-
-    function formatarData(dataStr) {
-        if (!dataStr) return '-';
-        const data = new Date(dataStr);
-        return data.toLocaleDateString('pt-BR');
     }
 
     function animateValue(id, start, end, duration) {
@@ -1249,6 +1972,130 @@
         });
     }
 
+    // Desenha área ao redor das incidências do bairro selecionado
+    function desenharAreaIncidencias(incidenciasDoBairro, nomeBairro) {
+        const pontos = incidenciasDoBairro.filter(i => i.lat && i.lng).map(i => [parseFloat(i.lat), parseFloat(i.lng)]);
+
+        if (pontos.length === 0) return;
+
+        // Criar grupo de layers
+        bairroPolygonLayer = L.featureGroup().addTo(mapa);
+
+        if (pontos.length === 1) {
+            // Se há apenas 1 ponto, desenha círculo ao redor dele
+            L.circle(pontos[0], {
+                radius: 500,
+                color: '#6366f1',
+                weight: 3,
+                opacity: 0.9,
+                fillColor: '#6366f1',
+                fillOpacity: 0.1,
+                dashArray: '8, 8'
+            }).addTo(bairroPolygonLayer);
+        } else if (pontos.length === 2) {
+            // Se há 2 pontos, desenha linha e área ao redor
+            const centroLat = (pontos[0][0] + pontos[1][0]) / 2;
+            const centroLng = (pontos[0][1] + pontos[1][1]) / 2;
+            const dist = Math.sqrt(Math.pow(pontos[1][0] - pontos[0][0], 2) + Math.pow(pontos[1][1] - pontos[0][1], 2)) * 111000;
+
+            L.circle([centroLat, centroLng], {
+                radius: Math.max(dist / 2 + 300, 500),
+                color: '#6366f1',
+                weight: 3,
+                opacity: 0.9,
+                fillColor: '#6366f1',
+                fillOpacity: 0.1,
+                dashArray: '8, 8'
+            }).addTo(bairroPolygonLayer);
+        } else {
+            // Se há 3+ pontos, usar convex hull para criar polígono
+            // Algoritmo Gift Wrapping (Jarvis March) simplificado
+            const pontosOrdenados = [...pontos].sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+
+            const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+
+            const lower = [];
+            for (const p of pontosOrdenados) {
+                while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+                    lower.pop();
+                }
+                lower.push(p);
+            }
+
+            const upper = [];
+            for (let i = pontosOrdenados.length - 1; i >= 0; i--) {
+                const p = pontosOrdenados[i];
+                while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+                    upper.pop();
+                }
+                upper.push(p);
+            }
+
+            lower.pop();
+            upper.pop();
+            const hull = lower.concat(upper);
+
+            // Expandir o hull um pouco para dar margem
+            const centroLat = hull.reduce((sum, p) => sum + p[0], 0) / hull.length;
+            const centroLng = hull.reduce((sum, p) => sum + p[1], 0) / hull.length;
+
+            const expandido = hull.map(p => [
+                centroLat + (p[0] - centroLat) * 1.15,
+                centroLng + (p[1] - centroLng) * 1.15
+            ]);
+
+            L.polygon(expandido, {
+                color: '#6366f1',
+                weight: 3,
+                opacity: 0.9,
+                fillColor: '#6366f1',
+                fillOpacity: 0.1,
+                dashArray: '8, 8'
+            }).addTo(bairroPolygonLayer);
+        }
+
+        // Calcular centro para o label
+        const centroLat = pontos.reduce((sum, p) => sum + p[0], 0) / pontos.length;
+        const centroLng = pontos.reduce((sum, p) => sum + p[1], 0) / pontos.length;
+
+        // Adicionar label do bairro no topo
+        L.marker([centroLat, centroLng], {
+            icon: L.divIcon({
+                className: 'bairro-label',
+                html: `<div style="background: rgba(99, 102, 241, 0.95); color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+                    <i class="bi bi-geo-alt-fill" style="margin-right: 4px;"></i>${nomeBairro}
+                    <span style="margin-left: 8px; opacity: 0.8;">(${incidenciasDoBairro.length})</span>
+                </div>`,
+                iconSize: [150, 30],
+                iconAnchor: [75, 15]
+            })
+        }).addTo(bairroPolygonLayer);
+
+        // Ajustar zoom para mostrar todas as incidências do bairro
+        const bounds = L.latLngBounds(pontos);
+        mapa.fitBounds(bounds, { padding: [60, 60] });
+    }
+
+    function buscarPoligonoBairro(bairro) {
+        // Limpar poligono anterior
+        if (bairroPolygonLayer) {
+            mapa.removeLayer(bairroPolygonLayer);
+            bairroPolygonLayer = null;
+        }
+
+        if (!bairro) return;
+
+        // Buscar incidências do bairro
+        const incidenciasDoBairro = todasIncidenciasMapa.filter(i => i.bairro === bairro);
+
+        // Desenhar área baseada nas incidências do bairro selecionado
+        if (incidenciasDoBairro.length > 0) {
+            desenharAreaIncidencias(incidenciasDoBairro, bairro);
+        } else {
+            console.log(`Nenhuma incidência encontrada no bairro: ${bairro}`);
+        }
+    }
+
     function filtrarPorBairro() {
         const bairro = document.getElementById('filtroBairro').value;
 
@@ -1261,15 +2108,117 @@
             centro: { lat: -22.9068, lng: -43.1729 },
             incidencias: incidenciasFiltradas
         });
+
+        // Buscar e desenhar poligono do bairro
+        buscarPoligonoBairro(bairro);
     }
 
-    // Event listener para filtro de bairro
-    document.getElementById('filtroBairro')?.addEventListener('change', filtrarPorBairro);
+    let filtroBairroTimeout = null;
+    document.getElementById('filtroBairro')?.addEventListener('change', function() {
+        if (filtroBairroTimeout) clearTimeout(filtroBairroTimeout);
+        filtroBairroTimeout = setTimeout(filtrarPorBairro, 300);
+    });
 
-    // Carregar dashboard
+    // Variavel para controlar filtro ativo dos badges
+    let filtroAtivo = null;
+
+    // Funcao para filtrar mapa por status (Novas, Em Andamento, Resolvidas)
+    function filtrarMapaPorStatus(element) {
+        const status = parseInt(element.dataset.status);
+
+        // Remover classe active de todos os cards clicaveis
+        document.querySelectorAll('.stat-card.clickable, .insight-mini.clickable').forEach(card => {
+            card.classList.remove('active');
+        });
+
+        // Se o mesmo filtro foi clicado, remover o filtro
+        if (filtroAtivo && filtroAtivo.tipo === 'status' && filtroAtivo.valor === status) {
+            filtroAtivo = null;
+            aplicarFiltroMapa();
+            return;
+        }
+
+        // Ativar o card clicado
+        element.classList.add('active');
+        filtroAtivo = { tipo: 'status', valor: status };
+        aplicarFiltroMapa();
+    }
+
+    // Funcao para filtrar mapa por data de hoje
+    function filtrarMapaPorHoje(element) {
+        // Remover classe active de todos os cards clicaveis
+        document.querySelectorAll('.stat-card.clickable, .insight-mini.clickable').forEach(card => {
+            card.classList.remove('active');
+        });
+
+        // Se o mesmo filtro foi clicado, remover o filtro
+        if (filtroAtivo && filtroAtivo.tipo === 'hoje') {
+            filtroAtivo = null;
+            aplicarFiltroMapa();
+            return;
+        }
+
+        // Ativar o card clicado
+        element.classList.add('active');
+        filtroAtivo = { tipo: 'hoje', valor: true };
+        aplicarFiltroMapa();
+    }
+
+    // Funcao para aplicar o filtro ao mapa
+    function aplicarFiltroMapa() {
+        let incidenciasFiltradas = todasIncidenciasMapa;
+
+        // Aplicar filtro de bairro se existir
+        const bairroSelecionado = document.getElementById('filtroBairro')?.value;
+        if (bairroSelecionado) {
+            incidenciasFiltradas = incidenciasFiltradas.filter(i => i.bairro === bairroSelecionado);
+        }
+
+        // Aplicar filtro de status ou data
+        if (filtroAtivo) {
+            if (filtroAtivo.tipo === 'status') {
+                incidenciasFiltradas = incidenciasFiltradas.filter(i => i.status === filtroAtivo.valor);
+            } else if (filtroAtivo.tipo === 'hoje') {
+                const hoje = new Date();
+                // Formato DD/MM/YYYY para comparar com o campo data que vem como "DD/MM/YYYY HH:MM"
+                const hojeStr = hoje.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                }); // formato DD/MM/YYYY
+
+                incidenciasFiltradas = incidenciasFiltradas.filter(i => {
+                    if (!i.data) return false;
+                    // O campo data vem no formato "DD/MM/YYYY HH:MM"
+                    // Extrair apenas a parte da data (antes do espaco)
+                    const dataIncidencia = i.data.split(' ')[0]; // Pega "DD/MM/YYYY"
+                    return dataIncidencia === hojeStr;
+                });
+            }
+        }
+
+        // Atualizar contador no badge do mapa
+        document.getElementById('totalMapa').textContent = `${incidenciasFiltradas.length} pontos`;
+
+        // Renderizar mapa com incidencias filtradas
+        renderMapa({
+            centro: mapa ? { lat: mapa.getCenter().lat, lng: mapa.getCenter().lng } : { lat: -15.5989, lng: -56.0949 },
+            incidencias: incidenciasFiltradas
+        });
+
+        // Se tiver filtro de bairro, buscar poligono
+        if (bairroSelecionado) {
+            buscarPoligonoBairro(bairroSelecionado);
+        }
+    }
+
+    // Atualizar filtrarPorBairro para considerar filtro ativo dos badges
+    const originalFiltrarPorBairro = filtrarPorBairro;
+    filtrarPorBairro = function() {
+        aplicarFiltroMapa();
+    };
+
+    // Carregar dashboard apenas uma vez (sem polling automático)
     loadDashboard();
-
-    // Atualizar a cada 60 segundos
-    setInterval(loadDashboard, 60000);
 </script>
 {% endblock %}

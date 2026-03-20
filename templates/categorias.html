@@ -4,15 +4,23 @@
 
 {% block content %}
 <style>
+    /* Fix z-index modais */
+    #categoriaModal,
+    #confirmDeleteModal {
+        z-index: 1200 !important;
+    }
+    .modal-backdrop {
+        z-index: 1150 !important;
+    }
     .icon-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-        gap: 8px;
-        max-height: 300px;
+        grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+        gap: 5px;
+        max-height: 150px;
         overflow-y: auto;
-        padding: 10px;
+        padding: 8px;
         border: 1px solid var(--gray-200);
-        border-radius: 10px;
+        border-radius: 8px;
         background: var(--gray-100);
     }
 
@@ -20,13 +28,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 45px;
-        height: 45px;
+        width: 36px;
+        height: 36px;
         border: 2px solid transparent;
-        border-radius: 8px;
+        border-radius: 6px;
         cursor: pointer;
         transition: all 0.2s;
         background: white;
+        font-size: 1rem;
     }
 
     .icon-item:hover {
@@ -154,7 +163,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Categorias</h2>
-        <p class="text-muted mb-0">Gerencie as categorias de incidencias do sistema</p>
+        <p class="text-muted mb-0">Gerencie as categorias de incidências do sistema</p>
     </div>
     <button type="button" class="btn btn-primary" onclick="abrirModalNovo()">
         <i class="bi bi-plus-lg me-1"></i> Nova Categoria
@@ -167,11 +176,11 @@
             <table class="table mb-0" id="categoriasTable">
                 <thead>
                     <tr>
-                        <th style="width: 80px;">Icone</th>
+                        <th style="width: 80px;">Ícone</th>
                         <th>Nome</th>
                         <th style="width: 100px;">Cor</th>
                         <th style="width: 100px;">Status</th>
-                        <th style="width: 120px;">Acoes</th>
+                        <th style="width: 120px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -189,7 +198,7 @@
 
 <!-- Modal de Categoria -->
 <div class="modal fade" id="categoriaModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 550px;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalTitle">
@@ -201,49 +210,47 @@
                 <form id="categoriaForm">
                     <input type="hidden" id="categoriaId">
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Nome da Categoria *</label>
-                                <input type="text" class="form-control" id="nome" required placeholder="Ex: Iluminacao Publica">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Cor</label>
-                                <div class="color-picker-wrapper">
-                                    <input type="color" id="cor" value="#6366f1" onchange="atualizarPreview()">
-                                    <input type="text" class="form-control color-preview" id="corHex" value="#6366f1" readonly>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="ativo" checked>
-                                    <label class="form-check-label">Categoria Ativa</label>
-                                </div>
-                            </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-7">
+                            <label class="form-label">Nome *</label>
+                            <input type="text" class="form-control" id="nome" required placeholder="Ex: Iluminação Pública" oninput="atualizarPreview()">
                         </div>
-
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Icone</label>
-                                <input type="text" class="form-control icon-search" id="iconSearch" placeholder="Buscar icone...">
-                                <input type="hidden" id="icone" value="bi-tag">
-                                <div class="icon-grid" id="iconGrid">
-                                    <!-- Icones serao inseridos via JavaScript -->
-                                </div>
+                        <div class="col-5">
+                            <label class="form-label">Cor do Card</label>
+                            <div class="input-group">
+                                <input type="color" id="cor" class="form-control form-control-color" value="#6366f1" style="width: 50px; height: 38px;" onchange="sincronizarCorPicker()">
+                                <input type="text" id="corHex" class="form-control" value="#6366f1" placeholder="#RRGGBB" maxlength="7" style="font-family: monospace; text-transform: uppercase;" oninput="sincronizarCorHex()">
                             </div>
+                            <small class="text-muted">Use o seletor ou digite o hex</small>
                         </div>
                     </div>
 
-                    <!-- Preview -->
-                    <div class="icon-preview">
-                        <div class="icon-preview-circle" id="previewCircle" style="background-color: #6366f1;">
-                            <i class="bi bi-tag" id="previewIcon"></i>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" rows="2" placeholder="Descreva o tipo de ocorrência desta categoria..."></textarea>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-8">
+                            <label class="form-label">Ícone</label>
+                            <input type="text" class="form-control form-control-sm mb-2" id="iconSearch" placeholder="Buscar ícone...">
+                            <input type="hidden" id="icone" value="bi-tag">
+                            <div class="icon-grid" id="iconGrid" style="max-height: 180px;">
+                                <!-- Icones via JavaScript -->
+                            </div>
                         </div>
-                        <div>
-                            <div class="icon-preview-name" id="previewName">Nova Categoria</div>
-                            <div class="icon-preview-text">Visualizacao de como a categoria aparecera</div>
+                        <div class="col-4">
+                            <label class="form-label">Preview</label>
+                            <div class="text-center p-3 border rounded bg-light">
+                                <div class="icon-preview-circle mx-auto d-flex align-items-center justify-content-center" id="previewCircle" style="background-color: #6366f1; width: 60px; height: 60px; border-radius: 50%;">
+                                    <i class="bi bi-tag text-white" id="previewIcon" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="small mt-2 fw-medium" id="previewName">Nova Categoria</div>
+                            </div>
+                            <div class="form-check form-switch mt-3">
+                                <input class="form-check-input" type="checkbox" id="ativo" checked>
+                                <label class="form-check-label">Categoria Ativa</label>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -258,7 +265,7 @@
     </div>
 </div>
 
-<!-- Modal de Confirmacao de Exclusao -->
+<!-- Modal de Confirmação de Exclusão -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -270,7 +277,7 @@
             </div>
             <div class="modal-body">
                 <p>Deseja realmente excluir a categoria <strong id="deleteCategoriaNome"></strong>?</p>
-                <p class="text-muted small mb-0">Esta acao nao pode ser desfeita.</p>
+                <p class="text-muted small mb-0">Esta ação não pode ser desfeita.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
@@ -285,42 +292,45 @@
 
 {% block scripts %}
 <script>
-    // Lista de icones disponiveis para incidencias urbanas
+    // Lista de icones disponiveis (apenas ícones comuns do Bootstrap Icons)
     const icones = [
+        // Alertas
+        'bi-exclamation-triangle-fill', 'bi-exclamation-triangle', 'bi-exclamation-circle-fill',
+        'bi-exclamation-circle', 'bi-x-circle-fill', 'bi-x-circle',
         // Infraestrutura
-        'bi-house', 'bi-building', 'bi-buildings', 'bi-hospital', 'bi-bank',
+        'bi-house-fill', 'bi-house', 'bi-building', 'bi-shop',
         // Transporte
-        'bi-car-front', 'bi-bus-front', 'bi-bicycle', 'bi-truck', 'bi-scooter',
-        // Iluminacao e Energia
-        'bi-lightbulb', 'bi-lightbulb-fill', 'bi-lamp', 'bi-lightning', 'bi-plug',
-        // Limpeza e Meio Ambiente
-        'bi-trash', 'bi-trash3', 'bi-recycle', 'bi-tree', 'bi-tree-fill', 'bi-flower1',
-        // Agua e Saneamento
-        'bi-water', 'bi-droplet', 'bi-droplet-fill', 'bi-moisture',
-        // Alertas e Seguranca
-        'bi-exclamation-triangle', 'bi-exclamation-triangle-fill', 'bi-shield-exclamation',
-        'bi-cone-striped', 'bi-sign-stop', 'bi-sign-stop-fill',
-        // Manutencao
-        'bi-tools', 'bi-wrench', 'bi-hammer', 'bi-gear', 'bi-gear-fill',
-        // Sinalizacao e Vias
-        'bi-signpost', 'bi-signpost-2', 'bi-signpost-split', 'bi-sign-turn-right',
-        'bi-stoplights', 'bi-traffic-cone',
-        // Parques e Lazer
-        'bi-flower2', 'bi-flower3', 'bi-sun', 'bi-cloud-sun',
-        // Saude
-        'bi-heart-pulse', 'bi-bandaid', 'bi-capsule',
-        // Comunicacao
-        'bi-telephone', 'bi-wifi', 'bi-broadcast',
+        'bi-truck', 'bi-bicycle', 'bi-stoplights', 'bi-signpost-split',
+        // Iluminação
+        'bi-lightbulb-fill', 'bi-lightbulb', 'bi-lightning-fill', 'bi-plug-fill',
+        // Limpeza
+        'bi-trash-fill', 'bi-trash', 'bi-trash3-fill', 'bi-trash3', 'bi-recycle',
+        // Natureza
+        'bi-tree-fill', 'bi-tree', 'bi-flower1', 'bi-flower2', 'bi-sun-fill', 'bi-sun',
+        'bi-cloud-fill', 'bi-cloud', 'bi-fire', 'bi-snow', 'bi-wind', 'bi-droplet-fill', 'bi-droplet', 'bi-water',
+        // Manutenção
+        'bi-tools', 'bi-wrench', 'bi-hammer', 'bi-gear-fill', 'bi-gear',
+        // Saúde
+        'bi-heart-fill', 'bi-heart', 'bi-heart-pulse-fill', 'bi-bandaid-fill', 'bi-hospital-fill', 'bi-hospital',
+        // Animais
+        'bi-bug-fill', 'bi-bug',
+        // Comunicação
+        'bi-telephone-fill', 'bi-telephone', 'bi-wifi', 'bi-megaphone-fill', 'bi-megaphone',
+        'bi-bell-fill', 'bi-bell', 'bi-chat-fill', 'bi-chat', 'bi-envelope-fill', 'bi-envelope',
+        // Localização
+        'bi-geo-alt-fill', 'bi-geo-alt', 'bi-pin-map-fill', 'bi-pin-map', 'bi-map-fill', 'bi-map',
+        'bi-flag-fill', 'bi-flag', 'bi-compass-fill', 'bi-compass',
+        // Educação
+        'bi-book-fill', 'bi-book', 'bi-journal', 'bi-pencil-fill', 'bi-pencil',
+        // Som
+        'bi-volume-up-fill', 'bi-volume-up', 'bi-volume-mute-fill', 'bi-volume-mute',
         // Outros
-        'bi-fire', 'bi-snow', 'bi-wind', 'bi-thermometer-half',
-        'bi-map', 'bi-geo-alt', 'bi-pin-map', 'bi-compass',
-        'bi-flag', 'bi-megaphone', 'bi-bell', 'bi-alarm',
-        'bi-calendar-event', 'bi-clock', 'bi-hourglass',
-        'bi-person-walking', 'bi-person-wheelchair', 'bi-universal-access',
-        'bi-tag', 'bi-tags', 'bi-bookmark', 'bi-star',
-        'bi-hand-thumbs-up', 'bi-hand-thumbs-down', 'bi-chat-dots',
-        'bi-camera', 'bi-image', 'bi-file-text', 'bi-folder',
-        'bi-box', 'bi-archive', 'bi-inbox', 'bi-mailbox'
+        'bi-camera-fill', 'bi-camera', 'bi-eye-fill', 'bi-eye',
+        'bi-clock-fill', 'bi-clock', 'bi-calendar-fill', 'bi-calendar',
+        'bi-people-fill', 'bi-people', 'bi-person-fill', 'bi-person',
+        'bi-star-fill', 'bi-star', 'bi-tag-fill', 'bi-tag',
+        'bi-check-circle-fill', 'bi-check-circle', 'bi-info-circle-fill', 'bi-info-circle',
+        'bi-question-circle-fill', 'bi-question-circle', 'bi-shield-fill', 'bi-shield'
     ];
 
     let categoriasData = [];
@@ -371,12 +381,35 @@
         document.getElementById('previewCircle').style.backgroundColor = cor;
         document.getElementById('previewIcon').className = `bi ${icone}`;
         document.getElementById('previewName').textContent = nome;
-        document.getElementById('corHex').value = cor;
+    }
+
+    // Sincronizar quando usar o color picker
+    function sincronizarCorPicker() {
+        const cor = document.getElementById('cor').value;
+        document.getElementById('corHex').value = cor.toUpperCase();
+        atualizarPreview();
+    }
+
+    // Sincronizar quando digitar o hex
+    function sincronizarCorHex() {
+        let hex = document.getElementById('corHex').value.trim();
+
+        // Adicionar # se nao tiver
+        if (hex && !hex.startsWith('#')) {
+            hex = '#' + hex;
+            document.getElementById('corHex').value = hex;
+        }
+
+        // Validar formato hex
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+            document.getElementById('cor').value = hex;
+            atualizarPreview();
+        }
     }
 
     // Atualizar cor do input hex
     document.getElementById('cor')?.addEventListener('input', function() {
-        atualizarPreview();
+        sincronizarCorPicker();
     });
 
     document.getElementById('nome')?.addEventListener('input', function() {
@@ -466,6 +499,7 @@
         document.getElementById('categoriaForm').reset();
         document.getElementById('categoriaId').value = '';
         document.getElementById('cor').value = '#6366f1';
+        document.getElementById('corHex').value = '#6366F1';
         document.getElementById('ativo').checked = true;
         selecionarIcone('bi-tag');
         atualizarPreview();
@@ -478,10 +512,13 @@
     function editarCategoria(id) {
         const categoria = categoriasData.find(c => c.categoria_id === id);
         if (categoria) {
+            const corCategoria = categoria.cor || '#6366f1';
             document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Editar Categoria';
             document.getElementById('categoriaId').value = categoria.categoria_id;
             document.getElementById('nome').value = categoria.nome;
-            document.getElementById('cor').value = categoria.cor || '#6366f1';
+            document.getElementById('descricao').value = categoria.descricao || '';
+            document.getElementById('cor').value = corCategoria;
+            document.getElementById('corHex').value = corCategoria.toUpperCase();
             document.getElementById('ativo').checked = categoria.ativo === 1;
             selecionarIcone(categoria.icone || 'bi-tag');
             atualizarPreview();
@@ -494,10 +531,17 @@
     // Salvar categoria
     async function salvarCategoria() {
         const token = localStorage.getItem('token');
+        // Pegar o hex do input texto (permite usuario digitar)
+        let cor = document.getElementById('corHex').value.trim();
+        // Garantir formato valido
+        if (!cor.startsWith('#')) cor = '#' + cor;
+        if (!/^#[0-9A-Fa-f]{6}$/.test(cor)) cor = document.getElementById('cor').value;
+
         const categoriaData = {
             nome: document.getElementById('nome').value,
+            descricao: document.getElementById('descricao').value,
             icone: document.getElementById('icone').value,
-            cor: document.getElementById('cor').value,
+            cor: cor,
             ativo: document.getElementById('ativo').checked ? 1 : 0
         };
 
@@ -564,7 +608,7 @@
 
             if (response.ok) {
                 loadCategorias();
-                mostrarToast('Categoria excluida com sucesso!', 'success');
+                mostrarToast('Categoria excluída com sucesso!', 'success');
             } else {
                 const data = await response.json();
                 alert(data.detail || 'Erro ao excluir categoria');

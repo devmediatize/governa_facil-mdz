@@ -37,7 +37,8 @@ async def get_volume_periodo(token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
     periodo: str = "month",  # Alterado para inglês
     data_inicio: str = None,
-    data_fim: str = None
+    data_fim: str = None,
+    categoria_id: Optional[int] = None
 ):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -47,7 +48,7 @@ async def get_volume_periodo(token: str = Depends(oauth2_scheme),
         raise credentials_exception
     if not usuario_id:
         raise HTTPException(status_code=401, detail="Usuário não identificado")
-    
+
     # Primeiro, pegamos as categorias permitidas para o usuário
     categorias_permitidas = db.query(
         models.UsuarioCategoria.categoria_id
@@ -60,6 +61,13 @@ async def get_volume_periodo(token: str = Depends(oauth2_scheme),
     if not categorias_ids:
         return []  # Retorna lista vazia se não tiver permissões
 
+    # Se foi passado um categoria_id específico, filtrar apenas se estiver nas permitidas
+    if categoria_id is not None:
+        if categoria_id in categorias_ids:
+            categorias_ids = [categoria_id]
+        else:
+            return {"labels": [], "values": []}  # Categoria não permitida
+
     try:
         # Mapear períodos em português para inglês
         periodos = {
@@ -68,7 +76,7 @@ async def get_volume_periodo(token: str = Depends(oauth2_scheme),
             "mensal": "month",
             "anual": "year"
         }
-        
+
         periodo_sql = periodos.get(periodo, "month")
         inicio = datetime.strptime(data_inicio, "%Y-%m-%d") if data_inicio else datetime.now() - timedelta(days=30)
         fim = datetime.strptime(data_fim, "%Y-%m-%d") if data_fim else datetime.now()
@@ -98,8 +106,14 @@ async def get_volume_periodo(token: str = Depends(oauth2_scheme),
 
 # Relatório de Tendências por Categoria
 @router.get("/tendencias-categoria", response_model=None)
-async def get_tendencias_categoria(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    
+async def get_tendencias_categoria(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+    categoria_id: Optional[int] = None,
+    data_inicio: str = None,
+    data_fim: str = None
+):
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         cliente_id = payload.get("cliente_id")
@@ -108,7 +122,7 @@ async def get_tendencias_categoria(token: str = Depends(oauth2_scheme), db: Sess
         raise credentials_exception
     if not usuario_id:
         raise HTTPException(status_code=401, detail="Usuário não identificado")
-    
+
     # Primeiro, pegamos as categorias permitidas para o usuário
     categorias_permitidas = db.query(
         models.UsuarioCategoria.categoria_id
@@ -121,18 +135,34 @@ async def get_tendencias_categoria(token: str = Depends(oauth2_scheme), db: Sess
     if not categorias_ids:
         return []  # Retorna lista vazia se não tiver permissões
 
+    # Se foi passado um categoria_id específico, filtrar apenas se estiver nas permitidas
+    if categoria_id is not None:
+        if categoria_id in categorias_ids:
+            categorias_ids = [categoria_id]
+        else:
+            return {"categorias": [], "dados": []}  # Categoria não permitida
+
     try:
         # Adicionar prints para debug
         print("Iniciando consulta de categorias...")
-        
+
         query = db.query(
             models.Categoria.nome,
             func.count(models.Incidencia.incidencia_id).label('total')
         ).outerjoin(
             models.Incidencia,
             models.Categoria.categoria_id == models.Incidencia.categoria_id
-        ).filter(models.Incidencia.categoria_id.in_(categorias_ids)
-        ).group_by(
+        ).filter(models.Incidencia.categoria_id.in_(categorias_ids))
+
+        # Filtrar por data se fornecido
+        if data_inicio:
+            inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
+            query = query.filter(models.Incidencia.data_hora >= inicio)
+        if data_fim:
+            fim = datetime.strptime(data_fim, "%Y-%m-%d")
+            query = query.filter(models.Incidencia.data_hora <= fim)
+
+        query = query.group_by(
             models.Categoria.nome
         ).order_by(
             models.Categoria.nome
@@ -143,13 +173,13 @@ async def get_tendencias_categoria(token: str = Depends(oauth2_scheme), db: Sess
 
         categorias = [r.nome for r in results]
         dados = [r.total for r in results]
-        
+
         response_data = {
             "categorias": categorias,
             "dados": dados
         }
         print("Dados retornados:", response_data)  # Ver o formato final
-        
+
         return response_data
 
     except Exception as e:
@@ -158,7 +188,13 @@ async def get_tendencias_categoria(token: str = Depends(oauth2_scheme), db: Sess
 
 # Relatório de Performance
 @router.get("/performance", response_model=None)
-async def get_performance(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def get_performance(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+    categoria_id: Optional[int] = None,
+    data_inicio: str = None,
+    data_fim: str = None
+):
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -168,7 +204,7 @@ async def get_performance(token: str = Depends(oauth2_scheme), db: Session = Dep
         raise credentials_exception
     if not usuario_id:
         raise HTTPException(status_code=401, detail="Usuário não identificado")
-    
+
     # Primeiro, pegamos as categorias permitidas para o usuário
     categorias_permitidas = db.query(
         models.UsuarioCategoria.categoria_id
@@ -180,10 +216,21 @@ async def get_performance(token: str = Depends(oauth2_scheme), db: Session = Dep
     categorias_ids = [cat[0] for cat in categorias_permitidas]
     if not categorias_ids:
         return []  # Retorna lista vazia se não tiver permissões
-    
+
+    # Se foi passado um categoria_id específico, filtrar apenas se estiver nas permitidas
+    if categoria_id is not None:
+        if categoria_id in categorias_ids:
+            categorias_ids = [categoria_id]
+        else:
+            return {"tempo_medio_por_categoria": {}, "taxa_resolucao": 0}  # Categoria não permitida
+
+    # Preparar filtros de data
+    inicio = datetime.strptime(data_inicio, "%Y-%m-%d") if data_inicio else None
+    fim = datetime.strptime(data_fim, "%Y-%m-%d") if data_fim else None
+
     try:
-        # Tempo médio de resolução
-        tempo_resolucao = db.query(
+        # Tempo médio de resolução (apenas incidências resolvidas - status 3)
+        tempo_query = db.query(
             models.Categoria.nome,
             func.avg(
                 func.extract('epoch', models.Incidencia.data_ultimo_status - models.Incidencia.data_hora)
@@ -193,30 +240,48 @@ async def get_performance(token: str = Depends(oauth2_scheme), db: Session = Dep
             models.Incidencia.categoria_id == models.Categoria.categoria_id
         ).filter(
             models.Incidencia.categoria_id.in_(categorias_ids),
-            models.Incidencia.status.isnot(None),
+            models.Incidencia.status == 3,  # Apenas resolvidas
             models.Incidencia.data_ultimo_status.isnot(None),
             models.Incidencia.data_hora.isnot(None)
-        ).group_by(
+        )
+
+        # Aplicar filtros de data
+        if inicio:
+            tempo_query = tempo_query.filter(models.Incidencia.data_hora >= inicio)
+        if fim:
+            tempo_query = tempo_query.filter(models.Incidencia.data_hora <= fim)
+
+        tempo_resolucao = tempo_query.group_by(
             models.Categoria.nome
         ).all()
 
         # Total de incidências
-        total_incidencias = db.query(func.count(models.Incidencia.incidencia_id)).filter(
+        total_query = db.query(func.count(models.Incidencia.incidencia_id)).filter(
             models.Incidencia.categoria_id.in_(categorias_ids)
-        ).scalar() or 0
-        
+        )
+        if inicio:
+            total_query = total_query.filter(models.Incidencia.data_hora >= inicio)
+        if fim:
+            total_query = total_query.filter(models.Incidencia.data_hora <= fim)
+        total_incidencias = total_query.scalar() or 0
+
         # Total resolvidas
-        resolvidas = db.query(
+        resolvidas_query = db.query(
             func.count(models.Incidencia.incidencia_id)
-        ).filter(models.Incidencia.categoria_id.in_(categorias_ids)
         ).filter(
-            models.Incidencia.status == 4  # Assumindo que 4 é o status de "RESOLVIDO"
-        ).scalar() or 0
+            models.Incidencia.categoria_id.in_(categorias_ids),
+            models.Incidencia.status == 3  # Status 3 = Concluída/Resolvida
+        )
+        if inicio:
+            resolvidas_query = resolvidas_query.filter(models.Incidencia.data_hora >= inicio)
+        if fim:
+            resolvidas_query = resolvidas_query.filter(models.Incidencia.data_hora <= fim)
+        resolvidas = resolvidas_query.scalar() or 0
 
         # Formatar resposta
         result = {
             "tempo_medio_por_categoria": {
-                r.nome: round(r.tempo_medio / 3600, 2) if r.tempo_medio else 0 
+                r.nome: round(r.tempo_medio / 3600, 2) if r.tempo_medio else 0
                 for r in tempo_resolucao
             } if tempo_resolucao else {},
             "taxa_resolucao": round((resolvidas / total_incidencias) * 100, 2) if total_incidencias > 0 else 0
@@ -227,11 +292,11 @@ async def get_performance(token: str = Depends(oauth2_scheme), db: Session = Dep
             print("Executando consulta de tempo médio...")
             # consulta tempo_resolucao
             print("Consulta de tempo médio concluída")
-            
+
             print("Executando consulta de total de incidências...")
             # consulta total_incidencias
             print("Consulta de total concluída")
-            
+
             print("Executando consulta de resolvidas...")
             # consulta resolvidas
             print("Consulta de resolvidas concluída")
@@ -241,7 +306,7 @@ async def get_performance(token: str = Depends(oauth2_scheme), db: Session = Dep
             raise HTTPException(status_code=500, detail=str(e))
 
         return result
-        
+
     except Exception as e:
         print(f"Erro no servidor (performance): {str(e)}")  # Debug
         raise HTTPException(status_code=500, detail=str(e))
@@ -275,33 +340,87 @@ async def get_geografico(db: Session = Depends(get_db)):
    
 # Relatório de Status
 @router.get("/status", response_model=None)
-async def get_status(db: Session = Depends(get_db)):
-   try:
-       # Distribuição atual
-       distribuicao = db.query(
-           models.Status.nome,
-           func.count(models.Incidencia.incidencia_id).label('total')
-       ).join(
-           models.Status
-       ).group_by(
-           models.Status.nome
-       ).all()
+async def get_status(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+    categoria_id: Optional[int] = None,
+    data_inicio: str = None,
+    data_fim: str = None
+):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        usuario_id = payload.get("user_id")
+    except JWTError:
+        raise credentials_exception
+    if not usuario_id:
+        raise HTTPException(status_code=401, detail="Usuario nao identificado")
 
-       # Tempo médio em cada status
-       tempo_medio = db.query(
-           models.Status.nome,
-           func.avg(
-               func.extract('epoch', models.Incidencia.data_ultimo_status - models.Incidencia.data_hora)
-           ).label('tempo_medio')
-       ).join(
-           models.Status
-       ).group_by(
-           models.Status.nome
-       ).all()
+    # Pegamos as categorias permitidas para o usuario
+    categorias_permitidas = db.query(
+        models.UsuarioCategoria.categoria_id
+    ).filter(
+        models.UsuarioCategoria.usuario_id == usuario_id
+    ).all()
 
-       return {
-           "distribuicao": {r.nome: r.total for r in distribuicao},
-           "tempo_medio": {r.nome: round(r.tempo_medio / 3600, 2) if r.tempo_medio else 0 for r in tempo_medio}
-       }
-   except Exception as e:
-       raise HTTPException(status_code=500, detail=str(e))
+    categorias_ids = [cat[0] for cat in categorias_permitidas]
+    if not categorias_ids:
+        return {"distribuicao": {}, "tempo_medio": {}}
+
+    # Se foi passado um categoria_id especifico, filtrar apenas se estiver nas permitidas
+    if categoria_id is not None:
+        if categoria_id in categorias_ids:
+            categorias_ids = [categoria_id]
+        else:
+            return {"distribuicao": {}, "tempo_medio": {}}
+
+    # Preparar filtros de data
+    inicio = datetime.strptime(data_inicio, "%Y-%m-%d") if data_inicio else None
+    fim = datetime.strptime(data_fim, "%Y-%m-%d") if data_fim else None
+
+    try:
+        # Distribuicao atual
+        dist_query = db.query(
+            models.Status.nome,
+            func.count(models.Incidencia.incidencia_id).label('total')
+        ).join(
+            models.Status
+        ).filter(
+            models.Incidencia.categoria_id.in_(categorias_ids)
+        )
+
+        if inicio:
+            dist_query = dist_query.filter(models.Incidencia.data_hora >= inicio)
+        if fim:
+            dist_query = dist_query.filter(models.Incidencia.data_hora <= fim)
+
+        distribuicao = dist_query.group_by(
+            models.Status.nome
+        ).all()
+
+        # Tempo medio em cada status
+        tempo_query = db.query(
+            models.Status.nome,
+            func.avg(
+                func.extract('epoch', models.Incidencia.data_ultimo_status - models.Incidencia.data_hora)
+            ).label('tempo_medio')
+        ).join(
+            models.Status
+        ).filter(
+            models.Incidencia.categoria_id.in_(categorias_ids)
+        )
+
+        if inicio:
+            tempo_query = tempo_query.filter(models.Incidencia.data_hora >= inicio)
+        if fim:
+            tempo_query = tempo_query.filter(models.Incidencia.data_hora <= fim)
+
+        tempo_medio = tempo_query.group_by(
+            models.Status.nome
+        ).all()
+
+        return {
+            "distribuicao": {r.nome: r.total for r in distribuicao},
+            "tempo_medio": {r.nome: round(r.tempo_medio / 3600, 2) if r.tempo_medio else 0 for r in tempo_medio}
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

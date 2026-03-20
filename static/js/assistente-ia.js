@@ -348,9 +348,251 @@ class AssistenteIA {
     }
 
     formatMessage(content) {
-        return content
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\n/g, '<br>');
+        // Primeiro, limpar o conteudo agressivamente
+        let formatted = content.trim();
+
+        // Remover TODOS os espacos e quebras de linha excessivos ANTES de qualquer processamento
+        // Isso resolve o problema de muitas linhas vazias vindas do backend
+        formatted = formatted
+            // Remover linhas que contem apenas espacos
+            .replace(/^\s*$/gm, '')
+            // Reduzir multiplas quebras de linha para uma
+            .replace(/\n{2,}/g, '\n')
+            // Remover espacos no inicio de cada linha
+            .replace(/^\s+/gm, '');
+
+        // Verificar se contem tabela HTML
+        const contemTabelaHTML = /<table/i.test(formatted);
+
+        if (contemTabelaHTML) {
+            // Para respostas com tabelas HTML, fazer limpeza especial
+            // Remover TUDO antes da tabela exceto texto relevante
+            formatted = formatted
+                // Remover quebras de linha e espacos dentro e ao redor de tags de tabela
+                .replace(/\n\s*(<table)/gi, '$1')
+                .replace(/\n\s*(<thead)/gi, '$1')
+                .replace(/\n\s*(<tbody)/gi, '$1')
+                .replace(/\n\s*(<tr)/gi, '$1')
+                .replace(/\n\s*(<th)/gi, '$1')
+                .replace(/\n\s*(<td)/gi, '$1')
+                .replace(/(<\/table>)\s*\n/gi, '$1')
+                .replace(/(<\/thead>)\s*\n/gi, '$1')
+                .replace(/(<\/tbody>)\s*\n/gi, '$1')
+                .replace(/(<\/tr>)\s*\n/gi, '$1')
+                .replace(/(<\/th>)\s*\n/gi, '$1')
+                .replace(/(<\/td>)\s*\n/gi, '$1')
+                // Remover espacos dentro das celulas
+                .replace(/<td>\s+/gi, '<td>')
+                .replace(/\s+<\/td>/gi, '</td>')
+                .replace(/<th>\s+/gi, '<th>')
+                .replace(/\s+<\/th>/gi, '</th>');
+        }
+
+        // Converter markdown bold para HTML
+        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Converter quebras de linha para <br> EXCETO dentro de tabelas
+        if (!contemTabelaHTML) {
+            formatted = formatted.replace(/\n/g, '<br>');
+        } else {
+            // Para conteudo com tabela, processar cada parte separadamente
+            const partes = formatted.split(/(<table[\s\S]*?<\/table>)/gi);
+            formatted = partes.map(parte => {
+                if (/<table/i.test(parte)) {
+                    return parte; // Tabela - nao mexer
+                } else {
+                    // Texto fora da tabela
+                    return parte.trim().replace(/\n/g, '<br>');
+                }
+            }).join('');
+        }
+
+        // Limpeza final agressiva de <br> excessivos
+        formatted = formatted
+            // Qualquer sequencia de 2+ <br> vira apenas 1
+            .replace(/(<br\s*\/?>\s*){2,}/gi, '<br>')
+            // Remover <br> no inicio
+            .replace(/^(<br\s*\/?>)+/i, '')
+            // Remover <br> no final
+            .replace(/(<br\s*\/?>)+$/i, '')
+            // Remover <br> imediatamente antes de tabelas
+            .replace(/(<br\s*\/?>\s*)+(<table)/gi, '$2')
+            // Remover <br> imediatamente depois de tabelas
+            .replace(/(<\/table>)(\s*<br\s*\/?>)+/gi, '$1')
+            // Remover espacos entre tags
+            .replace(/>\s+</g, '><');
+
+        // Verificar se contem tabela para adicionar links de exportacao
+        const contemTabela = this.detectarTabela(content);
+        if (contemTabela) {
+            formatted += this.gerarLinksExportacao();
+        }
+
+        return formatted;
+    }
+
+    detectarTabela(content) {
+        // Detectar tabelas markdown (linhas com |) ou tabelas HTML
+        const temTabelaMarkdown = (content.match(/\|/g) || []).length >= 3;
+        const temTabelaHTML = content.includes('<table') || content.includes('<TABLE');
+        const temLinhasComTabs = content.split('\n').filter(linha => (linha.match(/\t/g) || []).length >= 2).length >= 2;
+
+        return temTabelaMarkdown || temTabelaHTML || temLinhasComTabs;
+    }
+
+    gerarLinksExportacao() {
+        return `
+            <div class="export-links mt-2">
+                <a href="#" onclick="window.assistenteIA.exportarTabelaPDF(this); return false;" class="btn btn-sm btn-outline-primary me-2">
+                    <i class="bi bi-file-pdf"></i> Exportar PDF
+                </a>
+                <a href="#" onclick="window.assistenteIA.exportarTabelaExcel(this); return false;" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-file-excel"></i> Exportar Excel
+                </a>
+            </div>
+        `;
+    }
+
+    exportarTabelaPDF(element) {
+        // Encontrar a mensagem que contem a tabela
+        const messageDiv = element.closest('.assistente-ia-message');
+        if (!messageDiv) return;
+
+        const messageContent = messageDiv.querySelector('.message-content');
+        if (!messageContent) return;
+
+        // Clonar conteudo sem os botoes de exportacao
+        const contentClone = messageContent.cloneNode(true);
+        const exportLinks = contentClone.querySelector('.export-links');
+        if (exportLinks) exportLinks.remove();
+
+        // Criar janela de impressao
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Relatorio - Assistente IA</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #4a5568; color: white; }
+                    tr:nth-child(even) { background-color: #f9f9f9; }
+                    h1 { color: #333; font-size: 18px; margin-bottom: 20px; }
+                    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #4a5568; padding-bottom: 10px; }
+                    .data { color: #666; font-size: 12px; }
+                    @media print {
+                        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Relatorio - Assistente IA Governa Facil</h1>
+                    <span class="data">${new Date().toLocaleString('pt-BR')}</span>
+                </div>
+                <div class="content">
+                    ${contentClone.innerHTML}
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+
+        // Esperar carregar e imprimir
+        printWindow.onload = function() {
+            printWindow.print();
+        };
+    }
+
+    exportarTabelaExcel(element) {
+        // Encontrar a mensagem que contem a tabela
+        const messageDiv = element.closest('.assistente-ia-message');
+        if (!messageDiv) return;
+
+        const messageContent = messageDiv.querySelector('.message-content');
+        if (!messageContent) return;
+
+        // Clonar conteudo sem os botoes de exportacao
+        const contentClone = messageContent.cloneNode(true);
+        const exportLinks = contentClone.querySelector('.export-links');
+        if (exportLinks) exportLinks.remove();
+
+        // Extrair tabela se existir
+        let tableHtml = '';
+        const table = contentClone.querySelector('table');
+        if (table) {
+            tableHtml = table.outerHTML;
+        } else {
+            // Tentar converter texto com | em tabela
+            const text = contentClone.innerText;
+            tableHtml = this.converterTextoParaTabela(text);
+        }
+
+        // Criar arquivo Excel via HTML
+        const excelContent = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="UTF-8">
+                <!--[if gte mso 9]>
+                <xml>
+                    <x:ExcelWorkbook>
+                        <x:ExcelWorksheets>
+                            <x:ExcelWorksheet>
+                                <x:Name>Relatorio</x:Name>
+                                <x:WorksheetOptions>
+                                    <x:DisplayGridlines/>
+                                </x:WorksheetOptions>
+                            </x:ExcelWorksheet>
+                        </x:ExcelWorksheets>
+                    </x:ExcelWorkbook>
+                </xml>
+                <![endif]-->
+                <style>
+                    table { border-collapse: collapse; }
+                    th, td { border: 1px solid #000; padding: 5px; }
+                    th { background-color: #4a5568; color: white; font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                ${tableHtml || contentClone.innerHTML}
+            </body>
+            </html>
+        `;
+
+        // Download
+        const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `relatorio_assistente_ia_${new Date().toISOString().split('T')[0]}.xls`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    converterTextoParaTabela(text) {
+        const linhas = text.split('\n').filter(l => l.includes('|') || l.includes('\t'));
+        if (linhas.length < 2) return '';
+
+        let html = '<table><tbody>';
+        linhas.forEach((linha, idx) => {
+            const colunas = linha.includes('|') ? linha.split('|').filter(c => c.trim()) : linha.split('\t');
+            const tag = idx === 0 ? 'th' : 'td';
+            if (idx === 0) html += '<thead><tr>';
+            else if (idx === 1 && linhas[0].includes('|')) html += '</thead><tbody><tr>';
+            else html += '<tr>';
+
+            colunas.forEach(col => {
+                html += `<${tag}>${col.trim()}</${tag}>`;
+            });
+
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        return html;
     }
 
     showTypingIndicator() {

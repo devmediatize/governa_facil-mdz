@@ -986,6 +986,85 @@
     color: #e2e8f0;
 }
 
+/* ============================================
+   TABELAS NO CHAT
+   ============================================ */
+
+/* Estilos para tabelas geradas pelo assistente */
+.assistente-ia-message .message-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 12px;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.assistente-ia-message .message-content table thead th {
+    background: #4a5568;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding: 8px 10px;
+    text-align: left;
+    border: none;
+    white-space: nowrap;
+}
+
+.assistente-ia-message .message-content table tbody td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+    line-height: 1.3;
+}
+
+.assistente-ia-message .message-content table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.assistente-ia-message .message-content table tbody tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+.assistente-ia-message .message-content table tbody tr:hover {
+    background: #edf2f7;
+}
+
+/* Remover espacos excessivos antes e depois de tabelas */
+.assistente-ia-message .message-content table + br,
+.assistente-ia-message .message-content br + table {
+    display: none;
+}
+
+/* Limpar espacos em branco excessivos no conteudo */
+.assistente-ia-message .message-content {
+    line-height: 1.5;
+}
+
+.assistente-ia-message .message-content br + br + br {
+    display: none;
+}
+
+/* Links de exportacao */
+.assistente-ia-message .message-content .export-links {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.assistente-ia-message .message-content .export-links .btn {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
 /* Garantir que dropdowns do header fiquem acima do assistente */
 .app-header .dropdown-menu,
 .main-header-container .dropdown-menu,

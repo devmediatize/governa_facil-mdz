@@ -19,6 +19,10 @@ class UsuarioBase(BaseModel):
     cliente_id: int
     celular: str
     nivel: int
+    cargo: Optional[str] = None
+    lotacao: Optional[str] = None
+    receber_alertas_email: Optional[int] = 1
+    receber_alertas_sistema: Optional[int] = 1
 
 class UsuarioCreate(BaseModel):
     nome: str
@@ -29,6 +33,8 @@ class UsuarioCreate(BaseModel):
     estado: str
     ativo: int = 1  # Default value
     nivel: int = 0  # Default value
+    cargo: Optional[str] = None
+    lotacao: Optional[str] = None
 
 class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
@@ -40,6 +46,10 @@ class UsuarioUpdate(BaseModel):
     ativo: Optional[int] = None
     celular: Optional[str] = None
     nivel: int = 0  # Default value
+    cargo: Optional[str] = None
+    lotacao: Optional[str] = None
+    receber_alertas_email: Optional[int] = None
+    receber_alertas_sistema: Optional[int] = None
 
 class Usuario(UsuarioBase):
     usuario_id: int
@@ -59,12 +69,13 @@ class IncidenciaBase(BaseModel):
     lat: str = None
     long: str = None
     bairro: str = None
+    cep: Optional[str] = None
     cliente_id: int
 
 class IncidenciaCreate(IncidenciaBase):
     pass
 
-class Incidencia(IncidenciaBase):
+class IncidenciaResponse(IncidenciaBase):
     incidencia_id: int
     cidadao_id: int
     status: int
@@ -171,7 +182,7 @@ class CidadaoCreate(BaseModel):
     celular: str 
     endereco: Optional[str] 
     bairro: Optional[str] 
-    cep: str 
+    cep: Optional[str] = None 
     cidade: Optional[str] 
     estado: Optional[str] 
 
@@ -200,7 +211,7 @@ class Cidadao(BaseModel):
     celular: str
     endereco: Optional[str] = None
     bairro: Optional[str] = None
-    cep: str
+    cep: Optional[str] = None
     cidade: Optional[str] = None
     estado: Optional[str] = None
     ativo: int
@@ -218,3 +229,39 @@ class CidadaoBasico(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Schemas para Historico de Alertas
+class HistoricoAlertaBase(BaseModel):
+    tipo: str  # 'bairro' ou 'categoria'
+    referencia: str  # nome do bairro ou categoria
+    mensagem: str
+    severidade: str  # 'critico', 'atencao', 'info'
+    valor: int  # quantidade de incidencias
+    comparativo: Optional[str] = None  # ex: "3x acima da media"
+
+
+class HistoricoAlertaCreate(HistoricoAlertaBase):
+    cliente_id: int
+
+
+class HistoricoAlertaResponse(HistoricoAlertaBase):
+    alerta_id: int
+    cliente_id: int
+    data_criacao: datetime
+    lido: int
+    notificado_email: int
+
+    class Config:
+        from_attributes = True
+
+
+class AlertasNaoLidosResponse(BaseModel):
+    total_nao_lidos: int
+
+
+# Schema para atualizar notificacoes do usuario
+class UsuarioNotificacoesUpdate(BaseModel):
+    receber_alertas_email: Optional[int] = None
+    receber_alertas_sistema: Optional[int] = None
+    categorias_notificacao: Optional[list] = None  # Lista de {categoria_id, notifica_email}

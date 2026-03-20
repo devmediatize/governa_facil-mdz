@@ -9,43 +9,91 @@
 <script src="https://cdn.jsdelivr.net/npm/moment/min/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 
-<div class="row">
-    <div class="col-md-2 mb-3">
-        <h2>Incidências</h2>
-    </div>
-    <div class="col-md-1 mb-3" style="width: 140px;">
-        <select id="fcategoria" class="form-select">
-            <option value="">por categoria</option>
-        </select>
-    </div>
+<style>
+    .filtros-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .filtros-header h2 {
+        margin: 0;
+        white-space: nowrap;
+    }
+    .filtros-row {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.75rem;
+        align-items: center;
+    }
+    .filtros-row select {
+        width: 150px;
+        min-width: 120px;
+        flex-shrink: 1;
+    }
+    .filtros-row #fperiodo {
+        width: 220px;
+        min-width: 180px;
+        flex-shrink: 1;
+    }
+    .filtros-row #fdescricao {
+        width: 200px;
+        min-width: 150px;
+        flex-shrink: 1;
+    }
+    .filtros-row .btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    @media (max-width: 992px) {
+        .filtros-row {
+            flex-wrap: wrap;
+        }
+        .filtros-row select,
+        .filtros-row input {
+            flex: 1 1 auto;
+            min-width: 140px;
+        }
+        .filtros-row .btn {
+            flex-shrink: 0;
+        }
+    }
+    @media (max-width: 768px) {
+        .filtros-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filtros-row select,
+        .filtros-row input {
+            width: 100% !important;
+        }
+        .filtros-row .btn {
+            width: 100%;
+        }
+    }
+</style>
 
-    <!-- Filtro de Status -->
-    <div class="col-md-1 mb-3" style="width: 120px;">
-        <select id="fstatus" class="form-select">
-            <option value="">por status</option>
-        </select>
-    </div>
-
-    <!-- Filtro de Prioridade -->
-    <div class="col-md-1 mb-3" style="width: 150px;">
-
-        <select id="fprioridade" class="form-select">
-            <option value="">por prioridade</option>
-        </select>
-    </div>
-
-    <div class="col-md-2 mb-3" style="width: 250px;">
-        <input type="text" id="fperiodo" class="form-control" placeholder="Selecione o período">
-    </div>
-
-    <div class="col-md-2 mb-3">
-        <input type="text" id="fdescricao" class="form-control" placeholder="Pesquisar por texto">
-    </div>
-
-    <div class="col-md-2 mb-3">
-        <button id="btnbusca" class="btn btn-primary" onclick="loadIncidencias();"><i class="bi bi-search"></i>
-            Procurar</button>
-    </div>
+<div class="filtros-header">
+    <h2>Incidências</h2>
+</div>
+<div class="filtros-row mb-3">
+    <select id="fcategoria" class="form-select">
+        <option value="">por categoria</option>
+    </select>
+    <select id="fstatus" class="form-select">
+        <option value="">por status</option>
+    </select>
+    <select id="fprioridade" class="form-select">
+        <option value="">por prioridade</option>
+    </select>
+    <select id="fbairro" class="form-select">
+        <option value="">por bairro</option>
+    </select>
+    <input type="text" id="fperiodo" class="form-control" placeholder="Selecione o período">
+    <input type="text" id="fdescricao" class="form-control" placeholder="Pesquisar por texto">
+    <button id="btnbusca" class="btn btn-primary" onclick="loadIncidencias();">
+        <i class="bi bi-search me-1"></i>Procurar
+    </button>
 </div>
 
 
@@ -74,12 +122,13 @@
                         <th>ID</th>
                         <th>Foto</th>
                         <th>Categoria</th>
-                        <th>Bairro</th>
+                        <th>Bairro / Cidade</th>
                         <th>Descrição</th>
                         <th>Status</th>
                         <th>Prioridade</th>
+                        <th>Feedback</th>
                         <th>Data</th>
-                        <th width='120' style="display: none;">Ações</th>
+                        <th width='80'>Editar</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -125,19 +174,33 @@
                                 <textarea class="form-control" id="descricao" rows="3" required></textarea>
                             </div>
                             <div class="row">
-                                <div class="col-md-8 mb-3">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">CEP</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="cep" maxlength="9" placeholder="00000-000">
+                                        <button class="btn btn-outline-secondary" type="button" id="btnBuscarCep" onclick="buscarCep()">
+                                            <i class="bi bi-search"></i>
+                                        </button>
+                                    </div>
+                                    <small id="cepStatus" class="text-muted"></small>
+                                </div>
+                                <div class="col-md-7 mb-3">
                                     <label class="form-label">Endereço</label>
                                     <input type="text" class="form-control" id="endereco" required>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Número</label>
+                                    <input type="text" class="form-control" id="numero" placeholder="N">
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Bairro</label>
                                     <input type="text" class="form-control" id="bairro" required>
                                 </div>
-                                <div class="col-md-8 mb-3">
+                                <div class="col-md-6 mb-3">
                                     <label class="form-label">Cidade</label>
                                     <input type="text" class="form-control" id="cidade" required>
                                 </div>
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-2 mb-3">
                                     <label class="form-label">Estado</label>
                                     <input type="text" class="form-control" id="estado" maxlength="2" required>
                                 </div>
@@ -165,14 +228,12 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div id="map" style="border: 1px solid #CCC"></div>
+                    <div id="map" style="border: 1px solid #CCC; height: 300px; max-height: 300px; overflow: hidden;"></div>
                 </div>
             </div>
             <div class="modal-footer" style="justify-content: flex-start;">
                 <button type="button" class="btn btn-primary" onclick="salvarIncidencia()"
                     id="btnSalvar">Salvar</button>
-                <button type="button" class="btn btn-info" onclick="abrirInteracao()"
-                    id="btnAbrirInteracao">Interagir</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
             </div>
         </div>
@@ -268,11 +329,27 @@
     let currentPage = 1;
     const itemsPerPage = 15; // ou o número que preferir
     let totalPages = 0;
+    let mapaModal = null; // Mapa Leaflet do modal de detalhes
+
+    // Funcao para formatar bairro e cidade
+    function formatarBairroCidade(bairro, cidade) {
+        const b = bairro ? bairro.trim() : '';
+        const c = cidade ? cidade.trim() : '';
+
+        if (b && c) {
+            return `${b}, ${c}`;
+        } else if (b) {
+            return b;
+        } else if (c) {
+            return c;
+        }
+        return '';
+    }
 
     async function loadCategorias(campo, select1) {
         const token = localStorage.getItem('token');
         try {
-            const response = await fetch('/lista_categorias/', {
+            const response = await fetch('/lista_categorias', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -289,7 +366,7 @@
     async function loadPrioridade(campo, select1) {
         const token = localStorage.getItem('token');
         try {
-            const response = await fetch('/lista_prioridades/', {
+            const response = await fetch('/lista_prioridades', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -303,10 +380,33 @@
         }
     }
 
+    async function loadBairros() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/incidencias/bairros', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const bairros = await response.json();
+            const select = document.getElementById('fbairro');
+            if (select && bairros.length > 0) {
+                bairros.forEach(bairro => {
+                    if (bairro) {
+                        const option = document.createElement('option');
+                        option.value = bairro;
+                        option.textContent = bairro;
+                        select.appendChild(option);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Erro ao carregar bairros:', error);
+        }
+    }
+
     async function loadStatus(campo, select1) {
         const token = localStorage.getItem('token');
         try {
-            const response = await fetch('/lista_status/', {
+            const response = await fetch('/lista_status', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -325,6 +425,7 @@
         const categoria_id = document.getElementById('fcategoria').value;
         const status_id = document.getElementById('fstatus').value;
         const prioridade_id = document.getElementById('fprioridade').value;
+        const bairro = document.getElementById('fbairro').value;
         const periodo = document.getElementById('fperiodo').value;
         const texto = document.getElementById('fdescricao').value;
 
@@ -333,6 +434,7 @@
             if (categoria_id) params.append('categoria_id', categoria_id);
             if (status_id) params.append('status_id', status_id);
             if (prioridade_id) params.append('prioridade_id', prioridade_id);
+            if (bairro) params.append('bairro', bairro);
             if (periodo) params.append('data_hora', periodo);
             if (texto) params.append('texto', texto);
 
@@ -387,24 +489,31 @@
         console.log('Dados paginados:', paginatedData);
 
         tbody.innerHTML = paginatedData.length ? paginatedData.map(inc => `
-        <tr style="text-align: center;">
+        <tr style="text-align: center; cursor: pointer;" class="tr-hover" data-incidencia-id="${inc.incidencia_id}" onclick="window.location.href='/incidencia/${inc.incidencia_id}/detalhe'">
             <td>${inc.incidencia_id}</td>
             <td>
-                ${inc.foto ? `<img src="/fotos/${inc.foto}" width="48" height="48" 
+                ${inc.foto ? `<img src="${construirUrlFoto(inc.foto)}" width="48" height="48"
                     class="d-block rounded-2 border border-translucent">` : ''}
             </td>
             <td>${inc.categoria_nome || ''}</td>
-            <td>${inc.bairro || ''}</td>
-            <td style="text-align: justify;">
-                <a href='javascript:void(0)' onclick="editarIncidencia(${inc.incidencia_id})">
-                    ${inc.descricao || ''}
-                </a>
-            </td>
+            <td>${formatarBairroCidade(inc.bairro, inc.cidade)}</td>
+            <td style="text-align: justify;">${inc.descricao || ''}</td>
             <td>${inc.status_nome || 'Pendente'}</td>
             <td>${inc.prioridade_nome || ''}</td>
+            <td class="feedback-cell" id="feedback-${inc.incidencia_id}" onclick="event.stopPropagation(); verFeedback(${inc.incidencia_id})">
+                ${inc.status === 3 ? '<span class="text-muted small"><i class="bi bi-hourglass-split"></i></span>' : '<span class="text-muted">-</span>'}
+            </td>
             <td>${inc.data_hora ? new Date(inc.data_hora).toLocaleDateString() : ''}</td>
+            <td onclick="event.stopPropagation();">
+                <button class="btn btn-sm btn-outline-secondary" title="Editar Incidência" onclick="editarIncidencia(${inc.incidencia_id})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+            </td>
         </tr>
-    `).join('') : '<tr><td colspan="7" class="text-center">Nenhuma incidência encontrada</td></tr>';
+    `).join('') : '<tr><td colspan="10" class="text-center">Nenhuma incidencia encontrada</td></tr>';
+
+        // Carregar feedbacks para incidencias resolvidas
+        carregarFeedbacksIncidencias(paginatedData);
 
         renderPagination();
     }
@@ -487,7 +596,18 @@
 
     // Chamar loadIncidencias quando a página carregar
     document.addEventListener('DOMContentLoaded', async function () {
-        // Carrega os dados primeiro e espera a conclusão
+        // Carregar dados iniciais dos dropdowns
+        await Promise.all([
+            loadCategorias('categoriaId', 'Selecione...'),
+            loadCategorias('fcategoria', 'Categoria'),
+            loadPrioridade('prioridade', 'Selecione...'),
+            loadPrioridade('fprioridade', 'Prioridade'),
+            loadStatus('fstatus', 'Status'),
+            loadStatus('novoStatus', 'Selecione'),
+            loadBairros()
+        ]);
+
+        // Carrega os dados das incidencias
         await loadIncidencias();
 
         // Verifica se tem ID na URL
@@ -512,14 +632,22 @@
         const formData = new FormData();
         const foto = document.getElementById('foto').files[0];
 
+        // Montar endereco completo com numero se houver
+        let enderecoCompleto = document.getElementById('endereco').value;
+        const numero = document.getElementById('numero').value;
+        if (numero) {
+            enderecoCompleto += ', ' + numero;
+        }
+
         const incidenciaData = {
             categoria_id: document.getElementById('categoriaId').value,
             descricao: document.getElementById('descricao').value,
             prioridade: document.getElementById('prioridade').value,
-            endereco: document.getElementById('endereco').value,
+            endereco: enderecoCompleto,
             bairro: document.getElementById('bairro').value,
             cidade: document.getElementById('cidade').value,
             estado: document.getElementById('estado').value,
+            cep: document.getElementById('cep').value.replace(/\D/g, ''),
             lat: document.getElementById('lat').value,
             long: document.getElementById('long').value
         };
@@ -581,41 +709,90 @@
             document.getElementById('bairro').value = incidencia.bairro;
             document.getElementById('cidade').value = incidencia.cidade;
             document.getElementById('estado').value = incidencia.estado;
+            document.getElementById('cep').value = incidencia.cep || '';
+            document.getElementById('numero').value = '';
             document.getElementById('lat').value = incidencia.lat || '';
             document.getElementById('long').value = incidencia.long || '';
             document.getElementById('divFoto').style.display = 'block';
             document.getElementById('divUpFoto').style.display = 'none';
-            document.getElementById('imgFoto').src = "/fotos/" + incidencia.foto;
+            document.getElementById('imgFoto').src = construirUrlFoto(incidencia.foto);
             document.getElementById('divF').className = 'col-md-7';
-            document.getElementById('btnAbrirInteracao').style.display = 'block';
 
             if (document.getElementById('hddstatus').value == 'Resolvido') {
                 document.getElementById('categoriaId').disabled = true;
                 document.getElementById('descricao').disabled = true;
                 document.getElementById('prioridade').disabled = true;
+                document.getElementById('cep').disabled = true;
+                document.getElementById('numero').disabled = true;
                 document.getElementById('endereco').disabled = true;
                 document.getElementById('bairro').disabled = true;
                 document.getElementById('cidade').disabled = true;
                 document.getElementById('estado').disabled = true;
-                document.getElementById('btnAbrirInteracao').style.display = 'none';
+                document.getElementById('btnBuscarCep').disabled = true;
                 document.getElementById('btnSalvar').style.display = 'none';
             }
             else {
                 document.getElementById('categoriaId').disabled = false;
                 document.getElementById('descricao').disabled = false;
                 document.getElementById('prioridade').disabled = false;
+                document.getElementById('cep').disabled = false;
+                document.getElementById('numero').disabled = false;
                 document.getElementById('endereco').disabled = false;
                 document.getElementById('bairro').disabled = false;
                 document.getElementById('cidade').disabled = false;
                 document.getElementById('estado').disabled = false;
-                document.getElementById('btnAbrirInteracao').style.display = 'block';
+                document.getElementById('btnBuscarCep').disabled = false;
                 document.getElementById('btnSalvar').style.display = 'block';
             }
 
-            document.getElementById('map').innerHTML = '<iframe src = "https://maps.google.com/maps?q=' + incidencia.lat
-                + ',' + incidencia.long + '&z=16&amp;output=embed" style="height: 350px; width: 100%;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>';
+            // Inicializar mapa Leaflet no modal
+            const mapContainer = document.getElementById('map');
+            mapContainer.innerHTML = ''; // Limpar conteudo anterior
+
+            // Destruir mapa anterior se existir
+            if (mapaModal) {
+                mapaModal.remove();
+                mapaModal = null;
+            }
+
+            // Criar novo mapa Leaflet com visual moderno (CartoDB Voyager)
+            if (incidencia.lat && incidencia.long) {
+                mapaModal = L.map('map').setView([incidencia.lat, incidencia.long], 16);
+
+                // Tile layer com visual moderno (CartoDB Voyager - similar ao Google Maps)
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 20
+                }).addTo(mapaModal);
+
+                // Adicionar marcador na localizacao
+                const customIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="
+                        background: #ef4444;
+                        width: 28px;
+                        height: 28px;
+                        border-radius: 50%;
+                        border: 3px solid white;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    "></div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                });
+
+                L.marker([incidencia.lat, incidencia.long], { icon: customIcon }).addTo(mapaModal);
+            }
+
             const modal = new bootstrap.Modal(document.getElementById('incidenciaModal'));
             modal.show();
+
+            // Invalidar tamanho do mapa apos modal abrir (necessario para Leaflet)
+            document.getElementById('incidenciaModal').addEventListener('shown.bs.modal', function () {
+                if (mapaModal) {
+                    mapaModal.invalidateSize();
+                }
+            }, { once: true });
         } else {
             console.error('Incidência não encontrada:', id);
         }
@@ -634,26 +811,35 @@
         document.getElementById('categoriaId').value = "";
         document.getElementById('descricao').value = ""
         document.getElementById('prioridade').value = "";
+        document.getElementById('cep').value = "";
+        document.getElementById('numero').value = "";
         document.getElementById('endereco').value = "";
         document.getElementById('bairro').value = "";
         document.getElementById('cidade').value = "";
         document.getElementById('estado').value = "";
         document.getElementById('lat').value = "";
         document.getElementById('long').value = "";
+        document.getElementById('cepStatus').innerHTML = "";
         document.getElementById('divFoto').style.display = 'none';
         document.getElementById('map').innerHTML = '';
         document.getElementById('divUpFoto').style.display = 'block';
         document.getElementById('divF').className = 'col-md-12';
-        document.getElementById('btnAbrirInteracao').style.display = 'none';
+
+        // Destruir mapa anterior se existir
+        if (mapaModal) {
+            mapaModal.remove();
+            mapaModal = null;
+        }
 
         document.getElementById('categoriaId').disabled = false;
         document.getElementById('descricao').disabled = false;
         document.getElementById('prioridade').disabled = false;
+        document.getElementById('cep').disabled = false;
+        document.getElementById('numero').disabled = false;
         document.getElementById('endereco').disabled = false;
         document.getElementById('bairro').disabled = false;
         document.getElementById('cidade').disabled = false;
         document.getElementById('estado').disabled = false;
-        document.getElementById('btnAbrirInteracao').style.display = 'block';
         document.getElementById('btnSalvar').style.display = 'block';
 
         const modal = new bootstrap.Modal(document.getElementById('incidenciaModal'));
@@ -681,18 +867,176 @@
         }
     }
 
-    // Carregar dados iniciais
-    loadCategorias('categoriaId', 'Selecione...');
-    loadCategorias('fcategoria', 'Categoria');
-    loadPrioridade('prioridade', 'Selecione...');
-    loadPrioridade('fprioridade', 'Prioridade');
-    loadStatus('fstatus', 'Status');
-    loadStatus('novoStatus', 'Selecione');
-
     // Limpar formulário quando o modal for fechado
-    document.getElementById('incidenciaModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('incidenciaModal')?.addEventListener('hidden.bs.modal', function () {
         //document.getElementById('incidenciaForm').reset();
         //document.getElementById('incidenciaId').value = '';
+    });
+
+    // Funcao para buscar CEP via API ViaCEP
+    async function buscarCep() {
+        const cepInput = document.getElementById('cep');
+        const cepStatus = document.getElementById('cepStatus');
+        const btnBuscar = document.getElementById('btnBuscarCep');
+
+        // Limpar CEP - remover caracteres nao numericos
+        const cep = cepInput.value.replace(/\D/g, '');
+
+        if (cep.length !== 8) {
+            cepStatus.innerHTML = '<span class="text-danger">CEP deve ter 8 dígitos</span>';
+            return;
+        }
+
+        // Mostrar loading
+        btnBuscar.disabled = true;
+        btnBuscar.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        cepStatus.innerHTML = '<span class="text-info">Buscando...</span>';
+
+        try {
+            // Buscar endereco via ViaCEP
+            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            const data = await response.json();
+
+            if (data.erro) {
+                cepStatus.innerHTML = '<span class="text-danger">CEP não encontrado</span>';
+                return;
+            }
+
+            // Preencher campos de endereco
+            document.getElementById('endereco').value = data.logradouro || '';
+            document.getElementById('bairro').value = data.bairro || '';
+            document.getElementById('cidade').value = data.localidade || '';
+            document.getElementById('estado').value = data.uf || '';
+
+            // Formatar CEP com hifen
+            cepInput.value = cep.replace(/(\d{5})(\d{3})/, '$1-$2');
+
+            cepStatus.innerHTML = '<span class="text-success">Endereço encontrado!</span>';
+
+            // Focar no campo numero
+            document.getElementById('numero').focus();
+
+            // Buscar coordenadas (geocoding)
+            await buscarCoordenadas(data.logradouro, data.bairro, data.localidade, data.uf);
+
+        } catch (error) {
+            console.error('Erro ao buscar CEP:', error);
+            cepStatus.innerHTML = '<span class="text-danger">Erro ao buscar CEP</span>';
+        } finally {
+            btnBuscar.disabled = false;
+            btnBuscar.innerHTML = '<i class="bi bi-search"></i>';
+        }
+    }
+
+    // Funcao para buscar coordenadas via Nominatim (OpenStreetMap)
+    async function buscarCoordenadas(logradouro, bairro, cidade, estado) {
+        try {
+            // Montar query de busca
+            const endereco = `${logradouro}, ${bairro}, ${cidade}, ${estado}, Brasil`;
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}&limit=1`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'GovernaFacil/1.0'
+                }
+            });
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                const lat = data[0].lat;
+                const lon = data[0].lon;
+
+                document.getElementById('lat').value = lat;
+                document.getElementById('long').value = lon;
+
+                console.log('Coordenadas encontradas:', lat, lon);
+
+                // Atualizar mapa se estiver visivel
+                atualizarMapaPreview(lat, lon);
+            } else {
+                // Tentar busca mais generica (apenas cidade e estado)
+                const urlSimples = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidade + ', ' + estado + ', Brasil')}&limit=1`;
+                const responseSimples = await fetch(urlSimples, {
+                    headers: {
+                        'User-Agent': 'GovernaFacil/1.0'
+                    }
+                });
+                const dataSimples = await responseSimples.json();
+
+                if (dataSimples && dataSimples.length > 0) {
+                    document.getElementById('lat').value = dataSimples[0].lat;
+                    document.getElementById('long').value = dataSimples[0].lon;
+                    console.log('Coordenadas aproximadas (cidade):', dataSimples[0].lat, dataSimples[0].lon);
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao buscar coordenadas:', error);
+        }
+    }
+
+    // Funcao para atualizar preview do mapa no modal
+    function atualizarMapaPreview(lat, lon) {
+        const mapContainer = document.getElementById('map');
+        if (!mapContainer) return;
+
+        // Destruir mapa anterior se existir
+        if (mapaModal) {
+            mapaModal.remove();
+            mapaModal = null;
+        }
+
+        // Limpar container
+        mapContainer.innerHTML = '';
+
+        // Criar novo mapa
+        mapaModal = L.map('map').setView([lat, lon], 16);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(mapaModal);
+
+        // Adicionar marcador
+        const customIcon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="
+                background: #ef4444;
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            "></div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+
+        L.marker([lat, lon], { icon: customIcon }).addTo(mapaModal);
+
+        // Forcar atualizacao do tamanho do mapa
+        setTimeout(() => {
+            if (mapaModal) {
+                mapaModal.invalidateSize();
+            }
+        }, 100);
+    }
+
+    // Mascara para o campo CEP
+    document.getElementById('cep')?.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 5) {
+            value = value.replace(/(\d{5})(\d{0,3})/, '$1-$2');
+        }
+        e.target.value = value;
+    });
+
+    // Buscar CEP ao pressionar Enter
+    document.getElementById('cep')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            buscarCep();
+        }
     });
 </script>
 
@@ -849,7 +1193,7 @@
             alert('Incidência não identificada.');
             return;
         }
-        if (!novoStatus) {
+        if (!novoStatusId) {
             alert('Selecione o novo status.');
             return;
         }
@@ -1039,6 +1383,16 @@
 </script>
 
 <style>
+    /* Z-index dos modais para ficarem acima do header (z-index: 1100) */
+    #incidenciaModal,
+    #interacaoModal {
+        z-index: 1200 !important;
+    }
+
+    .modal-backdrop {
+        z-index: 1150 !important;
+    }
+
     .btn-delete-interaction {
         opacity: 0.7;
         transition: opacity 0.3s;
@@ -1055,6 +1409,223 @@
     .list-group-item:hover .btn-delete-interaction {
         display: inline-block;
     }
+
+    /* Estilo para linhas clicaveis da tabela */
+    .tr-hover {
+        transition: background-color 0.2s ease;
+    }
+
+    .tr-hover:hover {
+        background-color: #e9ecef !important;
+    }
+
+    .tr-hover:hover td {
+        background-color: #e9ecef !important;
+    }
+
+    /* Estilo para botao de timeline */
+    .btn-outline-primary.btn-sm {
+        padding: 6px 10px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-primary.btn-sm:hover {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-outline-primary.btn-sm i {
+        font-size: 14px;
+    }
+
+    /* Estilos para feedback na tabela */
+    .feedback-cell {
+        cursor: pointer;
+    }
+
+    .feedback-cell:hover {
+        background-color: rgba(245, 158, 11, 0.1) !important;
+    }
+
+    .feedback-stars {
+        color: #f59e0b;
+        font-size: 0.85rem;
+    }
+
+    .feedback-stars .bi-star {
+        color: var(--gray-300);
+    }
+
+    .feedback-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .feedback-badge.resolvido {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .feedback-badge.nao-resolvido {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
 </style>
+
+<!-- Modal de Feedback -->
+<div class="modal fade" id="feedbackModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-star-fill text-warning me-2"></i>Feedback do Cidadao</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div class="feedback-stars fs-3" id="feedbackModalStars"></div>
+                    <span class="badge bg-light text-dark fs-6" id="feedbackModalNota"></span>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Status da Resolucao</label>
+                    <div id="feedbackModalStatus"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Comentario</label>
+                    <div class="p-3 bg-light rounded" id="feedbackModalComentario">
+                        <em class="text-muted">Sem comentario</em>
+                    </div>
+                </div>
+                <div class="text-muted small">
+                    <i class="bi bi-calendar me-1"></i>
+                    <span id="feedbackModalData"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="/feedbacks" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-list me-1"></i>Ver Todos Feedbacks
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Cache de feedbacks
+    let feedbacksCache = {};
+
+    async function carregarFeedbacksIncidencias(incidencias) {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        // Filtrar apenas incidencias resolvidas (status 3)
+        const resolvidasIds = incidencias
+            .filter(inc => inc.status === 3)
+            .map(inc => inc.incidencia_id);
+
+        if (resolvidasIds.length === 0) return;
+
+        // Carregar feedbacks em paralelo
+        const promises = resolvidasIds.map(async (id) => {
+            // Verificar cache
+            if (feedbacksCache[id] !== undefined) {
+                atualizarCelulaFeedback(id, feedbacksCache[id]);
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/incidencias/${id}/feedback-info`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    feedbacksCache[id] = data;
+                    atualizarCelulaFeedback(id, data);
+                }
+            } catch (error) {
+                console.error(`Erro ao carregar feedback ${id}:`, error);
+            }
+        });
+
+        await Promise.all(promises);
+    }
+
+    function atualizarCelulaFeedback(incidenciaId, data) {
+        const celula = document.getElementById(`feedback-${incidenciaId}`);
+        if (!celula) return;
+
+        if (data.has_feedback && data.feedback) {
+            const fb = data.feedback;
+            let html = '<div class="d-flex flex-column align-items-center gap-1">';
+
+            // Estrelas
+            html += '<div class="feedback-stars">';
+            for (let i = 1; i <= 5; i++) {
+                html += `<i class="bi ${i <= fb.avaliacao ? 'bi-star-fill' : 'bi-star'}"></i>`;
+            }
+            html += '</div>';
+
+            // Badge de status
+            if (fb.resolvido) {
+                html += '<span class="feedback-badge resolvido"><i class="bi bi-check"></i>OK</span>';
+            } else {
+                html += '<span class="feedback-badge nao-resolvido"><i class="bi bi-x"></i>Reaberto</span>';
+            }
+
+            html += '</div>';
+            celula.innerHTML = html;
+        } else {
+            celula.innerHTML = '<span class="text-muted small">Aguardando</span>';
+        }
+    }
+
+    function verFeedback(incidenciaId) {
+        event.stopPropagation();
+
+        const data = feedbacksCache[incidenciaId];
+        if (!data || !data.has_feedback) {
+            // Se nao tem feedback, nao abre modal
+            return;
+        }
+
+        const fb = data.feedback;
+
+        // Preencher modal
+        let starsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+            starsHtml += `<i class="bi ${i <= fb.avaliacao ? 'bi-star-fill' : 'bi-star'}"></i>`;
+        }
+        document.getElementById('feedbackModalStars').innerHTML = starsHtml;
+        document.getElementById('feedbackModalNota').textContent = fb.avaliacao + '/5';
+
+        if (fb.resolvido) {
+            document.getElementById('feedbackModalStatus').innerHTML =
+                '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Confirmado Resolvido</span>';
+        } else {
+            document.getElementById('feedbackModalStatus').innerHTML =
+                '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Nao Resolvido (Reaberto)</span>';
+        }
+
+        if (fb.comentario) {
+            document.getElementById('feedbackModalComentario').innerHTML = fb.comentario;
+        } else {
+            document.getElementById('feedbackModalComentario').innerHTML = '<em class="text-muted">Sem comentario</em>';
+        }
+
+        document.getElementById('feedbackModalData').textContent = fb.data_feedback || '-';
+
+        // Abrir modal
+        const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+        modal.show();
+    }
+</script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 {% endblock %}

@@ -58,28 +58,31 @@
     #mapaCompleto {
         height: calc(100vh - 220px);
         min-height: 500px;
+        position: relative;
+        z-index: 1;
     }
 
     .mapa-legenda {
         display: flex;
-        gap: 1.5rem;
-        padding: 1rem 1.25rem;
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
+        gap: 1rem;
+        padding: 0;
+        background: transparent;
+        border-radius: 0;
+        margin: 0;
     }
 
     .legenda-item {
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 0.875rem;
+        gap: 6px;
+        font-size: 0.75rem;
         color: #475569;
         font-weight: 500;
     }
 
     .legenda-item .marker {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
         border: 2px solid white;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -137,6 +140,17 @@
         margin-bottom: 10px;
     }
 
+    .popup-content .btn-primary {
+        background-color: var(--primary) !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+
+    .popup-content .btn-primary:hover {
+        background-color: var(--primary-dark) !important;
+        color: #ffffff !important;
+    }
+
     .leaflet-popup-content-wrapper {
         border-radius: 12px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.15);
@@ -157,7 +171,14 @@
 
 <div class="mapa-container">
     <div class="mapa-header">
-        <h4><i class="bi bi-geo-alt-fill text-primary"></i> Mapa de Incidências</h4>
+        <div class="d-flex align-items-center gap-3">
+            <h4><i class="bi bi-geo-alt-fill text-primary"></i> Mapa de Incidências</h4>
+            <div class="mapa-legenda">
+                <div class="legenda-item"><div class="marker novo"></div> Novo</div>
+                <div class="legenda-item"><div class="marker andamento"></div> Em Andamento</div>
+                <div class="legenda-item"><div class="marker resolvido"></div> Resolvido</div>
+            </div>
+        </div>
         <div class="mapa-filtros">
             <div class="filtro-group">
                 <label>Bairro:</label>
@@ -187,12 +208,6 @@
     </div>
 
     <div id="mapaCompleto"></div>
-
-    <div class="mapa-legenda">
-        <div class="legenda-item"><div class="marker novo"></div> Novo</div>
-        <div class="legenda-item"><div class="marker andamento"></div> Em Andamento</div>
-        <div class="legenda-item"><div class="marker resolvido"></div> Resolvido</div>
-    </div>
 </div>
 {% endblock %}
 
@@ -200,7 +215,9 @@
 <script>
     let mapa = null;
     let markersLayer = null;
+    let bairroPolygonLayer = null;
     let todasIncidencias = [];
+    let cidadePadrao = 'Várzea Grande, MT, Brasil'; // Cidade padrão do sistema
 
     async function carregarMapa() {
         const token = localStorage.getItem('token');
@@ -219,11 +236,14 @@
                 if (!mapa) {
                     mapa = L.map('mapaCompleto').setView([data.centro.lat, data.centro.lng], 13);
 
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenStreetMap'
+                    // Tile layer com visual mais moderno (CartoDB Voyager - similar ao Google Maps)
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                        subdomains: 'abcd',
+                        maxZoom: 20
                     }).addTo(mapa);
 
-                    markersLayer = L.layerGroup().addTo(mapa);
+                    markersLayer = L.markerClusterGroup().addTo(mapa);
                 }
 
                 // Carregar filtros
@@ -263,6 +283,144 @@
         });
     }
 
+    // Limites de Várzea Grande para validação de coordenadas
+    const VARZEA_GRANDE_BOUNDS = {
+        minLat: -15.72, maxLat: -15.58,
+        minLng: -56.20, maxLng: -56.06
+    };
+
+    // Verifica se as coordenadas estão dentro de Várzea Grande
+    function dentroDeVarzeaGrande(lat, lng) {
+        return lat >= VARZEA_GRANDE_BOUNDS.minLat && lat <= VARZEA_GRANDE_BOUNDS.maxLat &&
+               lng >= VARZEA_GRANDE_BOUNDS.minLng && lng <= VARZEA_GRANDE_BOUNDS.maxLng;
+    }
+
+    // Desenha área ao redor das incidências do bairro selecionado
+    function desenharAreaIncidencias(incidenciasDoBairro, nomeBairro) {
+        const pontos = incidenciasDoBairro.filter(i => i.lat && i.lng).map(i => [parseFloat(i.lat), parseFloat(i.lng)]);
+
+        if (pontos.length === 0) return;
+
+        // Criar grupo de layers
+        bairroPolygonLayer = L.featureGroup().addTo(mapa);
+
+        if (pontos.length === 1) {
+            // Se há apenas 1 ponto, desenha círculo ao redor dele
+            L.circle(pontos[0], {
+                radius: 500,
+                color: '#6366f1',
+                weight: 3,
+                opacity: 0.9,
+                fillColor: '#6366f1',
+                fillOpacity: 0.1,
+                dashArray: '8, 8'
+            }).addTo(bairroPolygonLayer);
+        } else if (pontos.length === 2) {
+            // Se há 2 pontos, desenha linha e área ao redor
+            const centroLat = (pontos[0][0] + pontos[1][0]) / 2;
+            const centroLng = (pontos[0][1] + pontos[1][1]) / 2;
+            const dist = Math.sqrt(Math.pow(pontos[1][0] - pontos[0][0], 2) + Math.pow(pontos[1][1] - pontos[0][1], 2)) * 111000;
+
+            L.circle([centroLat, centroLng], {
+                radius: Math.max(dist / 2 + 300, 500),
+                color: '#6366f1',
+                weight: 3,
+                opacity: 0.9,
+                fillColor: '#6366f1',
+                fillOpacity: 0.1,
+                dashArray: '8, 8'
+            }).addTo(bairroPolygonLayer);
+        } else {
+            // Se há 3+ pontos, usar convex hull para criar polígono
+            // Algoritmo Gift Wrapping (Jarvis March) simplificado
+            const pontosOrdenados = [...pontos].sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+
+            const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+
+            const lower = [];
+            for (const p of pontosOrdenados) {
+                while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+                    lower.pop();
+                }
+                lower.push(p);
+            }
+
+            const upper = [];
+            for (let i = pontosOrdenados.length - 1; i >= 0; i--) {
+                const p = pontosOrdenados[i];
+                while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+                    upper.pop();
+                }
+                upper.push(p);
+            }
+
+            lower.pop();
+            upper.pop();
+            const hull = lower.concat(upper);
+
+            // Expandir o hull um pouco para dar margem
+            const centroLat = hull.reduce((sum, p) => sum + p[0], 0) / hull.length;
+            const centroLng = hull.reduce((sum, p) => sum + p[1], 0) / hull.length;
+
+            const expandido = hull.map(p => [
+                centroLat + (p[0] - centroLat) * 1.15,
+                centroLng + (p[1] - centroLng) * 1.15
+            ]);
+
+            L.polygon(expandido, {
+                color: '#6366f1',
+                weight: 3,
+                opacity: 0.9,
+                fillColor: '#6366f1',
+                fillOpacity: 0.1,
+                dashArray: '8, 8'
+            }).addTo(bairroPolygonLayer);
+        }
+
+        // Calcular centro para o label
+        const centroLat = pontos.reduce((sum, p) => sum + p[0], 0) / pontos.length;
+        const centroLng = pontos.reduce((sum, p) => sum + p[1], 0) / pontos.length;
+
+        // Adicionar label do bairro no topo
+        L.marker([centroLat, centroLng], {
+            icon: L.divIcon({
+                className: 'bairro-label',
+                html: `<div style="background: rgba(99, 102, 241, 0.95); color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+                    <i class="bi bi-geo-alt-fill" style="margin-right: 4px;"></i>${nomeBairro}
+                    <span style="margin-left: 8px; opacity: 0.8;">(${incidenciasDoBairro.length})</span>
+                </div>`,
+                iconSize: [150, 30],
+                iconAnchor: [75, 15]
+            })
+        }).addTo(bairroPolygonLayer);
+
+        // Ajustar zoom para mostrar todas as incidências do bairro
+        const bounds = L.latLngBounds(pontos);
+        mapa.fitBounds(bounds, { padding: [60, 60] });
+    }
+
+    async function buscarPoligonoBairro(bairro) {
+        // Limpar poligono anterior
+        if (bairroPolygonLayer) {
+            mapa.removeLayer(bairroPolygonLayer);
+            bairroPolygonLayer = null;
+        }
+
+        if (!bairro) return;
+
+        // Buscar incidências do bairro
+        const incidenciasDoBairro = todasIncidencias.filter(i => i.bairro === bairro);
+
+        // SEMPRE desenhar área baseada nas incidências do bairro selecionado
+        // pois o Nominatim frequentemente retorna resultados incorretos
+        if (incidenciasDoBairro.length > 0) {
+            desenharAreaIncidencias(incidenciasDoBairro, bairro);
+        } else {
+            // Se não há incidências no bairro (improvável), mostrar mensagem
+            console.log(`Nenhuma incidência encontrada no bairro: ${bairro}`);
+        }
+    }
+
     function filtrar() {
         const bairro = document.getElementById('filtroBairro').value;
         const status = document.getElementById('filtroStatus').value;
@@ -281,6 +439,9 @@
         }
 
         renderizarMarcadores(filtradas);
+
+        // Buscar e desenhar poligono do bairro
+        buscarPoligonoBairro(bairro);
     }
 
     function renderizarMarcadores(incidencias) {
@@ -288,32 +449,39 @@
         document.getElementById('totalPontos').textContent = incidencias.length;
 
         incidencias.forEach(inc => {
-            const cor = getMarkerColor(inc.status);
+            const cor = inc.categoria_cor || getMarkerColor(inc.status);
+            const icone = inc.categoria_icone || 'bi-tag';
+            const statusBorder = getMarkerColor(inc.status);
 
             const customIcon = L.divIcon({
                 className: 'custom-marker',
                 html: `<div style="
                     background: ${cor};
-                    width: 26px;
-                    height: 26px;
+                    width: 32px;
+                    height: 32px;
                     border-radius: 50%;
-                    border: 3px solid white;
+                    border: 3px solid ${statusBorder};
                     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                "></div>`,
-                iconSize: [26, 26],
-                iconAnchor: [13, 13]
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <i class="bi ${icone}" style="color: white; font-size: 14px;"></i>
+                </div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
             });
 
             const popupContent = `
                 <div class="popup-content">
-                    ${inc.foto ? `<img src="/fotos/${inc.foto}" onerror="this.style.display='none'" alt="">` : ''}
+                    ${inc.foto ? `<img src="${construirUrlFoto(inc.foto)}" onerror="this.style.display='none'" alt="">` : ''}
                     <h6>${inc.categoria}</h6>
                     <p><i class="bi bi-geo-alt"></i> ${inc.bairro || 'Sem bairro'}</p>
                     <p><i class="bi bi-pin-map"></i> ${inc.endereco || 'Sem endereço'}</p>
                     <p><i class="bi bi-calendar"></i> ${inc.data}</p>
                     <span class="badge ${getStatusBadgeClass(inc.status)}">${inc.status_nome}</span>
                     <br><br>
-                    <a href="/incidencias/${inc.id}" class="btn btn-sm btn-primary w-100">
+                    <a href="/incidencia/${inc.id}/detalhe" class="btn btn-sm btn-primary w-100">
                         <i class="bi bi-eye me-1"></i>Ver Detalhes
                     </a>
                 </div>

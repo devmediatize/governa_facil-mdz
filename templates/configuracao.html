@@ -61,6 +61,7 @@
         color: #1e293b;
         font-size: 1rem;
     }
+
 </style>
 
 <div class="row">
@@ -82,13 +83,18 @@
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="categorias-tab" data-bs-toggle="tab" data-bs-target="#categorias" type="button" role="tab">
-            <i class="bi bi-tags"></i> Categorias
+        <button class="nav-link" id="ia-tab" data-bs-toggle="tab" data-bs-target="#ia" type="button" role="tab">
+            <i class="bi bi-robot"></i> Inteligência Artificial
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="ia-tab" data-bs-toggle="tab" data-bs-target="#ia" type="button" role="tab">
-            <i class="bi bi-robot"></i> Inteligência Artificial
+        <button class="nav-link" id="storage-tab" data-bs-toggle="tab" data-bs-target="#storage" type="button" role="tab">
+            <i class="bi bi-cloud-upload"></i> Armazenamento
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="notificacoes-tab" data-bs-toggle="tab" data-bs-target="#notificacoes" type="button" role="tab">
+            <i class="bi bi-bell"></i> Notificacoes
         </button>
     </li>
 </ul>
@@ -108,7 +114,8 @@
 
                         <div class="mb-4 text-center">
                             <div class="border rounded p-3 bg-light" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
-                                <img id="previewLogo" src="/static/images/logo.png" alt="Logo atual" style="max-height: 120px; max-width: 100%;">
+                                <img id="previewLogo" src="" alt="Logo atual" style="max-height: 120px; max-width: 100%; display: none;">
+                                <div id="placeholderLogo" class="text-muted"><i class="bi bi-image" style="font-size: 48px;"></i><br>Nenhuma logo configurada</div>
                             </div>
                         </div>
 
@@ -136,6 +143,44 @@
             <div class="col-md-6 mb-4">
                 <div class="card">
                     <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-image-fill"></i> Imagem de Fundo</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Esta imagem aparece como fundo na tela inicial do <strong>aplicativo mobile</strong> (atrás do logo e botões de login/cadastro).</p>
+
+                        <div class="mb-4 text-center">
+                            <div class="border rounded p-3 bg-light" style="min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                                <img id="previewImagemFundo" src="" alt="Imagem de fundo atual" style="max-height: 120px; max-width: 100%; display: none;">
+                                <div id="placeholderImagemFundo" class="text-muted"><i class="bi bi-image-fill" style="font-size: 48px;"></i><br>Nenhuma imagem de fundo configurada</div>
+                            </div>
+                        </div>
+
+                        <form id="formUploadImagemFundo" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="inputImagemFundo" class="form-label">Selecionar nova imagem de fundo</label>
+                                <input type="file" class="form-control" id="inputImagemFundo" name="file"
+                                       accept=".png,.jpg,.jpeg,.gif,.webp">
+                                <div class="form-text">Formatos aceitos: PNG, JPG, JPEG, GIF, WEBP. Recomendado: 1920x1080 ou maior.</div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" id="btnSalvarImagemFundo">
+                                    <i class="bi bi-upload"></i> Enviar Imagem
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="btnRemoverImagemFundo">
+                                    <i class="bi bi-trash"></i> Remover Imagem
+                                </button>
+                            </div>
+                        </form>
+                        <div id="alertaImagemFundo" class="mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
                         <h5 class="card-title mb-0"><i class="bi bi-palette"></i> Cores do Sistema</h5>
                     </div>
                     <div class="card-body">
@@ -155,18 +200,6 @@
                                     <input type="color" class="form-control form-control-color" id="corSecundariaColor" value="#001F5B" style="width: 50px;">
                                     <input type="text" class="form-control" id="corSecundaria" value="#001F5B" placeholder="#001F5B">
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Cores Predefinidas</label>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <button type="button" class="btn btn-sm" style="background: linear-gradient(135deg, #086218, #001F5B); color: white;" onclick="aplicarCores('#086218', '#001F5B')">Verde/Azul (Padrão)</button>
-                                <button type="button" class="btn btn-sm" style="background: linear-gradient(135deg, #0F58AD, #0092A6); color: white;" onclick="aplicarCores('#0F58AD', '#0092A6')">Azul Claro</button>
-                                <button type="button" class="btn btn-sm" style="background: linear-gradient(135deg, #1a1a2e, #16213e); color: white;" onclick="aplicarCores('#1a1a2e', '#16213e')">Escuro</button>
-                                <button type="button" class="btn btn-sm" style="background: linear-gradient(135deg, #2d3436, #636e72); color: white;" onclick="aplicarCores('#2d3436', '#636e72')">Cinza</button>
-                                <button type="button" class="btn btn-sm" style="background: linear-gradient(135deg, #6c3483, #1f618d); color: white;" onclick="aplicarCores('#6c3483', '#1f618d')">Roxo/Azul</button>
-                                <button type="button" class="btn btn-sm" style="background: linear-gradient(135deg, #c0392b, #8e44ad); color: white;" onclick="aplicarCores('#c0392b', '#8e44ad')">Vermelho/Roxo</button>
                             </div>
                         </div>
 
@@ -251,42 +284,98 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Aba Categorias -->
-    <div class="tab-pane fade" id="categorias" role="tabpanel">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0"><i class="bi bi-tags"></i> Categorias</h5>
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCategoria" onclick="novaCategoria()">
-                    <i class="bi bi-plus-lg"></i> Nova Categoria
-                </button>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover" id="tabelaCategorias">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Status</th>
-                                <th width="150">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="4">Carregando...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- Card de Configuracoes do Sistema -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-gear"></i> Configuracoes do Sistema</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="permitirAnonimo" style="width: 50px; height: 25px;">
+                                <label class="form-check-label ms-2" for="permitirAnonimo">
+                                    <strong>Permitir Incidencias Anonimas</strong>
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                Quando ativado, os cidadaos podem enviar incidencias sem se identificar.
+                                Incidencias anonimas nao geram pontos de gamificacao.
+                            </small>
+                        </div>
+                        <hr>
+                        <button type="button" class="btn btn-primary" id="btnSalvarConfigs" onclick="salvarConfigsSistema()">
+                            <i class="bi bi-check-lg"></i> Salvar Configuracoes
+                        </button>
+                        <div id="alertaConfigs" class="mt-3" style="display: none;"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+
     <!-- Aba Inteligência Artificial -->
     <div class="tab-pane fade" id="ia" role="tabpanel">
+        <!-- Cards de Provedores de IA e Dicas lado a lado -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Provedores de IA</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>OpenAI:</strong></p>
+                                <ul class="small text-muted">
+                                    <li>URL: https://api.openai.com/v1</li>
+                                    <li>Modelos: GPT-4o, GPT-4, GPT-3.5</li>
+                                    <li>Requer API Key valida</li>
+                                </ul>
+                                <p class="mb-2 mt-3"><strong>Ollama (Local):</strong></p>
+                                <ul class="small text-muted">
+                                    <li>URL: http://localhost:11434</li>
+                                    <li>Nao requer API Key</li>
+                                    <li>Modelos: Llama 3, DeepSeek, Gemma</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Anthropic:</strong></p>
+                                <ul class="small text-muted">
+                                    <li>URL: https://api.anthropic.com</li>
+                                    <li>Modelos: Claude 3.5 Sonnet, Claude 3 Opus</li>
+                                </ul>
+                                <p class="mb-2 mt-3"><strong>OpenRouter:</strong></p>
+                                <ul class="small text-muted">
+                                    <li>URL: https://openrouter.ai/api/v1</li>
+                                    <li>Acesso a multiplos provedores</li>
+                                    <li>Ex: openai/gpt-4o, anthropic/claude-3</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0"><i class="bi bi-lightbulb"></i> Dicas</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small mb-0">
+                            <li class="mb-2"><strong>Temperatura:</strong> Valores baixos (0-3) = respostas mais precisas. Altos (7-10) = mais criativas.</li>
+                            <li class="mb-2"><strong>Max Tokens:</strong> Limite de palavras/tokens na resposta. 4096 e um bom padrao.</li>
+                            <li class="mb-2"><strong>System Prompt:</strong> Defina o contexto e personalidade do assistente para respostas mais relevantes.</li>
+                            <li class="mb-2"><strong>Context Window:</strong> Tamanho maximo do contexto que o modelo pode processar.</li>
+                            <li class="mb-2"><strong>Timeout:</strong> Tempo maximo de espera por resposta do modelo.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-lg-12">
                 <!-- Card de Modelo de Linguagem -->
@@ -389,15 +478,14 @@
                     </div>
                 </div>
 
-                <!-- Botões de Ação -->
+                <!-- Botoes de Acao -->
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-info" id="btnTestarIA">
-                                    <i class="bi bi-plug"></i> Testar LLM
-                                </button>
-                            </div>
-                        </form>
+                                <i class="bi bi-plug"></i> Testar LLM
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -416,7 +504,7 @@
                             </div>
                             <small class="text-muted">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Quando habilitado, exibe o botão de chat flutuante para consultar dados via IA.
+                                Quando habilitado, exibe o botao de chat flutuante para consultar dados via IA.
                             </small>
                         </div>
 
@@ -426,17 +514,88 @@
                                 <textarea class="form-control" id="aiSystemPrompt" rows="8" placeholder="Digite o prompt do sistema que define como o assistente vai se comportar..."></textarea>
                                 <small class="text-muted">
                                     <i class="bi bi-info-circle me-1"></i>
-                                    Este prompt define a personalidade e conhecimento do assistente. Exemplo: "Você é um assistente especializado em gestão de incidências urbanas..."
+                                    Este prompt define a personalidade e conhecimento do assistente. Exemplo: "Voce e um assistente especializado em gestao de incidencias urbanas..."
                                 </small>
                             </div>
                         </div>
 
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-primary" id="btnSalvarIA">
-                                <i class="bi bi-check-lg"></i> Salvar Todas as Configurações
+                                <i class="bi bi-check-lg"></i> Salvar Todas as Configuracoes
                             </button>
                         </div>
                         <div id="alertaIA" class="mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aba Armazenamento -->
+    <div class="tab-pane fade" id="storage" role="tabpanel">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Card de Armazenamento de Fotos (MinIO/S3) -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-cloud-upload"></i> Armazenamento de Fotos (MinIO/S3)</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Configure o servico de armazenamento externo para fotos das incidencias. Quando configurado, as fotos serao armazenadas no servidor MinIO/S3 em vez do armazenamento local.</p>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="storageAtivo" style="width: 50px; height: 25px;">
+                                <label class="form-check-label ms-2" for="storageAtivo">
+                                    <strong>Usar Armazenamento Externo</strong>
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                Quando ativado, as fotos das incidencias serao enviadas para o servidor MinIO/S3.
+                            </small>
+                        </div>
+
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="minioUrl" class="form-label">URL do Servidor</label>
+                                <input type="text" class="form-control" id="minioUrl" placeholder="https://apis3.mediatize.com.br">
+                                <small class="text-muted">URL completa do servidor MinIO ou S3</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="minioBucket" class="form-label">Nome do Bucket</label>
+                                <input type="text" class="form-control" id="minioBucket" placeholder="buracogo">
+                                <small class="text-muted">Nome do bucket onde as fotos serao armazenadas</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="minioAccessKey" class="form-label">Access Key (Opcional)</label>
+                                <input type="text" class="form-control" id="minioAccessKey" placeholder="Deixe vazio se publico">
+                                <small class="text-muted">Chave de acesso para autenticacao</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="minioSecretKey" class="form-label">Secret Key (Opcional)</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="minioSecretKey" placeholder="Deixe vazio se publico">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('minioSecretKey')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Chave secreta para autenticacao</small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary" id="btnSalvarStorage">
+                                <i class="bi bi-check-lg"></i> Salvar Configuracoes de Armazenamento
+                            </button>
+                            <button type="button" class="btn btn-info" id="btnTestarStorage">
+                                <i class="bi bi-plug"></i> Testar Conexao
+                            </button>
+                        </div>
+                        <div id="alertaStorage" class="mt-3" style="display: none;"></div>
                     </div>
                 </div>
             </div>
@@ -444,45 +603,276 @@
             <div class="col-lg-4">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Provedores de IA</h5>
+                        <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Sobre MinIO/S3</h5>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2"><strong>OpenAI:</strong></p>
+                        <p class="mb-2"><strong>O que e MinIO?</strong></p>
+                        <p class="small text-muted">
+                            MinIO e um servidor de armazenamento de objetos compativel com Amazon S3.
+                            Ele permite armazenar arquivos de forma distribuida e acessivel via HTTP.
+                        </p>
+
+                        <p class="mb-2 mt-3"><strong>Vantagens:</strong></p>
                         <ul class="small text-muted">
-                            <li>URL: https://api.openai.com/v1</li>
-                            <li>Modelos: GPT-4o, GPT-4, GPT-3.5</li>
-                            <li>Requer API Key válida</li>
+                            <li>Armazenamento centralizado de fotos</li>
+                            <li>Facil integracao com aplicativos mobile</li>
+                            <li>URLs publicas para acesso rapido</li>
+                            <li>Escalabilidade e redundancia</li>
                         </ul>
-                        <p class="mb-2 mt-3"><strong>Ollama (Local):</strong></p>
+
+                        <p class="mb-2 mt-3"><strong>Configuracao Tipica:</strong></p>
                         <ul class="small text-muted">
-                            <li>URL: http://localhost:11434</li>
-                            <li>Não requer API Key</li>
-                            <li>Modelos: Llama 3, DeepSeek, Gemma</li>
-                        </ul>
-                        <p class="mb-2 mt-3"><strong>Anthropic:</strong></p>
-                        <ul class="small text-muted">
-                            <li>URL: https://api.anthropic.com</li>
-                            <li>Modelos: Claude 3.5 Sonnet, Claude 3 Opus</li>
-                        </ul>
-                        <p class="mb-2 mt-3"><strong>OpenRouter:</strong></p>
-                        <ul class="small text-muted">
-                            <li>URL: https://openrouter.ai/api/v1</li>
-                            <li>Acesso a múltiplos provedores</li>
-                            <li>Ex: openai/gpt-4o, anthropic/claude-3</li>
+                            <li><strong>URL:</strong> https://seu-servidor.com</li>
+                            <li><strong>Bucket:</strong> nome-do-projeto</li>
+                            <li><strong>Publico:</strong> Sem credenciais</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="card-title mb-0"><i class="bi bi-lightbulb"></i> Dicas</h5>
+                    <div class="card-header bg-warning">
+                        <h5 class="card-title mb-0"><i class="bi bi-exclamation-triangle"></i> Importante</h5>
                     </div>
                     <div class="card-body">
                         <ul class="small mb-0">
-                            <li class="mb-2"><strong>Temperatura:</strong> Valores baixos (0-3) = respostas mais precisas. Altos (7-10) = mais criativas.</li>
-                            <li class="mb-2"><strong>Max Tokens:</strong> Limite de palavras/tokens na resposta. 4096 é um bom padrão.</li>
-                            <li class="mb-2"><strong>System Prompt:</strong> Defina o contexto e personalidade do assistente para respostas mais relevantes.</li>
+                            <li class="mb-2">Certifique-se de que o bucket existe antes de ativar.</li>
+                            <li class="mb-2">As fotos existentes nao serao migradas automaticamente.</li>
+                            <li class="mb-2">Teste a conexao antes de salvar as configuracoes.</li>
                         </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aba Notificacoes -->
+    <div class="tab-pane fade" id="notificacoes" role="tabpanel">
+        <div class="row">
+            <!-- Card de Email (SMTP) -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-envelope"></i> Configuracao de Email (SMTP)</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Configure o servidor SMTP para envio de emails de notificacao.</p>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="smtpServidor" class="form-label">Servidor SMTP</label>
+                                <input type="text" class="form-control" id="smtpServidor" placeholder="smtp.gmail.com">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="smtpPorta" class="form-label">Porta</label>
+                                <input type="number" class="form-control" id="smtpPorta" placeholder="587" value="587">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="smtpUsuario" class="form-label">Usuario</label>
+                                <input type="text" class="form-control" id="smtpUsuario" placeholder="email@exemplo.com">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="smtpSenha" class="form-label">Senha</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="smtpSenha" placeholder="Senha do email">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('smtpSenha')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="smtpEmailRemetente" class="form-label">Email Remetente</label>
+                                <input type="email" class="form-control" id="smtpEmailRemetente" placeholder="noreply@exemplo.com">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="smtpNomeRemetente" class="form-label">Nome do Remetente</label>
+                                <input type="text" class="form-control" id="smtpNomeRemetente" placeholder="Sistema de Incidencias">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="smtpUsarTls" checked>
+                                <label class="form-check-label" for="smtpUsarTls">
+                                    Usar TLS (recomendado)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-info" id="btnTestarEmail">
+                                <i class="bi bi-send"></i> Testar Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card de SMS -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-chat-dots"></i> Configuracao de SMS</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Configure o provedor de SMS para envio de notificacoes por mensagem de texto.</p>
+
+                        <div class="mb-3">
+                            <label for="smsProvedor" class="form-label">Provedor</label>
+                            <select class="form-select" id="smsProvedor">
+                                <option value="">Selecione o provedor</option>
+                                <option value="twilio">Twilio</option>
+                                <option value="aws_sns">AWS SNS</option>
+                                <option value="nexmo">Vonage (Nexmo)</option>
+                                <option value="zenvia">Zenvia</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="smsApiUrl" class="form-label">API URL</label>
+                            <input type="text" class="form-control" id="smsApiUrl" placeholder="https://api.twilio.com/2010-04-01">
+                            <small class="text-muted">URL da API do provedor de SMS</small>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="smsAccountSid" class="form-label">Account SID / API Key</label>
+                                <input type="text" class="form-control" id="smsAccountSid" placeholder="ACxxxxxxxxxxxxxxx">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="smsAuthToken" class="form-label">Auth Token / Secret</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="smsAuthToken" placeholder="Token de autenticacao">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('smsAuthToken')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="smsNumeroRemetente" class="form-label">Numero Remetente</label>
+                            <input type="text" class="form-control" id="smsNumeroRemetente" placeholder="+5511999999999">
+                            <small class="text-muted">Numero do remetente no formato internacional (ex: +5511999999999)</small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-info" id="btnTestarSms">
+                                <i class="bi bi-send"></i> Testar SMS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Card de Configuracoes de Envio -->
+            <div class="col-lg-8 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-gear"></i> Configuracoes de Envio Automatico</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Defina quando o sistema deve enviar notificacoes automaticamente.</p>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3"><i class="bi bi-envelope me-2"></i>Notificacoes por Email</h6>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="emailAoAbrir" style="width: 50px; height: 25px;">
+                                        <label class="form-check-label ms-2" for="emailAoAbrir">
+                                            Enviar email ao abrir incidencia
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block ms-5">Notifica o cidadao que sua incidencia foi registrada.</small>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="emailAoMudarStatus" style="width: 50px; height: 25px;">
+                                        <label class="form-check-label ms-2" for="emailAoMudarStatus">
+                                            Enviar email ao mudar status
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block ms-5">Notifica o cidadao quando o status da incidencia e alterado.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3"><i class="bi bi-chat-dots me-2"></i>Notificacoes por SMS</h6>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="smsAoAbrir" style="width: 50px; height: 25px;">
+                                        <label class="form-check-label ms-2" for="smsAoAbrir">
+                                            Enviar SMS ao abrir incidencia
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block ms-5">Envia SMS confirmando o registro da incidencia.</small>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="smsAoMudarStatus" style="width: 50px; height: 25px;">
+                                        <label class="form-check-label ms-2" for="smsAoMudarStatus">
+                                            Enviar SMS ao mudar status
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block ms-5">Envia SMS quando o status da incidencia e alterado.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card de Informacoes -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Informacoes</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Servidores SMTP Comuns:</strong></p>
+                        <ul class="small text-muted">
+                            <li><strong>Gmail:</strong> smtp.gmail.com:587</li>
+                            <li><strong>Outlook:</strong> smtp.office365.com:587</li>
+                            <li><strong>Yahoo:</strong> smtp.mail.yahoo.com:587</li>
+                        </ul>
+
+                        <p class="mb-2 mt-3"><strong>Provedores de SMS:</strong></p>
+                        <ul class="small text-muted">
+                            <li><strong>Twilio:</strong> api.twilio.com</li>
+                            <li><strong>AWS SNS:</strong> sns.amazonaws.com</li>
+                            <li><strong>Zenvia:</strong> api.zenvia.com</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header bg-warning">
+                        <h5 class="card-title mb-0"><i class="bi bi-exclamation-triangle"></i> Importante</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small mb-0">
+                            <li class="mb-2">Para Gmail, habilite "Acesso a apps menos seguros" ou use senha de app.</li>
+                            <li class="mb-2">SMS tem custo por mensagem enviada.</li>
+                            <li class="mb-2">Teste as configuracoes antes de ativar.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botao Salvar Notificacoes -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary" id="btnSalvarNotificacoes">
+                                <i class="bi bi-check-lg"></i> Salvar Todas as Configuracoes de Notificacao
+                            </button>
+                        </div>
+                        <div id="alertaNotificacoes" class="mt-3" style="display: none;"></div>
                     </div>
                 </div>
             </div>
@@ -490,37 +880,6 @@
     </div>
 </div>
 
-<!-- Modal de Categoria -->
-<div class="modal fade" id="modalCategoria" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalCategoriaTitle">Nova Categoria</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formCategoria">
-                    <input type="hidden" id="categoriaId">
-                    <div class="mb-3">
-                        <label for="categoriaNome" class="form-label">Nome da Categoria</label>
-                        <input type="text" class="form-control" id="categoriaNome" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="categoriaAtivo" class="form-label">Status</label>
-                        <select class="form-select" id="categoriaAtivo">
-                            <option value="1">Ativo</option>
-                            <option value="0">Inativo</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="btnSalvarCategoria">Salvar</button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
@@ -536,8 +895,15 @@
 
             const data = await response.json();
 
+            const previewLogo = document.getElementById('previewLogo');
+            const placeholderLogo = document.getElementById('placeholderLogo');
             if (data.logo) {
-                document.getElementById('previewLogo').src = data.logo + '?t=' + new Date().getTime();
+                previewLogo.src = data.logo + '?t=' + new Date().getTime();
+                previewLogo.style.display = 'block';
+                if (placeholderLogo) placeholderLogo.style.display = 'none';
+            } else {
+                previewLogo.style.display = 'none';
+                if (placeholderLogo) placeholderLogo.style.display = 'block';
             }
             if (data.cor_primaria) {
                 document.getElementById('corPrimaria').value = data.cor_primaria;
@@ -557,7 +923,11 @@
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById('previewLogo').src = e.target.result;
+                const previewLogo = document.getElementById('previewLogo');
+                const placeholderLogo = document.getElementById('placeholderLogo');
+                previewLogo.src = e.target.result;
+                previewLogo.style.display = 'block';
+                if (placeholderLogo) placeholderLogo.style.display = 'none';
             };
             reader.readAsDataURL(file);
         }
@@ -683,6 +1053,104 @@
         }
     }
 
+    // ========== IMAGEM DE FUNDO ==========
+    async function carregarImagemFundoAtual() {
+        try {
+            const response = await fetch('/api/configuracao/imagem-fundo', { headers });
+            if (!response.ok) return;
+
+            const data = await response.json();
+
+            const previewImagemFundo = document.getElementById('previewImagemFundo');
+            const placeholderImagemFundo = document.getElementById('placeholderImagemFundo');
+            if (data.imagem_fundo) {
+                previewImagemFundo.src = data.imagem_fundo + '?t=' + new Date().getTime();
+                previewImagemFundo.style.display = 'block';
+                if (placeholderImagemFundo) placeholderImagemFundo.style.display = 'none';
+            } else {
+                previewImagemFundo.style.display = 'none';
+                if (placeholderImagemFundo) placeholderImagemFundo.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Erro ao carregar imagem de fundo:', error);
+        }
+    }
+
+    document.getElementById('inputImagemFundo').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewImagemFundo = document.getElementById('previewImagemFundo');
+                const placeholderImagemFundo = document.getElementById('placeholderImagemFundo');
+                previewImagemFundo.src = e.target.result;
+                previewImagemFundo.style.display = 'block';
+                if (placeholderImagemFundo) placeholderImagemFundo.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('formUploadImagemFundo').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('inputImagemFundo');
+        if (!fileInput.files[0]) {
+            mostrarAlerta('alertaImagemFundo', 'warning', 'Selecione um arquivo primeiro.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            document.getElementById('btnSalvarImagemFundo').disabled = true;
+            document.getElementById('btnSalvarImagemFundo').innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
+
+            const response = await fetch('/api/configuracao/upload-imagem-fundo', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                mostrarAlerta('alertaImagemFundo', 'success', 'Imagem de fundo atualizada com sucesso!');
+                carregarImagemFundoAtual();
+                fileInput.value = '';
+            } else {
+                mostrarAlerta('alertaImagemFundo', 'danger', data.detail || 'Erro ao atualizar imagem de fundo.');
+            }
+        } catch (error) {
+            mostrarAlerta('alertaImagemFundo', 'danger', 'Erro ao enviar arquivo.');
+        } finally {
+            document.getElementById('btnSalvarImagemFundo').disabled = false;
+            document.getElementById('btnSalvarImagemFundo').innerHTML = '<i class="bi bi-upload"></i> Enviar Imagem';
+        }
+    });
+
+    document.getElementById('btnRemoverImagemFundo').addEventListener('click', async function() {
+        if (!confirm('Tem certeza que deseja remover a imagem de fundo? Será usada a imagem padrão.')) return;
+
+        try {
+            const response = await fetch('/api/configuracao/imagem-fundo', {
+                method: 'DELETE',
+                headers: headers
+            });
+
+            if (response.ok) {
+                mostrarAlerta('alertaImagemFundo', 'success', 'Imagem de fundo removida com sucesso!');
+                carregarImagemFundoAtual();
+            } else {
+                const data = await response.json();
+                mostrarAlerta('alertaImagemFundo', 'danger', data.detail || 'Erro ao remover imagem de fundo.');
+            }
+        } catch (error) {
+            mostrarAlerta('alertaImagemFundo', 'danger', 'Erro ao remover imagem de fundo.');
+        }
+    });
+
     function atualizarCoresHeader(cor1, cor2) {
         const header = document.querySelector('header.fixed-top');
         const nav = document.querySelector('nav.navbar');
@@ -706,8 +1174,35 @@
             document.getElementById('clienteEndereco').value = data.endereco || '';
             document.getElementById('clienteCidade').value = data.cidade || '';
             document.getElementById('clienteEstado').value = data.estado || '';
+
+            // Carregar configuracoes do sistema
+            document.getElementById('permitirAnonimo').checked = data.permitir_anonimo === true || data.permitir_anonimo === 1;
         } catch (error) {
             console.error('Erro ao carregar dados do cliente:', error);
+        }
+    }
+
+    // Salvar configuracoes do sistema
+    async function salvarConfigsSistema() {
+        const dados = {
+            permitir_anonimo: document.getElementById('permitirAnonimo').checked ? 1 : 0
+        };
+
+        try {
+            const response = await fetch('/api/configuracao/sistema', {
+                method: 'PUT',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+
+            if (response.ok) {
+                mostrarAlerta('alertaConfigs', 'success', 'Configuracoes salvas com sucesso!');
+            } else {
+                const data = await response.json();
+                mostrarAlerta('alertaConfigs', 'danger', data.detail || 'Erro ao salvar configuracoes.');
+            }
+        } catch (error) {
+            mostrarAlerta('alertaConfigs', 'danger', 'Erro ao salvar configuracoes.');
         }
     }
 
@@ -739,111 +1234,6 @@
             mostrarAlerta('alertaCliente', 'danger', 'Erro ao salvar dados do cliente.');
         }
     });
-
-    // ========== CATEGORIAS ==========
-    async function carregarCategorias() {
-        try {
-            const response = await fetch('/api/configuracao/categorias', { headers });
-            if (!response.ok) return;
-
-            const categorias = await response.json();
-
-            const tbody = document.querySelector('#tabelaCategorias tbody');
-            if (categorias.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center">Nenhuma categoria cadastrada</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = categorias.map(cat => `
-                <tr>
-                    <td>${cat.categoria_id}</td>
-                    <td>${cat.nome}</td>
-                    <td>
-                        <span class="badge ${cat.ativo ? 'bg-success' : 'bg-secondary'}">
-                            ${cat.ativo ? 'Ativo' : 'Inativo'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-primary me-1" onclick="editarCategoria(${cat.categoria_id}, '${cat.nome.replace(/'/g, "\\'")}', ${cat.ativo})" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-secondary" onclick="deletarCategoria(${cat.categoria_id})" title="Excluir">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        } catch (error) {
-            console.error('Erro ao carregar categorias:', error);
-        }
-    }
-
-    function novaCategoria() {
-        document.getElementById('modalCategoriaTitle').textContent = 'Nova Categoria';
-        document.getElementById('categoriaId').value = '';
-        document.getElementById('categoriaNome').value = '';
-        document.getElementById('categoriaAtivo').value = '1';
-    }
-
-    function editarCategoria(id, nome, ativo) {
-        document.getElementById('modalCategoriaTitle').textContent = 'Editar Categoria';
-        document.getElementById('categoriaId').value = id;
-        document.getElementById('categoriaNome').value = nome;
-        document.getElementById('categoriaAtivo').value = ativo;
-        new bootstrap.Modal(document.getElementById('modalCategoria')).show();
-    }
-
-    document.getElementById('btnSalvarCategoria').addEventListener('click', async function() {
-        const id = document.getElementById('categoriaId').value;
-        const nome = document.getElementById('categoriaNome').value;
-        const ativo = parseInt(document.getElementById('categoriaAtivo').value);
-
-        if (!nome.trim()) {
-            alert('Informe o nome da categoria');
-            return;
-        }
-
-        try {
-            const url = id ? `/api/configuracao/categorias/${id}` : '/api/configuracao/categorias';
-            const method = id ? 'PUT' : 'POST';
-
-            const response = await fetch(url, {
-                method: method,
-                headers: { ...headers, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome, ativo })
-            });
-
-            if (response.ok) {
-                bootstrap.Modal.getInstance(document.getElementById('modalCategoria')).hide();
-                carregarCategorias();
-            } else {
-                const data = await response.json();
-                alert(data.detail || 'Erro ao salvar categoria');
-            }
-        } catch (error) {
-            alert('Erro ao salvar categoria');
-        }
-    });
-
-    async function deletarCategoria(id) {
-        if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
-
-        try {
-            const response = await fetch(`/api/configuracao/categorias/${id}`, {
-                method: 'DELETE',
-                headers: headers
-            });
-
-            if (response.ok) {
-                carregarCategorias();
-            } else {
-                const data = await response.json();
-                alert(data.detail || 'Erro ao excluir categoria');
-            }
-        } catch (error) {
-            alert('Erro ao excluir categoria');
-        }
-    }
 
     // ========== CONFIGURAÇÃO DE IA ==========
     document.getElementById('aiTemperature').addEventListener('input', function(e) {
@@ -1028,12 +1418,281 @@
         }, 5000);
     }
 
+    // ========== CONFIGURACAO DE ARMAZENAMENTO (MinIO/S3) ==========
+    async function carregarConfigStorage() {
+        try {
+            const response = await fetch('/api/configuracao/storage', { headers });
+            if (!response.ok) {
+                console.log('Erro ao carregar configuracao de storage:', response.status);
+                return;
+            }
+
+            const config = await response.json();
+            console.log('Configuracao de storage carregada:', config);
+
+            document.getElementById('minioUrl').value = config.minio_url || '';
+            document.getElementById('minioBucket').value = config.minio_bucket || '';
+            document.getElementById('minioAccessKey').value = config.minio_access_key || '';
+            document.getElementById('minioSecretKey').value = config.minio_secret_key || '';
+            // Tratar tanto valores booleanos quanto inteiros (1/0)
+            document.getElementById('storageAtivo').checked = config.ativo === true || config.ativo === 1;
+        } catch (error) {
+            console.log('Configuracao de armazenamento nao encontrada, usando padroes.', error);
+        }
+    }
+
+    document.getElementById('btnSalvarStorage').addEventListener('click', async function() {
+        const config = {
+            minio_url: document.getElementById('minioUrl').value,
+            minio_bucket: document.getElementById('minioBucket').value,
+            minio_access_key: document.getElementById('minioAccessKey').value,
+            minio_secret_key: document.getElementById('minioSecretKey').value,
+            ativo: document.getElementById('storageAtivo').checked
+        };
+
+        try {
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
+
+            const response = await fetch('/api/configuracao/storage', {
+                method: 'PUT',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+
+            if (response.ok) {
+                mostrarAlerta('alertaStorage', 'success', 'Configuracoes de armazenamento salvas com sucesso!');
+            } else {
+                const data = await response.json();
+                mostrarAlerta('alertaStorage', 'danger', data.detail || 'Erro ao salvar configuracoes.');
+            }
+        } catch (error) {
+            mostrarAlerta('alertaStorage', 'danger', 'Erro ao salvar configuracoes de armazenamento.');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-check-lg"></i> Salvar Configuracoes de Armazenamento';
+        }
+    });
+
+    document.getElementById('btnTestarStorage').addEventListener('click', async function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Testando...';
+
+        // Primeiro salvar as configuracoes atuais
+        const config = {
+            minio_url: document.getElementById('minioUrl').value,
+            minio_bucket: document.getElementById('minioBucket').value,
+            minio_access_key: document.getElementById('minioAccessKey').value,
+            minio_secret_key: document.getElementById('minioSecretKey').value,
+            ativo: document.getElementById('storageAtivo').checked
+        };
+
+        try {
+            // Salvar antes de testar
+            await fetch('/api/configuracao/storage', {
+                method: 'PUT',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+
+            // Agora testar a conexao
+            const response = await fetch('/api/configuracao/storage/testar', {
+                method: 'POST',
+                headers: headers
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                mostrarAlerta('alertaStorage', 'success', data.message || 'Conexao testada com sucesso!');
+            } else {
+                const data = await response.json();
+                mostrarAlerta('alertaStorage', 'danger', data.detail || 'Erro ao testar conexao.');
+            }
+        } catch (error) {
+            mostrarAlerta('alertaStorage', 'danger', 'Erro ao testar conexao com o servidor.');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-plug"></i> Testar Conexao';
+        }
+    });
+
+    // ========== CONFIGURACAO DE NOTIFICACOES (Email/SMS) ==========
+    async function carregarConfigNotificacoes() {
+        try {
+            const response = await fetch('/api/configuracao/notificacoes', { headers });
+            if (!response.ok) return;
+
+            const config = await response.json();
+
+            // Email SMTP
+            document.getElementById('smtpServidor').value = config.smtp_servidor || '';
+            document.getElementById('smtpPorta').value = config.smtp_porta || 587;
+            document.getElementById('smtpUsuario').value = config.smtp_usuario || '';
+            document.getElementById('smtpSenha').value = config.smtp_senha || '';
+            document.getElementById('smtpEmailRemetente').value = config.smtp_email_remetente || '';
+            document.getElementById('smtpNomeRemetente').value = config.smtp_nome_remetente || '';
+            document.getElementById('smtpUsarTls').checked = config.smtp_usar_tls !== false;
+
+            // SMS
+            document.getElementById('smsProvedor').value = config.sms_provedor || '';
+            document.getElementById('smsApiUrl').value = config.sms_api_url || '';
+            document.getElementById('smsAccountSid').value = config.sms_account_sid || '';
+            document.getElementById('smsAuthToken').value = config.sms_auth_token || '';
+            document.getElementById('smsNumeroRemetente').value = config.sms_numero_remetente || '';
+
+            // Configuracoes de envio
+            document.getElementById('emailAoAbrir').checked = config.email_ao_abrir || false;
+            document.getElementById('emailAoMudarStatus').checked = config.email_ao_mudar_status || false;
+            document.getElementById('smsAoAbrir').checked = config.sms_ao_abrir || false;
+            document.getElementById('smsAoMudarStatus').checked = config.sms_ao_mudar_status || false;
+        } catch (error) {
+            console.log('Configuracao de notificacoes nao encontrada, usando padroes.');
+        }
+    }
+
+    document.getElementById('btnSalvarNotificacoes').addEventListener('click', async function() {
+        const config = {
+            // Email SMTP
+            smtp_servidor: document.getElementById('smtpServidor').value,
+            smtp_porta: parseInt(document.getElementById('smtpPorta').value) || 587,
+            smtp_usuario: document.getElementById('smtpUsuario').value,
+            smtp_senha: document.getElementById('smtpSenha').value,
+            smtp_email_remetente: document.getElementById('smtpEmailRemetente').value,
+            smtp_nome_remetente: document.getElementById('smtpNomeRemetente').value,
+            smtp_usar_tls: document.getElementById('smtpUsarTls').checked,
+
+            // SMS
+            sms_provedor: document.getElementById('smsProvedor').value,
+            sms_api_url: document.getElementById('smsApiUrl').value,
+            sms_account_sid: document.getElementById('smsAccountSid').value,
+            sms_auth_token: document.getElementById('smsAuthToken').value,
+            sms_numero_remetente: document.getElementById('smsNumeroRemetente').value,
+
+            // Configuracoes de envio
+            email_ao_abrir: document.getElementById('emailAoAbrir').checked,
+            email_ao_mudar_status: document.getElementById('emailAoMudarStatus').checked,
+            sms_ao_abrir: document.getElementById('smsAoAbrir').checked,
+            sms_ao_mudar_status: document.getElementById('smsAoMudarStatus').checked
+        };
+
+        try {
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
+
+            const response = await fetch('/api/configuracao/notificacoes', {
+                method: 'PUT',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+
+            if (response.ok) {
+                mostrarAlerta('alertaNotificacoes', 'success', 'Configuracoes de notificacao salvas com sucesso!');
+            } else {
+                const data = await response.json();
+                mostrarAlerta('alertaNotificacoes', 'danger', data.detail || 'Erro ao salvar configuracoes.');
+            }
+        } catch (error) {
+            mostrarAlerta('alertaNotificacoes', 'danger', 'Erro ao salvar configuracoes de notificacao.');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-check-lg"></i> Salvar Todas as Configuracoes de Notificacao';
+        }
+    });
+
+    document.getElementById('btnTestarEmail').addEventListener('click', async function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Testando...';
+
+        // Primeiro salvar as configuracoes atuais
+        const config = {
+            smtp_servidor: document.getElementById('smtpServidor').value,
+            smtp_porta: parseInt(document.getElementById('smtpPorta').value) || 587,
+            smtp_usuario: document.getElementById('smtpUsuario').value,
+            smtp_senha: document.getElementById('smtpSenha').value,
+            smtp_email_remetente: document.getElementById('smtpEmailRemetente').value,
+            smtp_nome_remetente: document.getElementById('smtpNomeRemetente').value,
+            smtp_usar_tls: document.getElementById('smtpUsarTls').checked
+        };
+
+        try {
+            // Salvar antes de testar
+            await fetch('/api/configuracao/notificacoes', {
+                method: 'PUT',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+
+            // Agora testar o envio de email
+            const response = await fetch('/api/configuracao/notificacoes/testar-email', {
+                method: 'POST',
+                headers: headers
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                mostrarAlerta('alertaNotificacoes', 'success', data.message || 'Email de teste enviado com sucesso!');
+            } else {
+                const data = await response.json();
+                mostrarAlerta('alertaNotificacoes', 'danger', data.detail || 'Erro ao enviar email de teste.');
+            }
+        } catch (error) {
+            mostrarAlerta('alertaNotificacoes', 'danger', 'Erro ao testar envio de email.');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-send"></i> Testar Email';
+        }
+    });
+
+    document.getElementById('btnTestarSms').addEventListener('click', async function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Testando...';
+
+        // Primeiro salvar as configuracoes atuais
+        const config = {
+            sms_provedor: document.getElementById('smsProvedor').value,
+            sms_api_url: document.getElementById('smsApiUrl').value,
+            sms_account_sid: document.getElementById('smsAccountSid').value,
+            sms_auth_token: document.getElementById('smsAuthToken').value,
+            sms_numero_remetente: document.getElementById('smsNumeroRemetente').value
+        };
+
+        try {
+            // Salvar antes de testar
+            await fetch('/api/configuracao/notificacoes', {
+                method: 'PUT',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+
+            // Agora testar o envio de SMS
+            const response = await fetch('/api/configuracao/notificacoes/testar-sms', {
+                method: 'POST',
+                headers: headers
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                mostrarAlerta('alertaNotificacoes', 'success', data.message || 'SMS de teste enviado com sucesso!');
+            } else {
+                const data = await response.json();
+                mostrarAlerta('alertaNotificacoes', 'danger', data.detail || 'Erro ao enviar SMS de teste.');
+            }
+        } catch (error) {
+            mostrarAlerta('alertaNotificacoes', 'danger', 'Erro ao testar envio de SMS.');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-send"></i> Testar SMS';
+        }
+    });
+
     // Carregar tudo ao iniciar
     document.addEventListener('DOMContentLoaded', function() {
         carregarLogoAtual();
+        carregarImagemFundoAtual();
         carregarDadosCliente();
-        carregarCategorias();
         carregarConfigIA();
+        carregarConfigStorage();
+        carregarConfigNotificacoes();
     });
 </script>
 {% endblock %}

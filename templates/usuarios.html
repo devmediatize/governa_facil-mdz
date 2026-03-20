@@ -2,6 +2,21 @@
 
 {% block title %}Usuários - Governa Fácil{% endblock %}
 
+{% block styles %}
+<style>
+    /* Correção de z-index para modais */
+    #userModal,
+    #permissoesModal {
+        z-index: 1200 !important;
+    }
+
+    /* Backdrop dos modais */
+    .modal-backdrop {
+        z-index: 1150 !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Usuários</h2>
@@ -17,9 +32,12 @@
                 <thead>
                     <tr>
                         <th>ID</th>
+                        <th>Foto</th>
                         <th>Nome</th>
                         <th>Email</th>
                         <th>Nível</th>
+                        <th>Cargo</th>
+                        <th>Lotação</th>
                         <th>Telefone</th>
                         <th>Endereço</th>
                         <th>Cidade</th>
@@ -35,72 +53,91 @@
 
 <!-- Modal -->
 <div class="modal fade" id="userModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header py-2">
                 <h5 class="modal-title" id="modalTitle">Novo Usuário</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body py-2">
                 <form id="userForm">
                     <input type="hidden" id="userId">
-                    <div class="mb-3">
-                        <label class="form-label">Nome</label>
-                        <input type="text" class="form-control" id="nome" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" required>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-7">
-                            <label class="form-label">Senha</label>
-                            <input type="password" class="form-control" id="senha">
-                            <small class="text-muted" style="font-style: italic;font-size:11px">Deixe em branco para
-                                manter a senha atual ao editar</small>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Nome</label>
+                            <input type="text" class="form-control form-control-sm" id="nome" required>
                         </div>
-                        <div class="col-md-5">
-                            <label class="form-label">Nível</label>
-                            <select class="form-select" id="nivel" name="nivel">
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Email</label>
+                            <input type="email" class="form-control form-control-sm" id="email" required>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label mb-1">Senha</label>
+                            <input type="password" class="form-control form-control-sm" id="senha" placeholder="Deixe vazio para manter">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label mb-1">Celular</label>
+                            <input type="tel" class="form-control form-control-sm" id="celular" maxlength="15" placeholder="(99) 99999-9999">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label mb-1">Nível</label>
+                            <select class="form-select form-select-sm" id="nivel">
                                 <option value="0">Usuário</option>
                                 <option value="1">Administrador</option>
                             </select>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Endereço</label>
-                        <input type="text" class="form-control" id="endereco" required>
-                    </div>
-                    <div class="row">
-                        <div class="mb-3">
-                            <label for="celular" class="form-label">Celular</label>
-                            <input type="tel" class="form-control" id="celular" name="celular" maxlength="15"
-                                placeholder="(99) 99999-9999">
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Cargo</label>
+                            <input type="text" class="form-control form-control-sm" id="cargo" placeholder="Ex: Analista">
                         </div>
-                        <div class="col-md-5">
-                            <div class="mb-3">
-                                <label class="form-label">Cidade</label>
-                                <input type="text" class="form-control" id="cidade" required>
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Lotação</label>
+                            <input type="text" class="form-control form-control-sm" id="lotacao" placeholder="Ex: Secretaria de Obras">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label mb-1">Endereço</label>
+                            <input type="text" class="form-control form-control-sm" id="endereco" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label mb-1">Cidade</label>
+                            <input type="text" class="form-control form-control-sm" id="cidade" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label mb-1">UF</label>
+                            <input type="text" class="form-control form-control-sm" id="estado" maxlength="2" required>
+                        </div>
+                    </div>
+                    <div class="row g-2 align-items-center border-top pt-2 mt-2">
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="ativo" checked>
+                                <label class="form-check-label">Ativo</label>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Estado</label>
-                                <input type="text" class="form-control" id="estado" maxlength="2" required>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="receberAlertasEmail" checked>
+                                <label class="form-check-label"><i class="bi bi-envelope me-1"></i> Alertas email</label>
                             </div>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="ativo" checked>
-                            <label class="form-check-label">Ativo</label>
+                        <div class="col-md-5">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="receberAlertasSistema" checked>
+                                <label class="form-check-label"><i class="bi bi-bell me-1"></i> Alertas sistema</label>
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="salvarUsuario()">Salvar</button>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="salvarUsuario()">Salvar</button>
             </div>
         </div>
     </div>
@@ -237,39 +274,56 @@
             const tbody = document.querySelector('#usuariosTable tbody');
 
             if (usuarios && usuarios.length > 0) {
-                tbody.innerHTML = usuarios.map(usuario => `
-                <tr>
-                    <td>${usuario.usuario_id}</td>
-                    <td>${usuario.nome}</td>
-                    <td>${usuario.email}</td>
-                    <td>${usuario.nivel == '1' ? 'Administrador' : 'Usuário'}</td>
-                    <td>${usuario.celular || ''}</td>
-                    <td>${usuario.endereco || ''}</td>
-                    <td>${usuario.cidade || ''}</td>
-                    <td>${usuario.estado || ''}</td>                    
-                    <td>
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-info me-1" onclick="editarUsuario(${usuario.usuario_id})">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-primary me-1" onclick="abrirPermissoes(${usuario.usuario_id})">
-                                <i class="bi bi-key"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="deletarUsuario(${usuario.usuario_id})">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+                // Cores para os badges de iniciais (variadas para diferenciar usuários)
+                const coresBadge = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#0ea5e9', '#3b82f6'];
+
+                tbody.innerHTML = usuarios.map((usuario, index) => {
+                    // Gerar iniciais do nome para placeholder
+                    const iniciais = usuario.nome.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase();
+                    const corBadge = coresBadge[index % coresBadge.length];
+
+                    // Verificar se tem foto
+                    const fotoHtml = usuario.foto
+                        ? `<img src="${usuario.foto}" alt="${usuario.nome}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">`
+                        : `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 40px; height: 40px; background: ${corBadge}; font-size: 14px;">${iniciais}</div>`;
+
+                    return `
+                    <tr>
+                        <td>${usuario.usuario_id}</td>
+                        <td>${fotoHtml}</td>
+                        <td>${usuario.nome}</td>
+                        <td>${usuario.email}</td>
+                        <td>${usuario.nivel == '1' ? 'Administrador' : 'Usuário'}</td>
+                        <td>${usuario.cargo || ''}</td>
+                        <td>${usuario.lotacao || ''}</td>
+                        <td>${usuario.celular || ''}</td>
+                        <td>${usuario.endereco || ''}</td>
+                        <td>${usuario.cidade || ''}</td>
+                        <td>${usuario.estado || ''}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-info me-1" onclick="editarUsuario(${usuario.usuario_id})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-primary me-1" onclick="abrirPermissoes(${usuario.usuario_id})">
+                                    <i class="bi bi-key"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deletarUsuario(${usuario.usuario_id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                }).join('');
             } else {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum usuário encontrado</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="12" class="text-center">Nenhum usuário encontrado</td></tr>';
             }
 
         } catch (error) {
             console.error('Erro ao carregar usuários:', error);
             const tbody = document.querySelector('#usuariosTable tbody');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar usuários</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Erro ao carregar usuários</td></tr>';
         }
     }
 
@@ -291,7 +345,11 @@
             estado: document.getElementById('estado').value,
             ativo: document.getElementById('ativo').checked,
             celular: document.getElementById('celular').value,
-            nivel: document.getElementById('nivel').value
+            nivel: document.getElementById('nivel').value,
+            cargo: document.getElementById('cargo').value,
+            lotacao: document.getElementById('lotacao').value,
+            receber_alertas_email: document.getElementById('receberAlertasEmail').checked ? 1 : 0,
+            receber_alertas_sistema: document.getElementById('receberAlertasSistema').checked ? 1 : 0
         };
 
         try {
@@ -359,6 +417,10 @@
             document.getElementById('estado').value = usuario.estado || '';
             document.getElementById('ativo').checked = usuario.ativo;
             document.getElementById('nivel').value = usuario.nivel || '0';
+            document.getElementById('cargo').value = usuario.cargo || '';
+            document.getElementById('lotacao').value = usuario.lotacao || '';
+            document.getElementById('receberAlertasEmail').checked = usuario.receber_alertas_email == 1;
+            document.getElementById('receberAlertasSistema').checked = usuario.receber_alertas_sistema == 1;
 
             // Alterar título do modal
             document.getElementById('modalTitle').textContent = 'Editar Usuário';
@@ -397,6 +459,9 @@
     document.getElementById('userModal').addEventListener('hidden.bs.modal', function () {
         document.getElementById('userForm').reset();
         document.getElementById('userId').value = '';
+        document.getElementById('receberAlertasEmail').checked = true;
+        document.getElementById('receberAlertasSistema').checked = true;
+        document.getElementById('modalTitle').textContent = 'Novo Usuario';
     });
 
     // Adicione este código após a definição da função mascaraCelular

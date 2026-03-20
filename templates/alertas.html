@@ -1,0 +1,865 @@
+{% extends "base.html" %}
+
+{% block title %}Alertas - Governa Facil{% endblock %}
+{% block page_title %}Centro de Alertas{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --primary-light: #818cf8;
+        --secondary: #0ea5e9;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --dark: #1e293b;
+        --gray-50: #f8fafc;
+        --gray-100: #f1f5f9;
+        --gray-200: #e2e8f0;
+        --gray-300: #cbd5e1;
+        --gray-400: #94a3b8;
+        --gray-500: #64748b;
+        --gray-600: #475569;
+    }
+
+    .alertas-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.25rem;
+    }
+
+    .page-header p {
+        color: var(--gray-500);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    /* Filtros */
+    .filtros-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid var(--gray-200);
+    }
+
+    .filtros-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .filtro-group {
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .filtro-group label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--gray-600);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .filtro-group select,
+    .filtro-group input {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        transition: all 0.2s;
+    }
+
+    .filtro-group select:focus,
+    .filtro-group input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    /* Lista de Alertas */
+    .alertas-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .alerta-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid var(--gray-200);
+        display: flex;
+        gap: 1rem;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .alerta-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+
+    .alerta-card.nao-lido {
+        border-left: 4px solid var(--primary);
+        background: linear-gradient(to right, rgba(99, 102, 241, 0.03), white);
+    }
+
+    .alerta-card.lido {
+        opacity: 0.7;
+    }
+
+    .alerta-icone {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.25rem;
+    }
+
+    .alerta-icone.critico {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .alerta-icone.alto {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .alerta-icone.atencao {
+        background: linear-gradient(135deg, #eab308, #ca8a04);
+        color: white;
+    }
+
+    .alerta-icone.info {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+
+    .alerta-conteudo {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .alerta-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .alerta-titulo {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0;
+    }
+
+    .alerta-data {
+        font-size: 0.75rem;
+        color: var(--gray-400);
+        white-space: nowrap;
+    }
+
+    .alerta-descricao {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
+    }
+
+    .alerta-meta {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .alerta-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.625rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .alerta-tag.tipo {
+        background: var(--gray-100);
+        color: var(--gray-600);
+    }
+
+    .alerta-tag.tipo-urgente {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .alerta-tag.tipo-sem_resposta {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .alerta-tag.tipo-feedback_negativo {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .alerta-tag.tipo-novas_incidencias {
+        background: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
+    }
+
+    .alerta-tag.prioridade-critico {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .alerta-tag.prioridade-alto {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .alerta-tag.prioridade-atencao {
+        background: rgba(234, 179, 8, 0.1);
+        color: #ca8a04;
+    }
+
+    .alerta-tag.prioridade-info {
+        background: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
+    }
+
+    .alerta-acoes {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+
+    .btn-marcar-lido {
+        padding: 0.375rem 0.75rem;
+        border: none;
+        background: var(--gray-100);
+        color: var(--gray-600);
+        border-radius: 6px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-marcar-lido:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-ver-detalhe {
+        padding: 0.375rem 0.75rem;
+        border: none;
+        background: var(--primary);
+        color: white;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-ver-detalhe:hover {
+        background: var(--primary-dark);
+        color: white;
+    }
+
+    /* Estados vazios e loading */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: white;
+        border-radius: 12px;
+        border: 1px dashed var(--gray-300);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--gray-300);
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h4 {
+        color: var(--gray-600);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--gray-400);
+        font-size: 0.875rem;
+    }
+
+    .loading-skeleton {
+        background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+        background-size: 200% 100%;
+        animation: skeleton 1.5s ease-in-out infinite;
+        border-radius: 8px;
+    }
+
+    @keyframes skeleton {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Resumo de alertas */
+    .alertas-resumo {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .resumo-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        text-align: center;
+        border: 1px solid var(--gray-200);
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .resumo-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transform: translateY(-2px);
+    }
+
+    .resumo-card.active {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .resumo-valor {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .resumo-label {
+        font-size: 0.7rem;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .resumo-card.total .resumo-valor { color: var(--primary); }
+    .resumo-card.criticos .resumo-valor { color: var(--danger); }
+    .resumo-card.urgentes .resumo-valor { color: var(--danger); }
+    .resumo-card.sem-resposta .resumo-valor { color: var(--warning); }
+    .resumo-card.feedbacks .resumo-valor { color: #dc2626; }
+    .resumo-card.novas .resumo-valor { color: var(--secondary); }
+
+    /* Paginacao */
+    .paginacao {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .paginacao button {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--gray-200);
+        background: white;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .paginacao button:hover:not(:disabled) {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .paginacao button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .paginacao button.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    /* Responsivo */
+    @media (max-width: 768px) {
+        .alertas-resumo {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .filtros-row {
+            flex-direction: column;
+        }
+
+        .filtro-group {
+            width: 100%;
+        }
+
+        .alerta-card {
+            flex-direction: column;
+        }
+
+        .alerta-icone {
+            width: 40px;
+            height: 40px;
+        }
+    }
+</style>
+
+<div class="alertas-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div>
+            <h2><i class="bi bi-bell-fill me-2"></i>Centro de Alertas</h2>
+            <p>Monitore alertas e notificacoes importantes do sistema</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-outline-primary btn-sm" onclick="marcarTodosLidos()">
+                <i class="bi bi-check-all me-1"></i> Marcar Todos como Lidos
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="carregarAlertas()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Atualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Resumo -->
+    <div class="alertas-resumo">
+        <div class="resumo-card total" onclick="filtrarPorTipo('')" title="Mostrar todos os alertas">
+            <div class="resumo-valor" id="totalAlertas">-</div>
+            <div class="resumo-label">Total</div>
+        </div>
+        <div class="resumo-card criticos" onclick="filtrarPorTipo('critico')" title="Filtrar alertas criticos">
+            <div class="resumo-valor" id="alertasCriticos">-</div>
+            <div class="resumo-label">Criticos</div>
+        </div>
+        <div class="resumo-card urgentes" onclick="filtrarPorTipo('urgente')" title="Filtrar incidencias urgentes">
+            <div class="resumo-valor" id="alertasUrgentes">-</div>
+            <div class="resumo-label">Urgentes</div>
+        </div>
+        <div class="resumo-card sem-resposta" onclick="filtrarPorTipo('sem_resposta')" title="Filtrar sem resposta">
+            <div class="resumo-valor" id="alertasSemResposta">-</div>
+            <div class="resumo-label">Sem Resposta</div>
+        </div>
+        <div class="resumo-card feedbacks" onclick="filtrarPorTipo('feedback_negativo')" title="Filtrar feedbacks negativos">
+            <div class="resumo-valor" id="alertasFeedbacks">-</div>
+            <div class="resumo-label">Feedbacks Neg.</div>
+        </div>
+        <div class="resumo-card novas" onclick="filtrarPorTipo('novas_incidencias')" title="Filtrar novas incidencias">
+            <div class="resumo-valor" id="alertasNovas">-</div>
+            <div class="resumo-label">Novas (24h)</div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros-card">
+        <div class="filtros-row">
+            <div class="filtro-group">
+                <label>Tipo de Alerta</label>
+                <select id="filtroTipo" onchange="filtrar()">
+                    <option value="">Todos os tipos</option>
+                    <option value="urgente">Incidencias Urgentes</option>
+                    <option value="sem_resposta">Sem Resposta (5+ dias)</option>
+                    <option value="feedback_negativo">Feedbacks Negativos</option>
+                    <option value="novas_incidencias">Novas Incidencias (24h)</option>
+                    <option value="bairro">Bairro Critico</option>
+                    <option value="categoria">Aumento de Categoria</option>
+                </select>
+            </div>
+            <div class="filtro-group">
+                <label>Severidade</label>
+                <select id="filtroPrioridade" onchange="filtrar()">
+                    <option value="">Todas</option>
+                    <option value="critico">Critico</option>
+                    <option value="alto">Alto</option>
+                    <option value="atencao">Atencao</option>
+                    <option value="info">Informativo</option>
+                </select>
+            </div>
+            <div class="filtro-group">
+                <label>Status</label>
+                <select id="filtroStatus" onchange="filtrar()">
+                    <option value="">Todos</option>
+                    <option value="nao_lido">Nao Lidos</option>
+                    <option value="lido">Lidos</option>
+                </select>
+            </div>
+            <div class="filtro-group">
+                <label>Periodo</label>
+                <select id="filtroPeriodo" onchange="filtrar()">
+                    <option value="">Todos</option>
+                    <option value="hoje">Hoje</option>
+                    <option value="semana">Ultima Semana</option>
+                    <option value="mes">Ultimo Mes</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Alertas -->
+    <div id="listaAlertas" class="alertas-lista">
+        <!-- Carregando -->
+        <div class="alerta-card loading-skeleton" style="height: 100px;"></div>
+        <div class="alerta-card loading-skeleton" style="height: 100px;"></div>
+        <div class="alerta-card loading-skeleton" style="height: 100px;"></div>
+    </div>
+
+    <!-- Paginacao -->
+    <div class="paginacao" id="paginacao"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let todosAlertas = [];
+    let alertasFiltrados = [];
+    let paginaAtual = 1;
+    const itensPorPagina = 20;
+    let resumoDados = {};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarAlertas();
+    });
+
+    async function carregarAlertas() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        try {
+            // Carregar alertas do sistema (dinamicos)
+            const response = await fetch('/api/alertas/sistema', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Erro ao carregar alertas');
+
+            const data = await response.json();
+            todosAlertas = data.alertas || [];
+            resumoDados = data.resumo || {};
+
+            atualizarResumo();
+            filtrar();
+        } catch (error) {
+            console.error('Erro:', error);
+            document.getElementById('listaAlertas').innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <h4>Erro ao carregar alertas</h4>
+                    <p>${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    function atualizarResumo() {
+        document.getElementById('totalAlertas').textContent = resumoDados.total || 0;
+        document.getElementById('alertasCriticos').textContent = resumoDados.criticos || 0;
+        document.getElementById('alertasUrgentes').textContent = resumoDados.urgentes || 0;
+        document.getElementById('alertasSemResposta').textContent = resumoDados.sem_resposta || 0;
+        document.getElementById('alertasFeedbacks').textContent = resumoDados.feedbacks_negativos || 0;
+        document.getElementById('alertasNovas').textContent = resumoDados.novas_24h || 0;
+    }
+
+    function filtrarPorTipo(tipo) {
+        // Remover active de todos
+        document.querySelectorAll('.resumo-card').forEach(c => c.classList.remove('active'));
+
+        // Adicionar active no clicado
+        if (tipo) {
+            document.getElementById('filtroTipo').value = tipo;
+            event.target.closest('.resumo-card').classList.add('active');
+        } else {
+            document.getElementById('filtroTipo').value = '';
+            document.querySelector('.resumo-card.total').classList.add('active');
+        }
+
+        filtrar();
+    }
+
+    function filtrar() {
+        const tipo = document.getElementById('filtroTipo').value;
+        const prioridade = document.getElementById('filtroPrioridade').value;
+        const status = document.getElementById('filtroStatus').value;
+        const periodo = document.getElementById('filtroPeriodo').value;
+
+        alertasFiltrados = todosAlertas.filter(alerta => {
+            // Filtro por tipo
+            if (tipo) {
+                if (tipo === 'critico') {
+                    if (alerta.severidade !== 'critico') return false;
+                } else {
+                    if (alerta.tipo !== tipo) return false;
+                }
+            }
+
+            // Filtro por severidade
+            if (prioridade && alerta.severidade !== prioridade) return false;
+
+            // Filtro por status lido/nao lido
+            if (status === 'nao_lido' && alerta.lido) return false;
+            if (status === 'lido' && !alerta.lido) return false;
+
+            // Filtro por periodo
+            if (periodo && alerta.data_criacao) {
+                const dataAlerta = new Date(alerta.data_criacao);
+                const hoje = new Date();
+                if (periodo === 'hoje') {
+                    if (dataAlerta.toDateString() !== hoje.toDateString()) return false;
+                } else if (periodo === 'semana') {
+                    const umaSemanaAtras = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    if (dataAlerta < umaSemanaAtras) return false;
+                } else if (periodo === 'mes') {
+                    const umMesAtras = new Date(hoje.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    if (dataAlerta < umMesAtras) return false;
+                }
+            }
+
+            return true;
+        });
+
+        paginaAtual = 1;
+        renderizarAlertas();
+    }
+
+    function renderizarAlertas() {
+        const container = document.getElementById('listaAlertas');
+        const inicio = (paginaAtual - 1) * itensPorPagina;
+        const fim = inicio + itensPorPagina;
+        const alertasPagina = alertasFiltrados.slice(inicio, fim);
+
+        if (alertasFiltrados.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-bell-slash"></i>
+                    <h4>Nenhum alerta encontrado</h4>
+                    <p>Nao ha alertas com os filtros selecionados</p>
+                </div>
+            `;
+            document.getElementById('paginacao').innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = alertasPagina.map(alerta => {
+            const severidadeClass = alerta.severidade || 'info';
+            const lidoClass = alerta.lido ? 'lido' : 'nao-lido';
+            const icone = alerta.icone || getIconeAlerta(alerta.tipo);
+            const dataFormatada = formatarData(alerta.data_criacao);
+
+            return `
+                <div class="alerta-card ${lidoClass}" onclick="verAlerta('${alerta.id}', '${alerta.link || ''}')">
+                    <div class="alerta-icone ${severidadeClass}">
+                        <i class="bi ${icone}"></i>
+                    </div>
+                    <div class="alerta-conteudo">
+                        <div class="alerta-header">
+                            <h5 class="alerta-titulo">${alerta.titulo || 'Alerta'}</h5>
+                            <span class="alerta-data">${dataFormatada}</span>
+                        </div>
+                        <p class="alerta-descricao">${alerta.mensagem || ''}</p>
+                        <div class="alerta-meta">
+                            <span class="alerta-tag tipo-${alerta.tipo}">
+                                <i class="bi bi-tag"></i> ${formatarTipo(alerta.tipo)}
+                            </span>
+                            <span class="alerta-tag prioridade-${severidadeClass}">
+                                <i class="bi bi-flag-fill"></i> ${formatarSeveridade(severidadeClass)}
+                            </span>
+                            ${alerta.referencia ? `
+                                <span class="alerta-tag tipo">
+                                    <i class="bi bi-link-45deg"></i> ${alerta.referencia}
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="alerta-acoes">
+                        ${alerta.link ? `
+                            <a href="${alerta.link}" class="btn-ver-detalhe" onclick="event.stopPropagation();">
+                                <i class="bi bi-eye"></i> Ver
+                            </a>
+                        ` : ''}
+                        ${!alerta.lido && alerta.alerta_id ? `
+                            <button class="btn-marcar-lido" onclick="event.stopPropagation(); marcarLido(${alerta.alerta_id})">
+                                <i class="bi bi-check"></i> Marcar lido
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        renderizarPaginacao();
+    }
+
+    function renderizarPaginacao() {
+        const totalPaginas = Math.ceil(alertasFiltrados.length / itensPorPagina);
+        const container = document.getElementById('paginacao');
+
+        if (totalPaginas <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = `
+            <button ${paginaAtual === 1 ? 'disabled' : ''} onclick="irParaPagina(${paginaAtual - 1})">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        `;
+
+        for (let i = 1; i <= totalPaginas; i++) {
+            if (i === 1 || i === totalPaginas || (i >= paginaAtual - 2 && i <= paginaAtual + 2)) {
+                html += `
+                    <button class="${i === paginaAtual ? 'active' : ''}" onclick="irParaPagina(${i})">
+                        ${i}
+                    </button>
+                `;
+            } else if (i === paginaAtual - 3 || i === paginaAtual + 3) {
+                html += `<button disabled>...</button>`;
+            }
+        }
+
+        html += `
+            <button ${paginaAtual === totalPaginas ? 'disabled' : ''} onclick="irParaPagina(${paginaAtual + 1})">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    function irParaPagina(pagina) {
+        paginaAtual = pagina;
+        renderizarAlertas();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function getIconeAlerta(tipo) {
+        const icones = {
+            'urgente': 'bi-exclamation-octagon-fill',
+            'sem_resposta': 'bi-clock-history',
+            'feedback_negativo': 'bi-emoji-frown-fill',
+            'novas_incidencias': 'bi-plus-circle-fill',
+            'bairro': 'bi-geo-alt-fill',
+            'categoria': 'bi-graph-up-arrow',
+            'sistema': 'bi-gear-fill'
+        };
+        return icones[tipo] || 'bi-bell-fill';
+    }
+
+    function formatarTipo(tipo) {
+        const tipos = {
+            'urgente': 'Urgente',
+            'sem_resposta': 'Sem Resposta',
+            'feedback_negativo': 'Feedback Negativo',
+            'novas_incidencias': 'Novas Incidencias',
+            'bairro': 'Bairro Critico',
+            'categoria': 'Categoria em Alta',
+            'sistema': 'Sistema'
+        };
+        return tipos[tipo] || tipo || 'Alerta';
+    }
+
+    function formatarSeveridade(severidade) {
+        const severidades = {
+            'critico': 'Critico',
+            'alto': 'Alto',
+            'atencao': 'Atencao',
+            'info': 'Informativo'
+        };
+        return severidades[severidade] || severidade || 'Normal';
+    }
+
+    function formatarData(dataStr) {
+        if (!dataStr) return '';
+        const data = new Date(dataStr);
+        const agora = new Date();
+        const diff = agora - data;
+
+        if (diff < 60000) return 'Agora mesmo';
+        if (diff < 3600000) return `Ha ${Math.floor(diff / 60000)} min`;
+        if (diff < 86400000) return `Ha ${Math.floor(diff / 3600000)}h`;
+        if (diff < 172800000) return 'Ontem';
+
+        return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    }
+
+    async function marcarLido(alertaId) {
+        const token = localStorage.getItem('token');
+        try {
+            await fetch(`/api/alertas/${alertaId}/marcar-lido`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            // Recarregar alertas
+            carregarAlertas();
+        } catch (error) {
+            console.error('Erro ao marcar alerta como lido:', error);
+        }
+    }
+
+    async function marcarTodosLidos() {
+        const token = localStorage.getItem('token');
+        try {
+            await fetch('/api/alertas/marcar-todos-lidos', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            // Recarregar alertas
+            carregarAlertas();
+        } catch (error) {
+            console.error('Erro ao marcar todos como lidos:', error);
+        }
+    }
+
+    function verAlerta(alertaId, link) {
+        if (link) {
+            window.location.href = link;
+        }
+    }
+</script>
+{% endblock %}

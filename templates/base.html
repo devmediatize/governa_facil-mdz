@@ -6,12 +6,16 @@
     <title>{% block title %}Governa Fácil{% endblock %}</title>
     <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <link href="/static/css/style.css" rel="stylesheet">
     <link href="/static/css/assistente-ia.css" rel="stylesheet">
+    {% block styles %}{% endblock %}
 
     <style>
         :root {
@@ -65,22 +69,27 @@
         }
 
         .sidebar-header {
-            padding: 20px;
+            padding: 2px 15px 2px 15px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 0;
             color: var(--white);
             text-decoration: none;
+            margin: 0;
+            padding: 0;
         }
 
         .logo-img {
             height: 120px;
             max-width: 220px;
             object-fit: contain;
+            margin: 0;
+            padding: 0;
+            display: block;
         }
 
         .logo-text {
@@ -104,7 +113,7 @@
         }
 
         .nav-section-title {
-            color: var(--gray-500);
+            color: var(--gray-400);
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
@@ -248,6 +257,7 @@
         /* User Dropdown */
         .user-dropdown {
             position: relative;
+            z-index: 1200;
         }
 
         .user-avatar-btn-wrapper {
@@ -285,8 +295,8 @@
         }
 
         .avatar-img-header {
-            width: 52px;
-            height: 52px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             border: 3px solid var(--gray-200);
             object-fit: cover;
@@ -304,7 +314,7 @@
             visibility: hidden;
             transform: translateY(-10px);
             transition: all 0.2s;
-            z-index: 1000;
+            z-index: 9999;
         }
 
         .user-dropdown-menu.show {
@@ -375,14 +385,14 @@
         /* ============ HEADER ============ */
         .top-header {
             background: var(--white);
-            padding: 16px 30px;
+            padding: 12px 30px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1100;
         }
 
         .header-left {
@@ -635,6 +645,20 @@
             padding: 16px 24px;
         }
 
+        /* ============ LEAFLET POPUP BUTTONS ============ */
+        .leaflet-popup-content .popup-content .btn-primary,
+        .leaflet-popup-content-wrapper .popup-content .btn-primary {
+            background-color: var(--primary) !important;
+            color: #ffffff !important;
+            border: none !important;
+        }
+
+        .leaflet-popup-content .popup-content .btn-primary:hover,
+        .leaflet-popup-content-wrapper .popup-content .btn-primary:hover {
+            background-color: var(--primary-dark) !important;
+            color: #ffffff !important;
+        }
+
         /* ============ LOADER ============ */
         #loader {
             display: none;
@@ -651,6 +675,253 @@
 
         #loader.show {
             display: flex;
+        }
+
+        /* ============ NOTIFICATION BELL ============ */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .notification-bell .header-btn {
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--white);
+            transform: translate(25%, -25%);
+            animation: pulse-badge 2s infinite;
+        }
+
+        .notification-badge.hidden {
+            display: none;
+        }
+
+        @keyframes pulse-badge {
+            0%, 100% {
+                transform: translate(25%, -25%) scale(1);
+            }
+            50% {
+                transform: translate(25%, -25%) scale(1.1);
+            }
+        }
+
+        /* Notification Dropdown */
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 360px;
+            max-height: 480px;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .notification-dropdown-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notification-dropdown-header h6 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .notification-dropdown-header .mark-all-read {
+            font-size: 12px;
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .notification-dropdown-header .mark-all-read:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .notification-list {
+            max-height: 340px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--gray-100);
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+
+        .notification-item:hover {
+            background: var(--gray-100);
+        }
+
+        .notification-item.unread {
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .notification-item.unread:hover {
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.critico {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        .notification-icon.alto {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .notification-icon.medio {
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--secondary);
+        }
+
+        .notification-icon.baixo {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .notification-icon.info {
+            background: rgba(79, 70, 229, 0.15);
+            color: var(--primary);
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark);
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .notification-message {
+            font-size: 13px;
+            color: var(--gray-500);
+            margin-bottom: 4px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .notification-time {
+            font-size: 11px;
+            color: var(--gray-400);
+        }
+
+        .notification-unread-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        .notification-dropdown-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--gray-200);
+            text-align: center;
+        }
+
+        .notification-dropdown-footer a {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .notification-dropdown-footer a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .notification-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--gray-400);
+        }
+
+        .notification-empty i {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .notification-empty p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* New notification flash animation */
+        .notification-bell.has-new .header-btn {
+            animation: bell-shake 0.5s ease-in-out;
+        }
+
+        @keyframes bell-shake {
+            0%, 100% { transform: rotate(0); }
+            15% { transform: rotate(15deg); }
+            30% { transform: rotate(-15deg); }
+            45% { transform: rotate(10deg); }
+            60% { transform: rotate(-10deg); }
+            75% { transform: rotate(5deg); }
+            90% { transform: rotate(-5deg); }
         }
 
         /* ============ RESPONSIVE ============ */
@@ -712,6 +983,10 @@
                     <i class="bi bi-geo-alt-fill"></i>
                     Mapa
                 </a>
+                <a class="nav-link {% if request.path.startswith('/cidadaos') %}active{% endif %}" href="/cidadaos">
+                    <i class="bi bi-person-badge"></i>
+                    Cidadãos
+                </a>
             </div>
 
             <div class="nav-section">
@@ -719,6 +994,22 @@
                 <a class="nav-link {% if request.path.startswith('/relatorios') %}active{% endif %}" href="/relatorios">
                     <i class="bi bi-bar-chart-line"></i>
                     Relatórios
+                </a>
+                <a class="nav-link {% if request.path.startswith('/feedbacks') %}active{% endif %}" href="/feedbacks">
+                    <i class="bi bi-star"></i>
+                    Feedbacks
+                </a>
+                <a class="nav-link {% if request.path.startswith('/estatisticas') %}active{% endif %}" href="/estatisticas">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    Estatísticas
+                </a>
+                <a class="nav-link {% if request.path.startswith('/alertas') %}active{% endif %}" href="/alertas">
+                    <i class="bi bi-bell-fill"></i>
+                    Alertas
+                </a>
+                <a class="nav-link {% if request.path.startswith('/ranking') %}active{% endif %}" href="/ranking">
+                    <i class="bi bi-trophy-fill"></i>
+                    Ranking
                 </a>
             </div>
 
@@ -754,7 +1045,7 @@
         <!-- Header -->
         <header class="top-header">
             <div class="header-left">
-                <img src="/static/images/logo.png" alt="Cliente" class="client-logo" id="clientLogo">
+                <img src="" alt="Cliente" class="client-logo" id="clientLogo" style="opacity: 0; transition: opacity 0.3s;">
             </div>
             <div class="header-center">
                 <div id="assistente-ia-container">
@@ -762,6 +1053,25 @@
                 </div>
             </div>
             <div class="header-right">
+                <!-- Notification Bell -->
+                <div class="notification-bell" id="notificationBell">
+                    <button class="header-btn" id="notificationBtn" title="Notificações">
+                        <i class="bi bi-bell"></i>
+                        <span class="notification-badge hidden" id="notificationBadge">0</span>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-dropdown-header">
+                            <h6><i class="bi bi-bell me-2"></i>Notificações</h6>
+                            <a href="#" class="mark-all-read" id="markAllReadBtn">Marcar todas como lidas</a>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <!-- Alertas serao carregados aqui via JavaScript -->
+                        </div>
+                        <div class="notification-dropdown-footer">
+                            <a href="/alertas"><i class="bi bi-arrow-right me-1"></i>Ver todos os alertas</a>
+                        </div>
+                    </div>
+                </div>
                 <div class="user-dropdown">
                     <button class="user-avatar-btn-wrapper" id="userAvatarBtn">
                         <div class="user-info-header">
@@ -853,6 +1163,14 @@
     </div>
 
     <style>
+        /* Z-index do modal de perfil para ficar acima do header */
+        #modalPerfil {
+            z-index: 1200;
+        }
+        #modalPerfil .modal-backdrop,
+        .modal-backdrop {
+            z-index: 1150;
+        }
         .profile-avatar-container {
             position: relative;
             display: inline-block;
@@ -965,12 +1283,7 @@
         }
 
         async function carregarLogoCliente() {
-            const logoSalva = localStorage.getItem('logo_cliente');
             const clientLogo = document.getElementById('clientLogo');
-
-            if (logoSalva && clientLogo) {
-                clientLogo.src = logoSalva;
-            }
 
             try {
                 const token = localStorage.getItem('token');
@@ -982,10 +1295,12 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    const logoUrl = (data.logo || '/static/images/logo.png') + '?t=' + Date.now();
-                    localStorage.setItem('logo_cliente', logoUrl);
-
-                    if (clientLogo) clientLogo.src = logoUrl;
+                    // Só mostra logo se tiver uma configurada para este cliente
+                    if (data.logo && clientLogo) {
+                        const logoUrl = data.logo + '?t=' + Date.now();
+                        clientLogo.src = logoUrl;
+                        clientLogo.style.opacity = '1'; // Mostra logo após carregar
+                    }
 
                     // Salvar cores
                     if (data.cor_primaria) {
@@ -1085,14 +1400,14 @@
             // Validar tipo de arquivo
             const tiposPermitidos = ['image/png', 'image/jpeg', 'image/jpg'];
             if (!tiposPermitidos.includes(file.type)) {
-                alert('Formato de arquivo nao permitido. Use PNG, JPG ou JPEG.');
+                alert('Formato de arquivo não permitido. Use PNG, JPG ou JPEG.');
                 return;
             }
 
             // Validar tamanho (max 5MB)
             const maxSize = 5 * 1024 * 1024;
             if (file.size > maxSize) {
-                alert('Arquivo muito grande. O tamanho maximo e 5MB.');
+                alert('Arquivo muito grande. O tamanho máximo é 5MB.');
                 return;
             }
 
@@ -1158,6 +1473,308 @@
             }
             return response;
         };
+
+        // ============ NOTIFICATION SYSTEM ============
+        const NotificationSystem = {
+            lastCount: 0,
+            pollingInterval: null,
+            notificationSound: null,
+
+            init: function() {
+                // Inicializar som de notificacao
+                this.initNotificationSound();
+
+                // Carregar alertas iniciais
+                this.loadUnreadAlerts();
+
+                // Polling removido - atualizacao manual apenas
+
+                // Event listeners
+                this.setupEventListeners();
+            },
+
+            initNotificationSound: function() {
+                // Criar elemento de audio para notificacao
+                this.notificationSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleUErnN3blmg7IZTX1YZuVEmaz9eJdl1XocnThHVgZ6TBzH95a3Oqvc2DfXB7sLnLhH56gra1x4R/fYe7scaDgYGMvqzFhYKEkMGoxoWEh5PFo8aGhYqWyJ7GhoaJmMqaxoeHi5vMlsaIiI2dzo/Gh4iPn9CJxoiJkKHSgseJipKj1HrIioqTpNZyyouKk6XXZM2NipSl2FTQj4qUpdlC05GJlKXaM9aTiJSl2iTamYeUpdofxZqGlKXaF86chJWl2hPRnoOVptoPz5+Dlqbawk+fg5em2rt9n4OXptqzfJ+DmKfar3ufg5io2qt6n4OYqNqoeZ+DmKjapXifg5ip2qN3n4OYqdqgdp+DmKnar3Wfg5mq2q10n4OZqtqrdJ+Dmarat3Ofg5mr2r9yn4Oaq9rNcZ+Dm6vd4W+gg5ys3/Btg4Wdr+D/a4OHn7Hg/2mDiKGz4P9og4misOD/Z4OKpLDg/2eDi6Ww4P9mg4ymsOD/ZYONprDg/2SDjqaw4P9kg4+msOD/ZIOQprDg/2SDkKaw4P9kg5GmsOD/ZIOSprDg/2SDkqaw4P9kg5KmsOD/ZIOSprDg/2SDkqaw4P9kg5GmsOD/ZIOQprDg/2SDj6aw4P9kg46msOD/ZIONprDg/2WDjKaw4P9mg4ulsOD/Z4OKpLDg/2iDiKOw4P9pg4aisOD/aoOGobDg/2uDhJ+w4P9tg4OesOD/cIOBnK/g/3aDf5uv4P98g32ar+D/g4N6mK/g/4uDd5av4P+Vg3SUr+D/oYNxkq/g/66Dbo+v4P+9g2uMr+D/zINoh6/g/9yDZIOu4P/vg2B/ruH/hINce63j/5yDV3es5f+zg1Jzq+b/y4NNb6nn/+KDSWun6f/6g0Vmpuv/F4RAYqTs/zOEPF6i7f9QhDhZn+//boQ0VJzx/42EL0+Y8/+thCpKlfX/zoQlRZH3/+6EID+N+f8QhRs6ivv/MYUVNIb9/1KFEC6C//9zhQso/v//lIUFIvr//7aF/xv2//HYAP8V8v//+v8A/g/u////AP8J6v////8A/QPm/////wD8/eH/////APv24/////8A+u/l/////wD56+j/////APjn6/////8A9+Pu/////wD24fH/////APXe9P////8A9Nv3/////wDy2Pr/////APHV/f////8A8NL//');
+                this.notificationSound.volume = 0.5;
+            },
+
+            playNotificationSound: function() {
+                try {
+                    // Verificar se o usuario habilitou som de notificacao (pode ser salvo no localStorage)
+                    const soundEnabled = localStorage.getItem('notification_sound') !== 'false';
+                    if (soundEnabled && this.notificationSound) {
+                        this.notificationSound.currentTime = 0;
+                        this.notificationSound.play().catch(e => {
+                            // Navegador bloqueou autoplay - isso e normal
+                            console.log('Autoplay bloqueado pelo navegador');
+                        });
+                    }
+                } catch (e) {
+                    console.error('Erro ao tocar som de notificacao:', e);
+                }
+            },
+
+            startPolling: function() {
+                // Polling a cada 2 minutos
+                this.pollingInterval = setInterval(() => {
+                    this.loadUnreadAlerts();
+                }, 120000);
+            },
+
+            stopPolling: function() {
+                if (this.pollingInterval) {
+                    clearInterval(this.pollingInterval);
+                    this.pollingInterval = null;
+                }
+            },
+
+            setupEventListeners: function() {
+                const notificationBtn = document.getElementById('notificationBtn');
+                const notificationDropdown = document.getElementById('notificationDropdown');
+                const markAllReadBtn = document.getElementById('markAllReadBtn');
+
+                // Toggle dropdown
+                if (notificationBtn) {
+                    notificationBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        notificationDropdown.classList.toggle('show');
+                        // Fechar dropdown de usuario se estiver aberto
+                        const userDropdown = document.getElementById('userDropdownMenu');
+                        if (userDropdown) userDropdown.classList.remove('show');
+                    });
+                }
+
+                // Marcar todas como lidas
+                if (markAllReadBtn) {
+                    markAllReadBtn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        await this.markAllAsRead();
+                    });
+                }
+
+                // Fechar dropdown ao clicar fora
+                document.addEventListener('click', (e) => {
+                    if (notificationDropdown && !notificationDropdown.contains(e.target) &&
+                        !notificationBtn?.contains(e.target)) {
+                        notificationDropdown.classList.remove('show');
+                    }
+                });
+            },
+
+            loadUnreadAlerts: async function() {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) return;
+
+                    const response = await fetch('/api/alertas/nao-lidos', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const alertas = data.alertas || [];
+                        const count = data.total || alertas.length;
+
+                        // Verificar se ha novos alertas
+                        if (count > this.lastCount && this.lastCount > 0) {
+                            this.showNewAlertNotification(alertas);
+
+                            // Tocar som se houver alerta critico
+                            const temCritico = alertas.some(a => a.nivel === 'critico');
+                            if (temCritico) {
+                                this.playNotificationSound();
+                            }
+                        }
+
+                        this.lastCount = count;
+                        this.updateBadge(count);
+                        this.renderAlerts(alertas);
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar alertas:', error);
+                }
+            },
+
+            updateBadge: function(count) {
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            },
+
+            showNewAlertNotification: function(alertas) {
+                const bell = document.getElementById('notificationBell');
+                if (bell) {
+                    bell.classList.add('has-new');
+                    setTimeout(() => {
+                        bell.classList.remove('has-new');
+                    }, 1000);
+                }
+            },
+
+            renderAlerts: function(alertas) {
+                const listContainer = document.getElementById('notificationList');
+                if (!listContainer) return;
+
+                if (!alertas || alertas.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="notification-empty">
+                            <i class="bi bi-bell-slash"></i>
+                            <p>Nenhuma notificação pendente</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Limitar a 10 alertas no dropdown
+                const alertasLimitados = alertas.slice(0, 10);
+
+                listContainer.innerHTML = alertasLimitados.map(alerta => {
+                    const iconClass = this.getIconClass(alerta.nivel);
+                    const icon = this.getIcon(alerta.nivel);
+                    const timeAgo = this.formatTimeAgo(alerta.data_criacao);
+                    const unreadClass = alerta.lido ? '' : 'unread';
+
+                    return `
+                        <div class="notification-item ${unreadClass}" data-id="${alerta.id}" onclick="NotificationSystem.markAsRead(${alerta.id})">
+                            <div class="notification-icon ${iconClass}">
+                                <i class="bi ${icon}"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">${this.escapeHtml(alerta.titulo || 'Alerta')}</div>
+                                <div class="notification-message">${this.escapeHtml(alerta.mensagem || '')}</div>
+                                <div class="notification-time">${timeAgo}</div>
+                            </div>
+                            ${!alerta.lido ? '<div class="notification-unread-dot"></div>' : ''}
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            getIconClass: function(nivel) {
+                const classes = {
+                    'critico': 'critico',
+                    'alto': 'alto',
+                    'medio': 'medio',
+                    'baixo': 'baixo'
+                };
+                return classes[nivel] || 'info';
+            },
+
+            getIcon: function(nivel) {
+                const icons = {
+                    'critico': 'bi-exclamation-octagon-fill',
+                    'alto': 'bi-exclamation-triangle-fill',
+                    'medio': 'bi-info-circle-fill',
+                    'baixo': 'bi-check-circle-fill'
+                };
+                return icons[nivel] || 'bi-bell-fill';
+            },
+
+            formatTimeAgo: function(dateString) {
+                if (!dateString) return '';
+
+                const date = new Date(dateString);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+
+                if (diffMins < 1) return 'Agora mesmo';
+                if (diffMins < 60) return `Há ${diffMins} minuto${diffMins > 1 ? 's' : ''}`;
+                if (diffHours < 24) return `Há ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+                if (diffDays < 7) return `Há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+
+                return date.toLocaleDateString('pt-BR');
+            },
+
+            escapeHtml: function(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            },
+
+            markAsRead: async function(alertaId) {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) return;
+
+                    const response = await fetch(`/api/alertas/${alertaId}/marcar-lido`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Atualizar a lista de alertas
+                        this.loadUnreadAlerts();
+                    }
+                } catch (error) {
+                    console.error('Erro ao marcar alerta como lido:', error);
+                }
+            },
+
+            markAllAsRead: async function() {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) return;
+
+                    const response = await fetch('/api/alertas/marcar-todos-lidos', {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Atualizar a lista de alertas
+                        this.loadUnreadAlerts();
+                    }
+                } catch (error) {
+                    console.error('Erro ao marcar todos alertas como lidos:', error);
+                }
+            }
+        };
+
+        // Inicializar sistema de notificacoes quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aguardar um pouco para garantir que a autenticacao foi verificada
+            setTimeout(() => {
+                if (localStorage.getItem('token')) {
+                    NotificationSystem.init();
+                }
+            }, 500);
+        });
+    </script>
+    <!-- Configuracoes globais do sistema -->
+    <script>
+        // Configuracoes globais do sistema
+        const CONFIG = {
+            MINIO_URL: 'https://apis3.mediatize.com.br',
+            MINIO_BUCKET: 'buracogo',
+            get MINIO_BASE_URL() { return `${this.MINIO_URL}/${this.MINIO_BUCKET}`; }
+        };
+
+        // Funcao global para construir URL de foto
+        function construirUrlFoto(path) {
+            if (!path) return '';
+            if (path.startsWith('http')) return path;
+            if (path.startsWith('/fotos/')) return path;  // Fotos locais (interacoes)
+            if (path.startsWith('fotos/')) return '/' + path;  // Fotos locais sem barra inicial
+            if (path.startsWith('buraco_')) return '/fotos/' + path;
+            return `${CONFIG.MINIO_BASE_URL}/${path}`;
+        }
     </script>
     {% block scripts %}{% endblock %}
     <script src="/static/js/assistente-ia.js"></script>

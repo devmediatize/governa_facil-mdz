@@ -1,0 +1,1087 @@
+{% extends "base.html" %}
+
+{% block title %}Ranking - Governa Fácil{% endblock %}
+
+{% block styles %}
+<style>
+    /* ===== VARIÁVEIS ===== */
+    :root {
+        --gold: #FFD700;
+        --gold-dark: #DAA520;
+        --silver: #C0C0C0;
+        --silver-dark: #A8A8A8;
+        --bronze: #CD7F32;
+        --bronze-dark: #B8732E;
+    }
+
+    /* ===== LAYOUT PRINCIPAL ===== */
+    .ranking-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .page-header {
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .page-header p {
+        color: var(--gray-500);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    /* ===== CARDS DE ESTATÍSTICAS ===== */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        border: 1px solid var(--gray-100);
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .stat-icon.engajamento { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
+    .stat-icon.participantes { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+    .stat-icon.pontos { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .stat-icon.badges { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+    .stat-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--dark);
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--gray-500);
+        font-weight: 500;
+    }
+
+    /* ===== PODIO TOP 3 ===== */
+    .podio-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border: 1px solid var(--gray-100);
+    }
+
+    .podio-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .podio-header h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .podio-header h3 i {
+        color: var(--gold);
+    }
+
+    .podio-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 1.5rem;
+        padding: 0 2rem;
+        min-height: 320px;
+    }
+
+    .podio-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: slideUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .podio-item:nth-child(1) { animation-delay: 0.3s; }
+    .podio-item:nth-child(2) { animation-delay: 0.1s; }
+    .podio-item:nth-child(3) { animation-delay: 0.5s; }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .podio-avatar-container {
+        position: relative;
+        margin-bottom: 0.75rem;
+    }
+
+    .podio-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.5rem;
+        border: 4px solid white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        overflow: hidden;
+    }
+
+    .podio-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .podio-item.primeiro .podio-avatar {
+        width: 100px;
+        height: 100px;
+        font-size: 2rem;
+        border-color: var(--gold);
+        box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+    }
+
+    .podio-item.segundo .podio-avatar {
+        border-color: var(--silver);
+        box-shadow: 0 4px 15px rgba(192, 192, 192, 0.4);
+    }
+
+    .podio-item.terceiro .podio-avatar {
+        border-color: var(--bronze);
+        box-shadow: 0 4px 15px rgba(205, 127, 50, 0.4);
+    }
+
+    .podio-medal {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .podio-item.primeiro .podio-medal {
+        background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+        color: white;
+        width: 38px;
+        height: 38px;
+    }
+
+    .podio-item.segundo .podio-medal {
+        background: linear-gradient(135deg, var(--silver), var(--silver-dark));
+        color: white;
+    }
+
+    .podio-item.terceiro .podio-medal {
+        background: linear-gradient(135deg, var(--bronze), var(--bronze-dark));
+        color: white;
+    }
+
+    .podio-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--dark);
+        text-align: center;
+        max-width: 140px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .podio-item.primeiro .podio-name {
+        font-size: 1.1rem;
+    }
+
+    .podio-points {
+        font-size: 0.9rem;
+        color: var(--primary);
+        font-weight: 700;
+        margin-top: 0.25rem;
+    }
+
+    .podio-level {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--gray-100);
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        color: var(--gray-600);
+        margin-top: 0.5rem;
+    }
+
+    .podio-pedestal {
+        width: 100%;
+        margin-top: 1rem;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 800;
+        color: rgba(255,255,255,0.9);
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .podio-item.primeiro .podio-pedestal {
+        width: 130px;
+        height: 120px;
+        background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    }
+
+    .podio-item.segundo .podio-pedestal {
+        width: 110px;
+        height: 90px;
+        background: linear-gradient(180deg, var(--silver) 0%, var(--silver-dark) 100%);
+    }
+
+    .podio-item.terceiro .podio-pedestal {
+        width: 110px;
+        height: 70px;
+        background: linear-gradient(180deg, var(--bronze) 0%, var(--bronze-dark) 100%);
+    }
+
+    /* ===== TABELA DE RANKING ===== */
+    .ranking-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border: 1px solid var(--gray-100);
+        overflow: hidden;
+    }
+
+    .ranking-card-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .ranking-card-header h5 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .ranking-card-header h5 i {
+        color: var(--gray-400);
+    }
+
+    .ranking-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .ranking-table thead th {
+        background: var(--gray-50);
+        border-bottom: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+        color: var(--gray-500);
+        padding: 0.9rem 1rem;
+        text-align: left;
+    }
+
+    .ranking-table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: 0.875rem;
+    }
+
+    .ranking-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .ranking-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .ranking-table tbody tr:hover {
+        background-color: var(--gray-50);
+    }
+
+    .ranking-table tbody tr.top-3 {
+        background: linear-gradient(90deg, rgba(255, 215, 0, 0.08) 0%, transparent 100%);
+    }
+
+    .ranking-table tbody tr.top-3:hover {
+        background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, var(--gray-50) 100%);
+    }
+
+    .ranking-position {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
+
+    .ranking-position.pos-1 {
+        background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+        color: white;
+        box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+    }
+
+    .ranking-position.pos-2 {
+        background: linear-gradient(135deg, var(--silver), var(--silver-dark));
+        color: white;
+    }
+
+    .ranking-position.pos-3 {
+        background: linear-gradient(135deg, var(--bronze), var(--bronze-dark));
+        color: white;
+    }
+
+    .ranking-position.pos-other {
+        background: var(--gray-100);
+        color: var(--gray-600);
+    }
+
+    .ranking-user {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .ranking-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .ranking-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .ranking-user-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ranking-user-name {
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .ranking-user-level {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .ranking-points {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 1rem;
+    }
+
+    .ranking-level {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .ranking-level.level-1 { background: rgba(148, 163, 184, 0.15); color: var(--gray-600); }
+    .ranking-level.level-2 { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .ranking-level.level-3 { background: rgba(14, 165, 233, 0.15); color: var(--secondary); }
+    .ranking-level.level-4 { background: rgba(99, 102, 241, 0.15); color: var(--primary); }
+    .ranking-level.level-5 { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+
+    /* ===== BADGES ===== */
+    .ranking-badges {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .badge-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .badge-icon:hover {
+        transform: scale(1.15);
+    }
+
+    .badge-icon i {
+        color: white;
+    }
+
+    /* ===== PROGRESS BAR PRÓXIMO NÍVEL ===== */
+    .progress-container {
+        width: 100%;
+        max-width: 120px;
+    }
+
+    .progress-label {
+        font-size: 0.7rem;
+        color: var(--gray-500);
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .progress-bar-mini {
+        height: 6px;
+        background: var(--gray-200);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .progress-bar-mini .progress-fill {
+        height: 100%;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        transition: width 0.5s ease;
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .ranking-empty {
+        padding: 4rem 2rem;
+        text-align: center;
+        color: var(--gray-400);
+    }
+
+    .ranking-empty i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .ranking-empty h4 {
+        color: var(--gray-600);
+        margin-bottom: 0.5rem;
+    }
+
+    .ranking-empty p {
+        font-size: 0.875rem;
+    }
+
+    /* ===== LOADING ===== */
+    .ranking-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem;
+    }
+
+    /* ===== RESPONSIVO ===== */
+    @media (max-width: 1200px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 991px) {
+        .podio-container {
+            gap: 1rem;
+            padding: 0 1rem;
+        }
+
+        .podio-item.primeiro .podio-avatar {
+            width: 80px;
+            height: 80px;
+        }
+
+        .podio-item.primeiro .podio-pedestal {
+            width: 100px;
+            height: 100px;
+        }
+
+        .podio-item.segundo .podio-pedestal,
+        .podio-item.terceiro .podio-pedestal {
+            width: 90px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .podio-container {
+            flex-wrap: wrap;
+            min-height: auto;
+        }
+
+        .ranking-table thead th,
+        .ranking-table tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .ranking-badges {
+            display: none;
+        }
+
+        .progress-container {
+            display: none;
+        }
+    }
+
+    /* ===== ANIMAÇÕES DE ENTRADA ===== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    .ranking-table tbody tr {
+        animation: fadeInUp 0.3s ease-out forwards;
+        opacity: 0;
+    }
+
+    .ranking-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+    .ranking-table tbody tr:nth-child(2) { animation-delay: 0.15s; }
+    .ranking-table tbody tr:nth-child(3) { animation-delay: 0.2s; }
+    .ranking-table tbody tr:nth-child(4) { animation-delay: 0.25s; }
+    .ranking-table tbody tr:nth-child(5) { animation-delay: 0.3s; }
+    .ranking-table tbody tr:nth-child(6) { animation-delay: 0.35s; }
+    .ranking-table tbody tr:nth-child(7) { animation-delay: 0.4s; }
+    .ranking-table tbody tr:nth-child(8) { animation-delay: 0.45s; }
+    .ranking-table tbody tr:nth-child(9) { animation-delay: 0.5s; }
+    .ranking-table tbody tr:nth-child(10) { animation-delay: 0.55s; }
+
+    /* ===== CONFETTI ANIMATION ===== */
+    .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: var(--gold);
+        animation: confetti-fall 3s ease-in-out infinite;
+    }
+
+    @keyframes confetti-fall {
+        0% {
+            transform: translateY(-100%) rotate(0deg);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(300%) rotate(720deg);
+            opacity: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ranking-container">
+    <!-- HEADER -->
+    <div class="page-header">
+        <h2><i class="bi bi-trophy-fill" style="color: var(--gold);"></i> Ranking de Cidadãos</h2>
+        <p>Os cidadãos mais ativos e engajados na melhoria da cidade</p>
+    </div>
+
+    <!-- CARDS DE ESTATISTICAS -->
+    <div class="stats-row">
+        <div class="stat-card animate-fade-in" style="animation-delay: 0.1s;">
+            <div class="stat-icon engajamento">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalIncidenciasReportadas">-</div>
+                <div class="stat-label">Incidências Reportadas</div>
+            </div>
+        </div>
+        <div class="stat-card animate-fade-in" style="animation-delay: 0.2s;">
+            <div class="stat-icon participantes">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalParticipantes">-</div>
+                <div class="stat-label">Cidadãos Participantes</div>
+            </div>
+        </div>
+        <div class="stat-card animate-fade-in" style="animation-delay: 0.3s;">
+            <div class="stat-icon pontos">
+                <i class="bi bi-star-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalPontosDistribuidos">-</div>
+                <div class="stat-label">Pontos Distribuídos</div>
+            </div>
+        </div>
+        <div class="stat-card animate-fade-in" style="animation-delay: 0.4s;">
+            <div class="stat-icon badges">
+                <i class="bi bi-award-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalBadgesConquistados">-</div>
+                <div class="stat-label">Badges Conquistados</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PODIO TOP 3 -->
+    <div class="podio-section animate-fade-in" style="animation-delay: 0.5s;">
+        <div class="podio-header">
+            <h3><i class="bi bi-trophy-fill"></i> Pódio - Top 3 Cidadãos</h3>
+        </div>
+        <div class="podio-container" id="podioContainer">
+            <div class="ranking-loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABELA RANKING COMPLETO -->
+    <div class="ranking-card animate-fade-in" style="animation-delay: 0.6s;">
+        <div class="ranking-card-header">
+            <h5><i class="bi bi-list-ol"></i> Ranking Completo - Top 10</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary" onclick="carregarRanking()" title="Atualizar">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="ranking-table" id="rankingTable">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">#</th>
+                        <th>Cidadão</th>
+                        <th style="width: 100px;">Pontos</th>
+                        <th style="width: 100px;">Nível</th>
+                        <th style="width: 150px;">Badges</th>
+                        <th style="width: 140px;">Progresso</th>
+                    </tr>
+                </thead>
+                <tbody id="rankingTableBody">
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="spinner-border text-primary spinner-border-sm me-2"></div>
+                            Carregando ranking...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Configurações de níveis
+    const NIVEIS = {
+        1: { nome: 'Iniciante', pontos_proximo: 100, icone: 'bi-1-circle' },
+        2: { nome: 'Colaborador', pontos_proximo: 300, icone: 'bi-2-circle' },
+        3: { nome: 'Engajado', pontos_proximo: 600, icone: 'bi-3-circle' },
+        4: { nome: 'Ativo', pontos_proximo: 1000, icone: 'bi-4-circle' },
+        5: { nome: 'Líder', pontos_proximo: null, icone: 'bi-5-circle' }
+    };
+
+    // Badges padrão (caso não venham do backend)
+    const BADGES_ICONS = {
+        'star': { icon: 'bi-star-fill', cor: '#FFD700' },
+        'fire': { icon: 'bi-fire', cor: '#FF6B35' },
+        'heart': { icon: 'bi-heart-fill', cor: '#E91E63' },
+        'lightning': { icon: 'bi-lightning-fill', cor: '#FFC107' },
+        'trophy': { icon: 'bi-trophy-fill', cor: '#9C27B0' },
+        'medal': { icon: 'bi-award-fill', cor: '#2196F3' },
+        'check': { icon: 'bi-check-circle-fill', cor: '#4CAF50' },
+        'eye': { icon: 'bi-eye-fill', cor: '#00BCD4' },
+        'camera': { icon: 'bi-camera-fill', cor: '#795548' },
+        'map': { icon: 'bi-geo-alt-fill', cor: '#F44336' }
+    };
+
+    let rankingData = [];
+
+    async function carregarRanking() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('Token não encontrado');
+            return;
+        }
+
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        try {
+            // Carregar ranking
+            const response = await fetch('/api/ranking?limite=10', { headers });
+            if (!response.ok) throw new Error('Erro ao carregar ranking');
+            rankingData = await response.json();
+
+            // Carregar estatísticas
+            const statsResponse = await fetch('/api/ranking/estatisticas', { headers }).catch(() => null);
+            let stats = null;
+            if (statsResponse && statsResponse.ok) {
+                stats = await statsResponse.json();
+            }
+
+            // Renderizar
+            renderPodio(rankingData.slice(0, 3));
+            renderTabela(rankingData);
+            renderEstatisticas(stats, rankingData);
+
+        } catch (error) {
+            console.error('Erro ao carregar ranking:', error);
+            renderEmpty();
+        }
+    }
+
+    function renderPodio(top3) {
+        const container = document.getElementById('podioContainer');
+
+        if (!top3 || top3.length === 0) {
+            container.innerHTML = `
+                <div class="ranking-empty">
+                    <i class="bi bi-trophy"></i>
+                    <h4>Nenhum cidadão no ranking ainda</h4>
+                    <p>Os cidadãos mais ativos aparecerão aqui</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Reorganizar: 2o, 1o, 3o
+        const podioOrdem = [];
+        if (top3[1]) podioOrdem.push({ ...top3[1], classe: 'segundo', posicao: 2 });
+        if (top3[0]) podioOrdem.push({ ...top3[0], classe: 'primeiro', posicao: 1 });
+        if (top3[2]) podioOrdem.push({ ...top3[2], classe: 'terceiro', posicao: 3 });
+
+        container.innerHTML = podioOrdem.map(cidadao => {
+            const iniciais = getIniciais(cidadao.nome);
+            // Tratar caminho da foto usando funcao padronizada
+            const fotoUrl = construirUrlFoto(cidadao.foto);
+            const avatarContent = fotoUrl
+                ? `<img src="${fotoUrl}" alt="${cidadao.nome}" onerror="this.parentElement.innerHTML='${iniciais}'">`
+                : iniciais;
+
+            const nivelInfo = NIVEIS[cidadao.nivel] || NIVEIS[1];
+
+            return `
+                <div class="podio-item ${cidadao.classe}">
+                    <div class="podio-avatar-container">
+                        <div class="podio-avatar">${avatarContent}</div>
+                        <div class="podio-medal">
+                            <i class="bi bi-trophy-fill"></i>
+                        </div>
+                    </div>
+                    <div class="podio-name" title="${cidadao.nome}">${cidadao.nome}</div>
+                    <div class="podio-points">${formatNumber(cidadao.pontos_totais)} pts</div>
+                    <div class="podio-level">
+                        <i class="bi ${nivelInfo.icone}"></i>
+                        ${nivelInfo.nome}
+                    </div>
+                    <div class="podio-pedestal">${cidadao.posicao}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderTabela(ranking) {
+        const tbody = document.getElementById('rankingTableBody');
+
+        if (!ranking || ranking.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6">
+                        <div class="ranking-empty">
+                            <i class="bi bi-trophy"></i>
+                            <h4>Nenhum cidadão no ranking</h4>
+                            <p>Os cidadãos mais ativos aparecerão aqui</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = ranking.map((cidadao, index) => {
+            const posicao = cidadao.posicao || (index + 1);
+            const isTop3 = posicao <= 3;
+            const posClass = posicao === 1 ? 'pos-1' : posicao === 2 ? 'pos-2' : posicao === 3 ? 'pos-3' : 'pos-other';
+
+            const iniciais = getIniciais(cidadao.nome);
+            // Tratar caminho da foto usando funcao padronizada
+            const fotoUrl = construirUrlFoto(cidadao.foto);
+            const avatarContent = fotoUrl
+                ? `<img src="${fotoUrl}" alt="${cidadao.nome}" onerror="this.parentElement.innerHTML='${iniciais}'">`
+                : iniciais;
+
+            const nivelInfo = NIVEIS[cidadao.nivel] || NIVEIS[1];
+            const levelClass = `level-${Math.min(cidadao.nivel, 5)}`;
+
+            // Calcular progresso para próximo nível
+            const pontosAtual = cidadao.pontos_totais || 0;
+            const pontosProximo = nivelInfo.pontos_proximo || pontosAtual;
+            const pontosAnterior = cidadao.nivel > 1 ? (NIVEIS[cidadao.nivel - 1]?.pontos_proximo || 0) : 0;
+            const progresso = pontosProximo
+                ? Math.min(100, Math.round(((pontosAtual - pontosAnterior) / (pontosProximo - pontosAnterior)) * 100))
+                : 100;
+
+            // Badges (simulados ou reais)
+            const badges = cidadao.badges || gerarBadgesSimulados(cidadao);
+            const badgesHtml = badges.slice(0, 4).map(badge => {
+                const badgeInfo = BADGES_ICONS[badge.icone] || BADGES_ICONS['star'];
+                return `
+                    <div class="badge-icon" style="background: ${badge.cor || badgeInfo.cor};" title="${badge.nome || 'Badge'}">
+                        <i class="bi ${badgeInfo.icon}"></i>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <tr class="${isTop3 ? 'top-3' : ''}">
+                    <td>
+                        <div class="ranking-position ${posClass}">${posicao}</div>
+                    </td>
+                    <td>
+                        <div class="ranking-user">
+                            <div class="ranking-avatar">${avatarContent}</div>
+                            <div class="ranking-user-info">
+                                <span class="ranking-user-name">${cidadao.nome}</span>
+                                <span class="ranking-user-level">
+                                    <i class="bi ${nivelInfo.icone}"></i>
+                                    ${nivelInfo.nome}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="ranking-points">${formatNumber(cidadao.pontos_totais)}</span>
+                    </td>
+                    <td>
+                        <span class="ranking-level ${levelClass}">
+                            <i class="bi bi-star-fill"></i>
+                            Nível ${cidadao.nivel}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="ranking-badges">
+                            ${badgesHtml || '<span class="text-muted" style="font-size: 0.75rem;">-</span>'}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>${progresso}%</span>
+                                <span>${pontosProximo ? `${pontosAtual}/${pontosProximo}` : 'MAX'}</span>
+                            </div>
+                            <div class="progress-bar-mini">
+                                <div class="progress-fill" style="width: ${progresso}%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderEstatisticas(stats, ranking) {
+        // Se tiver stats do backend, usar; senão, calcular do ranking
+        if (stats) {
+            animateValue('totalIncidenciasReportadas', 0, stats.total_incidencias || 0, 600);
+            animateValue('totalParticipantes', 0, stats.total_participantes || 0, 600);
+            animateValue('totalPontosDistribuidos', 0, stats.total_pontos || 0, 600);
+            animateValue('totalBadgesConquistados', 0, stats.total_badges || 0, 600);
+        } else {
+            // Calcular do ranking
+            const totalPontos = ranking.reduce((sum, c) => sum + (c.pontos_totais || 0), 0);
+            const totalBadges = ranking.reduce((sum, c) => sum + ((c.badges?.length || 0) || Math.floor(c.nivel / 2)), 0);
+
+            animateValue('totalParticipantes', 0, ranking.length, 600);
+            animateValue('totalPontosDistribuidos', 0, totalPontos, 600);
+            animateValue('totalBadgesConquistados', 0, totalBadges, 600);
+
+            // Buscar total de incidências
+            fetch('/api/dashboard/counters2', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            }).then(r => r.json()).then(data => {
+                animateValue('totalIncidenciasReportadas', 0, data.incidencias || 0, 600);
+            }).catch(() => {
+                document.getElementById('totalIncidenciasReportadas').textContent = '-';
+            });
+        }
+    }
+
+    function renderEmpty() {
+        document.getElementById('podioContainer').innerHTML = `
+            <div class="ranking-empty">
+                <i class="bi bi-trophy"></i>
+                <h4>Nenhum cidadão no ranking</h4>
+                <p>Os cidadãos mais ativos aparecerão aqui</p>
+            </div>
+        `;
+
+        document.getElementById('rankingTableBody').innerHTML = `
+            <tr>
+                <td colspan="6">
+                    <div class="ranking-empty">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <h4>Erro ao carregar ranking</h4>
+                        <p>Tente novamente mais tarde</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    function gerarBadgesSimulados(cidadao) {
+        const badges = [];
+        const nivel = cidadao.nivel || 1;
+        const pontos = cidadao.pontos_totais || 0;
+
+        if (nivel >= 1) badges.push({ icone: 'star', nome: 'Primeira Estrela', cor: '#FFD700' });
+        if (nivel >= 2) badges.push({ icone: 'fire', nome: 'Em Chamas', cor: '#FF6B35' });
+        if (nivel >= 3) badges.push({ icone: 'trophy', nome: 'Vencedor', cor: '#9C27B0' });
+        if (nivel >= 4) badges.push({ icone: 'lightning', nome: 'Raio', cor: '#FFC107' });
+        if (pontos >= 500) badges.push({ icone: 'medal', nome: 'Medalha de Ouro', cor: '#2196F3' });
+
+        return badges;
+    }
+
+    function getIniciais(nome) {
+        if (!nome) return '?';
+        const partes = nome.trim().split(' ');
+        if (partes.length === 1) return partes[0].charAt(0).toUpperCase();
+        return (partes[0].charAt(0) + partes[partes.length - 1].charAt(0)).toUpperCase();
+    }
+
+    function formatNumber(num) {
+        if (num === undefined || num === null) return '0';
+        return num.toLocaleString('pt-BR');
+    }
+
+    function animateValue(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+
+        const range = end - start;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const value = Math.floor(start + range * easeOutQuart(progress));
+            obj.textContent = formatNumber(value);
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    function easeOutQuart(x) {
+        return 1 - Math.pow(1 - x, 4);
+    }
+
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', function() {
+        if (localStorage.getItem('token')) {
+            carregarRanking();
+        }
+    });
+</script>
+{% endblock %}

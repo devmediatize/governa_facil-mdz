@@ -138,12 +138,13 @@
 
         /* Right Side - Login Form */
         .login-side {
-            width: 650px;
+            width: 750px;
+            min-height: 100vh;
             background: var(--white);
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 60px 80px;
+            padding: 70px 100px;
             position: relative;
         }
 
@@ -485,8 +486,9 @@
                 (function() {
                     var logoSalva = localStorage.getItem('logo_cliente');
                     var logoImg = document.getElementById('logocliente');
-                    if (logoImg) {
-                        logoImg.src = logoSalva || '/static/images/logo.png';
+                    // Só mostra logo se tiver uma salva - não usa padrão
+                    if (logoImg && logoSalva) {
+                        logoImg.src = logoSalva;
                         logoImg.style.opacity = '1';
                     }
                 })();
@@ -541,12 +543,8 @@
             const clienteId = localStorage.getItem('cliente_id');
             const logoImg = document.getElementById('logocliente');
 
-            // Se nao tem cliente_id, mostra logo padrao
+            // Se não tem cliente_id, não mostra logo
             if (!clienteId) {
-                if (logoImg) {
-                    logoImg.src = '/static/images/logo.png';
-                    logoImg.style.opacity = '1';
-                }
                 return;
             }
 
@@ -582,11 +580,7 @@
                 }
             } catch (error) {
                 console.error('Erro ao carregar logo:', error);
-                // Em caso de erro, garantir que a logo apareca
-                if (logoImg && !logoImg.src) {
-                    logoImg.src = '/static/images/logo.png';
-                    logoImg.style.opacity = '1';
-                }
+                // Em caso de erro, não mostra logo padrão - mantém invisível
             }
         }
 

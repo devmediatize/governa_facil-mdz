@@ -1,0 +1,1075 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes da Incidência - Governa Fácil{% endblock %}
+
+{% block styles %}
+<style>
+    /* ============ TIMELINE CONTAINER ============ */
+    .timeline-container {
+        position: relative;
+        padding: 10px 0;
+    }
+
+    /* ============ TIMELINE VISUAL ============ */
+    .timeline {
+        position: relative;
+        padding: 0;
+        list-style: none;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 18px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, var(--primary) 0%, var(--gray-300) 100%);
+        border-radius: 2px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-left: 50px;
+        padding-bottom: 10px;
+        opacity: 0;
+        transform: translateX(-20px);
+        animation: slideInTimeline 0.5s ease forwards;
+    }
+
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+    .timeline-item:nth-child(2) { animation-delay: 0.2s; }
+    .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+    .timeline-item:nth-child(4) { animation-delay: 0.4s; }
+    .timeline-item:nth-child(5) { animation-delay: 0.5s; }
+    .timeline-item:nth-child(6) { animation-delay: 0.6s; }
+    .timeline-item:nth-child(7) { animation-delay: 0.7s; }
+    .timeline-item:nth-child(8) { animation-delay: 0.8s; }
+    .timeline-item:nth-child(9) { animation-delay: 0.9s; }
+    .timeline-item:nth-child(10) { animation-delay: 1.0s; }
+
+    @keyframes slideInTimeline {
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* ============ TIMELINE MARKER (CÍRCULO) ============ */
+    .timeline-marker {
+        position: absolute;
+        left: 6px;
+        top: 2px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 11px;
+        z-index: 10;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .timeline-marker:hover {
+        transform: scale(1.1);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    }
+
+    /* Cores dos marcadores por status */
+    .timeline-marker.resolvida {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .timeline-marker.andamento {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .timeline-marker.analise {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .timeline-marker.aberta {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    }
+
+    .timeline-marker.cancelada {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .timeline-marker.abertura {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    }
+
+    .timeline-marker.outro {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    }
+
+    /* ============ TIMELINE CONTENT ============ */
+    .timeline-content {
+        background: var(--white);
+        border-radius: 8px;
+        padding: 10px 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        border: 1px solid var(--gray-200);
+        transition: box-shadow 0.2s ease;
+    }
+
+    .timeline-content:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+        gap: 8px;
+    }
+
+    .timeline-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0;
+    }
+
+    .timeline-body {
+        font-size: 12px;
+        color: var(--gray-600);
+        line-height: 1.4;
+        white-space: pre-wrap;
+        margin-bottom: 6px;
+    }
+
+    .timeline-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--gray-500);
+    }
+
+    .timeline-meta-separator {
+        color: var(--gray-300);
+    }
+
+    .timeline-user-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .timeline-user-icon {
+        font-size: 10px;
+    }
+
+    .timeline-user-icon.cidadao {
+        color: var(--primary);
+    }
+
+    .timeline-user-icon.funcionario {
+        color: var(--secondary);
+    }
+
+    .timeline-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    /* ============ DETALHES DA INCIDÊNCIA ============ */
+    .incidencia-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border-radius: 10px;
+        padding: 10px 16px;
+        color: white;
+        margin-bottom: 16px;
+    }
+
+    .incidencia-id-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .incidencia-categoria-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+
+    .incidencia-categoria-nome {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .incidencia-status-atual {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: auto;
+    }
+
+    .status-resolvida { background: #10b981; color: white; }
+    .status-andamento { background: #f59e0b; color: white; }
+    .status-analise { background: #3b82f6; color: white; }
+    .status-aberta { background: #6b7280; color: white; }
+    .status-cancelada { background: #ef4444; color: white; }
+    .status-outro { background: #64748b; color: white; }
+
+    /* ============ CARDS DE INFO ============ */
+    .info-card {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 20px;
+        height: 100%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid var(--gray-200);
+    }
+
+    .info-card-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-card-value {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--dark);
+    }
+
+    /* ============ FOTO DA INCIDÊNCIA ============ */
+    .foto-incidencia {
+        width: 100%;
+        border-radius: 12px;
+        object-fit: cover;
+        max-height: 400px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .foto-incidencia:hover {
+        transform: scale(1.02);
+    }
+
+    .foto-container {
+        position: relative;
+    }
+
+    .foto-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* ============ MAPA ============ */
+    #mapaDetalhe {
+        height: 300px;
+        border-radius: 12px;
+        z-index: 1;
+    }
+
+    /* ============ RESUMO ============ */
+    .resumo-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid var(--gray-200);
+    }
+
+    .resumo-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .resumo-item:last-child {
+        border-bottom: none;
+    }
+
+    .resumo-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .resumo-icon.dias { background: rgba(79, 70, 229, 0.15); color: var(--primary); }
+    .resumo-icon.interacoes { background: rgba(14, 165, 233, 0.15); color: var(--secondary); }
+    .resumo-icon.status { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+
+    .resumo-info {
+        flex: 1;
+    }
+
+    .resumo-label {
+        font-size: 12px;
+        color: var(--gray-500);
+    }
+
+    .resumo-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--dark);
+    }
+
+    /* ============ LIGHTBOX FOTO ============ */
+    .lightbox {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .lightbox.show {
+        display: flex;
+    }
+
+    .lightbox img {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: 8px;
+        box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+    }
+
+    .lightbox-close {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        color: white;
+        font-size: 40px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .lightbox-close:hover {
+        transform: scale(1.2);
+    }
+
+    /* ============ RESPONSIVO ============ */
+    @media (max-width: 768px) {
+        .timeline::before {
+            left: 14px;
+        }
+
+        .timeline-item {
+            padding-left: 42px;
+        }
+
+        .timeline-marker {
+            left: 4px;
+            width: 20px;
+            height: 20px;
+            font-size: 9px;
+        }
+
+        .timeline-content {
+            padding: 8px 10px;
+        }
+
+        .incidencia-header {
+            padding: 12px 16px;
+        }
+
+        .incidencia-categoria-nome {
+            font-size: 14px;
+        }
+
+        .timeline-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .timeline-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Container principal -->
+<div id="detalheContainer">
+    <!-- Será preenchido via JavaScript -->
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-3 text-muted">Carregando detalhes da incidência...</p>
+    </div>
+</div>
+
+<!-- Lightbox para foto ampliada -->
+<div class="lightbox" id="lightbox" onclick="fecharLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img src="" alt="Foto ampliada" id="lightboxImg">
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const incidenciaId = {{ incidencia_id }};
+    let mapaDetalhe = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!checkAuth()) return;
+        carregarDetalhesIncidencia();
+    });
+
+    async function carregarDetalhesIncidencia() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/incidencias/${incidenciaId}/timeline`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            renderizarDetalhe(data);
+        } catch (error) {
+            console.error('Erro ao carregar detalhes:', error);
+            document.getElementById('detalheContainer').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Erro ao carregar os detalhes da incidência: ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    function renderizarDetalhe(data) {
+        const container = document.getElementById('detalheContainer');
+        const inc = data.incidencia;
+        const timeline = data.timeline;
+        const resumo = data.resumo;
+
+        // Determinar classe do status atual
+        const statusClasse = getStatusClasse(inc.status_atual.style.tipo);
+
+        // Formatar data
+        const dataAbertura = inc.data_abertura ? formatarData(inc.data_abertura) : 'N/A';
+
+        let html = `
+            <!-- Header da Incidência - Compacto em linha -->
+            <div class="incidencia-header d-flex align-items-center flex-wrap gap-2">
+                <a href="/incidencias" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white; padding: 4px 8px; border-radius: 8px; text-decoration: none; margin-right: 4px;" title="Voltar para lista">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <span class="incidencia-id-badge">
+                    #${inc.id}
+                </span>
+                <div class="incidencia-categoria-icon">
+                    <i class="bi bi-${getIconeCategoria(inc.categoria_icone)}"></i>
+                </div>
+                <span class="incidencia-categoria-nome">${inc.categoria_nome || 'Sem categoria'}</span>
+                <span class="incidencia-status-atual status-${inc.status_atual.style.tipo}">
+                    <i class="bi bi-${getIconeStatus(inc.status_atual.style.tipo)}"></i>
+                    ${inc.status_atual.nome}
+                </span>
+            </div>
+
+            <div class="row g-3">
+                <!-- Coluna Esquerda: Info, Foto e Mapa -->
+                <div class="col-lg-5">
+                    <!-- Cards de Informação -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="info-card">
+                                <div class="info-card-title">
+                                    <i class="bi bi-geo-alt"></i> Endereço
+                                </div>
+                                <div class="info-card-value">
+                                    ${inc.endereco || 'Não informado'}
+                                    ${inc.bairro ? `<br><small class="text-muted">${inc.bairro}</small>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="info-card">
+                                <div class="info-card-title">
+                                    <i class="bi bi-calendar-event"></i> Abertura
+                                </div>
+                                <div class="info-card-value">${dataAbertura}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="info-card">
+                                <div class="info-card-title">
+                                    <i class="bi bi-building"></i> Cidade
+                                </div>
+                                <div class="info-card-value">
+                                    ${inc.cidade || ''} ${inc.estado ? '- ' + inc.estado : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="info-card">
+                                <div class="info-card-title">
+                                    <i class="bi bi-person"></i> Cidadão
+                                </div>
+                                <div class="info-card-value">${inc.cidadao_nome || 'Anônimo'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${inc.foto_principal ? `
+                    <div class="foto-container mb-3">
+                        <span class="foto-badge"><i class="bi bi-camera me-1"></i> Foto</span>
+                        <img src="${construirUrlFoto(inc.foto_principal)}"
+                             alt="Foto da incidencia"
+                             class="foto-incidencia"
+                             onclick="abrirLightbox('${construirUrlFoto(inc.foto_principal)}')">
+                    </div>
+                    ` : ''}
+
+                    <!-- Mapa -->
+                    <div class="card mb-3">
+                        <div class="card-header py-2">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-geo-alt me-2"></i>Localização
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="mapaDetalhe"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna Direita: Resumo e Timeline -->
+                <div class="col-lg-7">
+                    <!-- Resumo -->
+                    <div class="resumo-card mb-3">
+                        <div class="resumo-item">
+                            <div class="resumo-icon dias">
+                                <i class="bi bi-calendar3"></i>
+                            </div>
+                            <div class="resumo-info">
+                                <div class="resumo-label">Tempo</div>
+                                <div class="resumo-value">${resumo.dias_aberta} dia${resumo.dias_aberta !== 1 ? 's' : ''}</div>
+                            </div>
+                        </div>
+                        <div class="resumo-item">
+                            <div class="resumo-icon interacoes">
+                                <i class="bi bi-chat-dots"></i>
+                            </div>
+                            <div class="resumo-info">
+                                <div class="resumo-label">Interações</div>
+                                <div class="resumo-value">${data.total_interacoes}</div>
+                            </div>
+                        </div>
+                        <div class="resumo-item">
+                            <div class="resumo-icon status">
+                                <i class="bi bi-${resumo.esta_resolvida ? 'check-circle' : 'hourglass-split'}"></i>
+                            </div>
+                            <div class="resumo-info">
+                                <div class="resumo-label">Situação</div>
+                                <div class="resumo-value">${resumo.esta_resolvida ? 'Resolvida' : 'Em andamento'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${inc.status_atual.style.tipo !== 'resolvido' ? `
+                    <!-- Formulário de Interação -->
+                    <div class="card mb-3">
+                        <div class="card-header py-2">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-chat-dots me-2"></i>Nova Interação
+                            </h6>
+                        </div>
+                        <div class="card-body py-2">
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <textarea class="form-control form-control-sm" id="comentarioDetalhe"
+                                              rows="2" placeholder="Digite seu comentário..." maxlength="500"></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <select class="form-select form-select-sm" id="novoStatusDetalhe">
+                                        <option value="">Manter status atual</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small mb-1">
+                                        <i class="bi bi-camera me-1"></i>Foto (opcional)
+                                    </label>
+                                    <input type="file" class="form-control form-control-sm" id="fotoInteracao"
+                                           accept="image/png,image/jpeg,image/jpg" onchange="previewFotoInteracao(this)">
+                                    <input type="hidden" id="fotoInteracaoPath" value="">
+                                    <div id="previewFotoContainer" class="mt-2" style="display: none;">
+                                        <div class="position-relative d-inline-block">
+                                            <img id="previewFotoImg" src="" alt="Preview" class="rounded"
+                                                 style="max-width: 150px; max-height: 100px; object-fit: cover;">
+                                            <button type="button" class="btn btn-danger btn-sm position-absolute"
+                                                    style="top: -8px; right: -8px; padding: 2px 6px; font-size: 10px;"
+                                                    onclick="removerFotoInteracao()">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                        <div id="uploadProgress" class="progress mt-1" style="height: 4px; display: none;">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                                 role="progressbar" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-primary btn-sm w-100" id="btnEnviarInteracao" onclick="salvarInteracaoDetalhe(${inc.id})">
+                                        <i class="bi bi-send me-1"></i>Enviar Interação
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Timeline -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-clock-history me-2"></i>Histórico de Atualizações
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline-container">
+                                <ul class="timeline">
+                                    ${timeline.map((item, index) => renderizarTimelineItem(item, index)).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        // Inicializar mapa após renderizar
+        setTimeout(() => {
+            inicializarMapa(inc.lat, inc.long, inc.endereco);
+        }, 100);
+
+        // Carregar status disponíveis para o dropdown (somente se o formulário existe)
+        if (inc.status_atual.style.tipo !== 'resolvido') {
+            carregarStatusDisponiveis();
+        }
+    }
+
+    function renderizarTimelineItem(item, index) {
+        const dataFormatada = item.data_hora ? formatarDataHora(item.data_hora) : 'N/A';
+        const tipoClasse = item.tipo_status || 'outro';
+        const icone = getIconeTimeline(item.tipo_evento, item.tipo_status);
+        const descricao = (item.descricao || '').trim();
+
+        // Renderizar fotos da interacao se existirem
+        let fotosHtml = '';
+        if (item.fotos && item.fotos.length > 0) {
+            fotosHtml = `
+                <div class="timeline-fotos mt-2">
+                    ${item.fotos.map(foto => `
+                        <img src="${construirUrlFoto(foto)}"
+                             alt="Foto da interação"
+                             class="timeline-foto-thumb"
+                             style="max-width: 120px; max-height: 80px; object-fit: cover; border-radius: 6px; cursor: pointer; margin-right: 6px;"
+                             onclick="abrirLightbox('${construirUrlFoto(foto)}')"
+                             onerror="this.style.display='none'">
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        return `
+            <li class="timeline-item">
+                <div class="timeline-marker ${tipoClasse}">
+                    <i class="bi bi-${icone}"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <h6 class="timeline-title">${item.titulo}</h6>
+                        ${item.status_nome ? `
+                        <span class="timeline-badge" style="background-color: ${item.cor}20; color: ${item.cor};">
+                            ${item.status_nome}
+                        </span>
+                        ` : ''}
+                    </div>
+                    ${descricao ? `<div class="timeline-body">${descricao}</div>` : ''}
+                    ${fotosHtml}
+                    <div class="timeline-meta">
+                        <span class="timeline-user-inline">
+                            <i class="bi bi-${item.usuario_tipo === 'cidadao' ? 'person' : 'person-badge'} timeline-user-icon ${item.usuario_tipo}"></i>
+                            ${item.usuario_nome || 'Usuário'}
+                        </span>
+                        <span class="timeline-meta-separator">|</span>
+                        <span><i class="bi bi-clock"></i> ${dataFormatada}</span>
+                        ${item.bairro || item.endereco ? `
+                        <span class="timeline-meta-separator">|</span>
+                        <span><i class="bi bi-geo-alt"></i> ${item.bairro || item.endereco}</span>
+                        ` : ''}
+                    </div>
+                </div>
+            </li>
+        `;
+    }
+
+    function inicializarMapa(lat, lng, endereco) {
+        const mapContainer = document.getElementById('mapaDetalhe');
+        if (!mapContainer) return;
+
+        // Coordenadas padrão caso não tenha
+        const latNum = parseFloat(lat) || -23.5505;
+        const lngNum = parseFloat(lng) || -46.6333;
+
+        if (mapaDetalhe) {
+            mapaDetalhe.remove();
+        }
+
+        mapaDetalhe = L.map('mapaDetalhe').setView([latNum, lngNum], 16);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(mapaDetalhe);
+
+        // Marcador personalizado
+        const customIcon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="
+                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border: 4px solid white;
+                box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <svg width="16" height="16" fill="white" viewBox="0 0 16 16">
+                    <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                </svg>
+            </div>`,
+            iconSize: [36, 36],
+            iconAnchor: [18, 36]
+        });
+
+        const marker = L.marker([latNum, lngNum], { icon: customIcon }).addTo(mapaDetalhe);
+
+        if (endereco) {
+            marker.bindPopup(`<b>Local da Incidência</b><br>${endereco}`);
+        }
+    }
+
+    // Funções auxiliares
+    function formatarData(dataStr) {
+        const data = new Date(dataStr);
+        return data.toLocaleDateString('pt-BR');
+    }
+
+    function formatarDataHora(dataStr) {
+        const data = new Date(dataStr);
+        return data.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function getStatusClasse(tipo) {
+        const classes = {
+            'resolvida': 'resolvida',
+            'andamento': 'andamento',
+            'analise': 'analise',
+            'aberta': 'aberta',
+            'cancelada': 'cancelada',
+            'abertura': 'abertura'
+        };
+        return classes[tipo] || 'outro';
+    }
+
+    function getIconeStatus(tipo) {
+        const icones = {
+            'resolvida': 'check-circle-fill',
+            'andamento': 'gear-fill',
+            'analise': 'search',
+            'aberta': 'record-circle',
+            'cancelada': 'x-circle-fill',
+            'abertura': 'plus-circle-fill'
+        };
+        return icones[tipo] || 'circle-fill';
+    }
+
+    function getIconeTimeline(tipoEvento, tipoStatus) {
+        if (tipoEvento === 'abertura') return 'plus-lg';
+
+        const icones = {
+            'resolvida': 'check-lg',
+            'andamento': 'gear',
+            'analise': 'search',
+            'aberta': 'circle',
+            'cancelada': 'x-lg'
+        };
+        return icones[tipoStatus] || 'arrow-right';
+    }
+
+    function getIconeCategoria(icone) {
+        // Mapear icones do banco para Bootstrap Icons
+        const mapa = {
+            'road': 'signpost-split',
+            'lightbulb': 'lightbulb',
+            'trash': 'trash',
+            'tree': 'tree',
+            'water': 'droplet',
+            'warning': 'exclamation-triangle',
+            'construction': 'cone-striped'
+        };
+        return mapa[icone] || 'exclamation-circle';
+    }
+
+    // Lightbox
+    function abrirLightbox(src) {
+        const lightbox = document.getElementById('lightbox');
+        const img = document.getElementById('lightboxImg');
+        img.src = src;
+        lightbox.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function fecharLightbox() {
+        const lightbox = document.getElementById('lightbox');
+        lightbox.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    // Fechar lightbox com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            fecharLightbox();
+        }
+    });
+
+    // Carregar status disponíveis para o select
+    async function carregarStatusDisponiveis() {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch('/status_lista', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const statusList = await response.json();
+                const select = document.getElementById('novoStatusDetalhe');
+                if (select && Array.isArray(statusList)) {
+                    statusList.forEach(s => {
+                        const option = document.createElement('option');
+                        option.value = s.status_id;
+                        option.textContent = s.nome;
+                        select.appendChild(option);
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar status:', error);
+        }
+    }
+
+    // Preview da foto selecionada para interacao
+    function previewFotoInteracao(input) {
+        const previewContainer = document.getElementById('previewFotoContainer');
+        const previewImg = document.getElementById('previewFotoImg');
+        const uploadProgress = document.getElementById('uploadProgress');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+
+            // Validar tamanho (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('A foto deve ter no máximo 10MB');
+                input.value = '';
+                return;
+            }
+
+            // Mostrar preview local
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            // Fazer upload da foto
+            uploadFotoInteracao(file);
+        }
+    }
+
+    // Upload da foto para o servidor
+    async function uploadFotoInteracao(file) {
+        const token = localStorage.getItem('token');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const btnEnviar = document.getElementById('btnEnviarInteracao');
+
+        // Mostrar progresso
+        uploadProgress.style.display = 'block';
+        btnEnviar.disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/interagir/upload-foto', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                document.getElementById('fotoInteracaoPath').value = result.foto_path;
+                uploadProgress.style.display = 'none';
+                btnEnviar.disabled = false;
+            } else {
+                const error = await response.json();
+                alert('Erro ao enviar foto: ' + (error.detail || 'Erro desconhecido'));
+                removerFotoInteracao();
+            }
+        } catch (error) {
+            console.error('Erro ao enviar foto:', error);
+            alert('Erro ao enviar foto');
+            removerFotoInteracao();
+        }
+    }
+
+    // Remover foto selecionada
+    function removerFotoInteracao() {
+        document.getElementById('fotoInteracao').value = '';
+        document.getElementById('fotoInteracaoPath').value = '';
+        document.getElementById('previewFotoContainer').style.display = 'none';
+        document.getElementById('uploadProgress').style.display = 'none';
+        document.getElementById('btnEnviarInteracao').disabled = false;
+    }
+
+    // Salvar interação da página de detalhe
+    async function salvarInteracaoDetalhe(incidenciaId) {
+        const token = localStorage.getItem('token');
+        const comentario = document.getElementById('comentarioDetalhe').value.trim();
+        const novoStatus = document.getElementById('novoStatusDetalhe').value;
+        const fotoPath = document.getElementById('fotoInteracaoPath').value;
+
+        if (!comentario) {
+            alert('Por favor, digite um comentário.');
+            return;
+        }
+
+        // Desabilitar botão durante o envio
+        const btnEnviar = document.getElementById('btnEnviarInteracao');
+        btnEnviar.disabled = true;
+        btnEnviar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enviando...';
+
+        try {
+            const payload = {
+                incidencia_id: incidenciaId,
+                comentario: comentario
+            };
+
+            // Incluir novo_status_id apenas se um status foi selecionado
+            if (novoStatus) {
+                payload.novo_status_id = parseInt(novoStatus);
+            }
+
+            // Incluir foto se houver
+            if (fotoPath) {
+                payload.foto = fotoPath;
+            }
+
+            const response = await fetch('/interagir', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                // Limpar campos e recarregar página
+                document.getElementById('comentarioDetalhe').value = '';
+                document.getElementById('novoStatusDetalhe').value = '';
+                removerFotoInteracao();
+                location.reload();
+            } else {
+                const error = await response.json();
+                alert('Erro ao salvar interação: ' + (error.detail || 'Erro desconhecido'));
+                btnEnviar.disabled = false;
+                btnEnviar.innerHTML = '<i class="bi bi-send me-1"></i>Enviar Interação';
+            }
+        } catch (error) {
+            console.error('Erro ao salvar interação:', error);
+            alert('Erro ao salvar interação');
+            btnEnviar.disabled = false;
+            btnEnviar.innerHTML = '<i class="bi bi-send me-1"></i>Enviar Interação';
+        }
+    }
+
+</script>
+{% endblock %}
