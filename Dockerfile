@@ -17,23 +17,8 @@ ENV PATH="/root/.cargo/bin:$PATH"
 RUN rustup update stable && cargo --version && \
     pip install --upgrade pip setuptools wheel
 
-# Copie os arquivos de requisitos para o contêiner
-COPY requirements.txt .
-
-# Instale as dependências do Python
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copie o restante do código do aplicativo para o contêiner
-COPY . .
-
 # Exponha a porta que o aplicativo irá rodar
 EXPOSE 8000
 
-# Instale o dotenv para carregar variáveis de ambiente
-RUN pip install python-dotenv
-
-# Comando para rodar o aplicativo
-#CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
-# Comando para rodar o Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Comando padrão: instala dependências via volume e sobe o Uvicorn
+CMD ["sh", "-c", "pip install --no-cache-dir -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
