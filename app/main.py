@@ -3312,18 +3312,20 @@ async def interagir_incidencia(
             detail=f"Incidência com ID {incidencia_id} não encontrada"
         )
    
-    # Verificar se o status existe (somente se novo_status_id foi informado)
-    status_obj = None
-    if novo_status_id:
-        status_obj = db.query(models.Status).filter(
-            models.Status.status_id == novo_status_id
-        ).first()
+    # Verificar se o status existe
+    # Se novo_status_id foi informado, verifica se existe
+    # Caso contrário, usa o status atual da incidência
+    status_id_para_usar = novo_status_id if novo_status_id else incidencia.status
 
-        if not status_obj:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Status com ID {novo_status_id} não encontrado"
-            )
+    status_obj = db.query(models.Status).filter(
+        models.Status.status_id == status_id_para_usar
+    ).first()
+
+    if not status_obj:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Status com ID {status_id_para_usar} não encontrado"
+        )
    
     # Obter dados do usuário atual
     usuario_atual = db.query(models.Usuario).filter(
@@ -3341,7 +3343,7 @@ async def interagir_incidencia(
         incidencia_id=incidencia_id,
         usuario_id=usuario_id,
         comentario=comentario if comentario else None,
-        status_id=novo_status_id if novo_status_id else None,
+        status_id=status_id_para_usar,
         data=datetime.now(),
         foto=foto_path if foto_path else None
     )
@@ -3401,7 +3403,7 @@ async def interagir_incidencia(
         push_dados = {
             "tipo": "atualizacao_incidencia",
             "incidencia_id": str(incidencia_id),
-            "status_id": str(novo_status_id),
+            "status_id": str(status_id_para_usar),
             "status_nome": status_obj.nome
         }
 
