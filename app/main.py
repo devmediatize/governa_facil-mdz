@@ -595,6 +595,94 @@ async def login_cidadao(
         "foto": ""
     }
 
+# Rate limiting para cadastro - armazena tentativas por IP
+_cadastro_tentativas = {}
+
+@app.post("/api/cidadao/cadastrar")
+async def cadastrar_cidadao(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Cadastrar novo cidadão (endpoint público com validações de segurança)"""
+    import re
+    from datetime import datetime, timedelta
+
+    # Rate limiting por IP - máximo 5 cadastros por hora por IP
+    client_ip = request.client.host if request.client else "unknown"
+    agora = datetime.now()
+
+    if client_ip in _cadastro_tentativas:
+        tentativas = _cadastro_tentativas[client_ip]
+        # Limpar tentativas antigas (mais de 1 hora)
+        tentativas = [t for t in tentativas if agora - t < timedelta(hours=1)]
+        _cadastro_tentativas[client_ip] = tentativas
+
+        if len(tentativas) >= 5:
+            raise HTTPException(status_code=429, detail="Muitas tentativas de cadastro. Tente novamente em 1 hora.")
+    else:
+        _cadastro_tentativas[client_ip] = []
+
+    dados = await request.json()
+
+    # Validar campos obrigatórios
+    nome = dados.get("nome", "").strip()
+    email = dados.get("email", "").strip().lower()
+    senha = dados.get("senha", "")
+    celular = dados.get("celular", "").strip()
+
+    if not nome:
+        raise HTTPException(status_code=400, detail="Nome é obrigatório")
+    if len(nome) < 3:
+        raise HTTPException(status_code=400, detail="Nome deve ter pelo menos 3 caracteres")
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Email é obrigatório")
+
+    # Validar formato de email
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_regex, email):
+        raise HTTPException(status_code=400, detail="Email inválido")
+
+    if not senha:
+        raise HTTPException(status_code=400, detail="Senha é obrigatória")
+    if len(senha) < 6:
+        raise HTTPException(status_code=400, detail="Senha deve ter pelo menos 6 caracteres")
+
+    # Verificar se email já existe
+    email_existente = db.query(models.Cidadao).filter(models.Cidadao.email == email).first()
+    if email_existente:
+        raise HTTPException(status_code=400, detail="Email já cadastrado")
+
+    # Hash da senha
+    senha_hash = get_password_hash(senha)
+
+    # Criar cidadão
+    novo_cidadao = models.Cidadao(
+        nome=nome,
+        email=email,
+        senha=senha_hash,
+        celular=celular,
+        endereco=dados.get("endereco", ""),
+        bairro=dados.get("bairro", ""),
+        cep=dados.get("cep", ""),
+        cidade=dados.get("cidade", ""),
+        estado=dados.get("estado", ""),
+        ativo=1
+    )
+
+    db.add(novo_cidadao)
+    db.commit()
+    db.refresh(novo_cidadao)
+
+    # Registrar tentativa bem sucedida
+    _cadastro_tentativas[client_ip].append(agora)
+
+    return {
+        "success": True,
+        "message": "Cadastro realizado com sucesso",
+        "cidadao_id": novo_cidadao.cidadao_id
+    }
+
 # Rotas Usuarios
 
 @app.post("/novo_usuario/", response_model=schemas.Usuario)
