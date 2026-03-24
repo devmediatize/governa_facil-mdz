@@ -289,6 +289,22 @@ class ConfigStorage(Base):
     updated_at = Column(DateTime)
 
 
+class PasswordResetToken(Base):
+    """
+    Modelo para armazenar tokens de reset de senha para cidadaos.
+    Token expira em 1 hora apos criacao.
+    """
+    __tablename__ = "password_reset_token"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cidadao_id = Column(Integer, ForeignKey('cidadao.cidadao_id'), nullable=False)
+    token = Column(String(100), nullable=False, unique=True)
+    email = Column(String(300), nullable=False)
+    created_at = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
+    expires_at = Column(TIMESTAMP, nullable=False)
+    used = Column(Integer, default=0)  # 0 = Nao usado, 1 = Usado
+
+
 class ConfigNotificacoes(Base):
     """
     Configuracao de notificacoes por Email (SMTP) e SMS.

@@ -458,12 +458,30 @@
         position: relative;
         height: 100%;
         min-height: 400px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .chart-container canvas {
+        max-width: 100% !important;
     }
 
     /* ===== EVOLUCAO TEMPORAL ===== */
     .evolucao-chart-container {
         position: relative;
         height: 220px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .evolucao-chart-container canvas {
+        max-width: 100% !important;
     }
 
     .evolucao-legend {
@@ -1282,9 +1300,32 @@
         }
         const headers = { 'Authorization': `Bearer ${token}` };
 
+        // 1. Carregar contadores do cache imediatamente
+        const countersCache = localStorage.getItem('dashboard_counters');
+        if (countersCache) {
+            try {
+                const cached = JSON.parse(countersCache);
+                document.getElementById('incidenciasCount').textContent = cached.incidencias || 0;
+                document.getElementById('ResolvidosCount').textContent = cached.resolvidos || 0;
+                document.getElementById('EmAndamentoCount').textContent = cached.emandamento || 0;
+                document.getElementById('NovosCount').textContent = cached.novos || 0;
+            } catch(e) {}
+        }
+
+        // 2. Carregar insights do cache
+        const insightsCache = localStorage.getItem('dashboard_insights');
+        if (insightsCache) {
+            try {
+                const cached = JSON.parse(insightsCache);
+                document.getElementById('totalHoje').textContent = cached.total_hoje || 0;
+                document.getElementById('bairroMais').textContent = cached.bairro_mais_incidencias || 'N/A';
+                document.getElementById('categoriaMais').textContent = cached.categoria_mais_frequente || 'N/A';
+            } catch(e) {}
+        }
+
         try {
             const [counters, incidencias, categorias, mapaData, insights, estatisticasAvancadas, rankingBairros, evolucaoTemporal, alertas, topCidadaos, feedbackStats] = await Promise.all([
-                fetch(`/api/dashboard/counters2?t=${Date.now()}`, { headers }).then(r => r.json()),
+                fetch('/api/dashboard/counters2', { headers }).then(r => r.json()),
                 fetch('/api/dashboard/ultimas-incidencias', { headers }).then(r => r.json()),
                 fetch('/api/dashboard/incidencias-por-categoria', { headers }).then(r => r.json()),
                 fetch('/api/dashboard/mapa-incidencias', { headers }).then(r => r.json()),
@@ -1297,13 +1338,19 @@
                 fetch('/api/feedback/estatisticas', { headers }).then(r => r.json()).catch(() => ({ total_feedbacks: 0, media_avaliacao: 0, taxa_satisfacao: 0 }))
             ]);
 
-            // Animacao dos contadores
-            animateValue('incidenciasCount', 0, counters.incidencias || 0, 600);
-            animateValue('ResolvidosCount', 0, counters.resolvidos || 0, 600);
-            animateValue('EmAndamentoCount', 0, counters.emandamento || 0, 600);
-            animateValue('NovosCount', 0, counters.novos || 0, 600);
+            // Salvar contadores no cache
+            localStorage.setItem('dashboard_counters', JSON.stringify(counters));
 
-            // Insights
+            // Animacao dos contadores (se tiver cache, anima do valor atual)
+            const cached = localStorage.getItem('dashboard_counters');
+            const fromCache = cached ? JSON.parse(cached) : { incidencias: 0, resolvidos: 0, emandamento: 0, novos: 0 };
+            animateValue('incidenciasCount', parseInt(document.getElementById('incidenciasCount').textContent) || 0, counters.incidencias || 0, 400);
+            animateValue('ResolvidosCount', parseInt(document.getElementById('ResolvidosCount').textContent) || 0, counters.resolvidos || 0, 400);
+            animateValue('EmAndamentoCount', parseInt(document.getElementById('EmAndamentoCount').textContent) || 0, counters.emandamento || 0, 400);
+            animateValue('NovosCount', parseInt(document.getElementById('NovosCount').textContent) || 0, counters.novos || 0, 400);
+
+            // Insights - salvar no cache e atualizar
+            localStorage.setItem('dashboard_insights', JSON.stringify(insights));
             document.getElementById('totalHoje').textContent = insights.total_hoje || 0;
             document.getElementById('bairroMais').textContent = insights.bairro_mais_incidencias || 'N/A';
             document.getElementById('categoriaMais').textContent = insights.categoria_mais_frequente || 'N/A';
@@ -1764,7 +1811,7 @@
         }
 
         tbody.innerHTML = incidencias.map(i => `
-            <tr style="text-align: center; cursor: pointer;" onclick="window.location.href='/incidencias/${i.incidencia_id}'" class="tr-hover">
+            <tr style="text-align: center; cursor: pointer;" onclick="window.location.href='/incidencia/${i.incidencia_id}/detalhe'" class="tr-hover">
                 <td>${i.incidencia_id}</td>
                 <td>
                     ${i.foto ? `<img src="${construirUrlFoto(i.foto)}" width="40" height="40"

@@ -470,6 +470,7 @@
             height: 100px;
             max-width: 250px;
             object-fit: contain;
+            flex-shrink: 0;
         }
 
         /* ============ PAGE CONTENT ============ */
@@ -928,10 +929,12 @@
         @media (max-width: 991px) {
             .sidebar {
                 transform: translateX(-100%);
+                z-index: 1000;
             }
 
             .sidebar.open {
                 transform: translateX(0);
+                z-index: 1200; /* Maior que o header (1100) quando aberto */
             }
 
             .main-content {
@@ -941,11 +944,170 @@
             .search-box {
                 display: none;
             }
+
+            .top-header {
+                padding: 10px 15px;
+            }
+
+            .page-content {
+                padding: 15px;
+            }
+
+            .client-logo {
+                height: 60px;
+                max-width: 150px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-header {
+                padding: 8px 10px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .header-left {
+                gap: 10px;
+            }
+
+            .page-title {
+                font-size: 16px;
+            }
+
+            .header-right {
+                gap: 8px;
+            }
+
+            .header-btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            .page-content {
+                padding: 10px;
+            }
+
+            .client-logo {
+                height: 50px;
+                max-width: 120px;
+            }
+
+            .card-body {
+                padding: 15px;
+            }
+
+            .card-header {
+                padding: 15px;
+            }
+
+            .user-dropdown {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .top-header {
+                padding: 8px;
+            }
+
+            .page-title {
+                font-size: 14px;
+            }
+
+            .header-center {
+                display: none;
+            }
+
+            .client-logo {
+                height: 40px;
+                max-width: 100px;
+                min-width: 60px;
+            }
+
+            .page-content {
+                padding: 8px;
+            }
+
+            .card-body {
+                padding: 12px;
+            }
+
+            .notification-bell {
+                display: none;
+            }
+        }
+
+        /* Overlay para sidebar mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1150; /* Entre o header (1100) e o sidebar aberto (1200) */
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* Menu hamburguer */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--dark);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        @media (max-width: 991px) {
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        /* ============ GRAFICOS RESPONSIVOS (CHART.JS) ============ */
+        .chart-container,
+        .chart-wrapper,
+        [class*="chart-container"] {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .chart-container canvas,
+        .chart-wrapper canvas,
+        [class*="chart-container"] canvas {
+            max-width: 100% !important;
+            height: auto !important;
+            min-height: 200px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container,
+            .chart-wrapper,
+            [class*="chart-container"] {
+                min-height: 250px;
+            }
+
+            .chart-container canvas,
+            .chart-wrapper canvas,
+            [class*="chart-container"] canvas {
+                min-width: 300px;
+            }
         }
     </style>
 
     <script>
-        // Carregar cores do localStorage antes do render
+        // Carregar cores e logo do localStorage antes do render
         (function() {
             var cores = localStorage.getItem('cores_cliente');
             if (cores) {
@@ -954,6 +1116,14 @@
                     document.documentElement.style.setProperty('--sidebar-bg', c.primaria || '#0f172a');
                     document.documentElement.style.setProperty('--sidebar-bg-end', c.secundaria || '#1e293b');
                 } catch(e) {}
+            }
+            // Carregar logo do cache imediatamente quando o elemento existir
+            var logoCache = localStorage.getItem('logo_cliente');
+            if (logoCache) {
+                document.addEventListener('DOMContentLoaded', function() {
+                    var logo = document.getElementById('clientLogo');
+                    if (logo && !logo.src) logo.src = logoCache;
+                }, { once: true });
             }
         })();
     </script>
@@ -1040,12 +1210,18 @@
         </div>
     </nav>
 
+    <!-- Overlay para sidebar mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
     <!-- Main Content -->
     <main class="main-content">
         <!-- Header -->
         <header class="top-header">
             <div class="header-left">
-                <img src="" alt="Cliente" class="client-logo" id="clientLogo" style="opacity: 0; transition: opacity 0.3s;">
+                <button class="menu-toggle" onclick="toggleSidebar()" title="Menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <img src="" alt="Cliente" class="client-logo" id="clientLogo" style="transition: opacity 0.3s;">
             </div>
             <div class="header-center">
                 <div id="assistente-ia-container">
@@ -1225,11 +1401,40 @@
             return headers;
         }
 
+        // Toggle sidebar para mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+
+        // Fechar sidebar ao redimensionar para desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 991) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             if (!checkAuth()) return;
             carregarDadosUsuario();
             carregarLogoCliente();
             carregarCoresSidebar();
+
+            // Fechar sidebar ao clicar em um link no mobile
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 991) {
+                        toggleSidebar();
+                    }
+                });
+            });
         });
 
         async function carregarDadosUsuario() {
@@ -1284,6 +1489,13 @@
 
         async function carregarLogoCliente() {
             const clientLogo = document.getElementById('clientLogo');
+            if (!clientLogo) return;
+
+            // 1. Carregar do cache instantaneamente
+            const logoCache = localStorage.getItem('logo_cliente');
+            if (logoCache) {
+                clientLogo.src = logoCache;
+            }
 
             try {
                 const token = localStorage.getItem('token');
@@ -1296,10 +1508,14 @@
                 if (response.ok) {
                     const data = await response.json();
                     // Só mostra logo se tiver uma configurada para este cliente
-                    if (data.logo && clientLogo) {
-                        const logoUrl = data.logo + '?t=' + Date.now();
-                        clientLogo.src = logoUrl;
-                        clientLogo.style.opacity = '1'; // Mostra logo após carregar
+                    if (data.logo) {
+                        const logoUrl = data.logo;
+                        // Salvar no cache para próximo carregamento instantâneo
+                        localStorage.setItem('logo_cliente', logoUrl);
+                        // Atualizar se for diferente
+                        if (clientLogo.src !== logoUrl) {
+                            clientLogo.src = logoUrl;
+                        }
                     }
 
                     // Salvar cores

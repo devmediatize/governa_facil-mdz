@@ -98,10 +98,21 @@
         position: relative;
         min-height: 320px;
         width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
     }
 
     .chart-container canvas {
         max-height: 350px;
+        max-width: 100% !important;
+    }
+
+    @media (max-width: 576px) {
+        .chart-container canvas {
+            min-width: 300px;
+        }
     }
 
     /* Filtros estilizados */

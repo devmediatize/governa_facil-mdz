@@ -291,7 +291,9 @@ class CheckLoggedMiddleware(BaseHTTPMiddleware):
             "/api/configuracao/logo-publica",  # Logo publica para tela de login
             "/api/configuracao/ia/chat-status",  # Status do chat IA
             "/api/alertas/enviar-emails",  # Endpoint para cron job de envio de emails
-            "/api/health"  # Health check para conectividade do app
+            "/api/health",  # Health check para conectividade do app
+            "/api/cidadao/esqueci-senha",  # Reset de senha - solicitar
+            "/api/cidadao/redefinir-senha"  # Reset de senha - redefinir
         ]
         
         # Se não for uma rota pública, verifica autenticação
@@ -373,7 +375,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Funções auxiliares
 def verify_password(plain_password, hashed_password):
-   return pwd_context.verify(plain_password, hashed_password)
+    import hashlib
+    # Verifica se é bcrypt (começa com $2b$ ou $2a$)
+    if hashed_password and hashed_password.startswith(('$2b$', '$2a$')):
+        return pwd_context.verify(plain_password, hashed_password)
+    else:
+        # Fallback para SHA256 (sistema antigo)
+        sha256_hash = hashlib.sha256(plain_password.encode()).hexdigest()
+        return sha256_hash == hashed_password
 
 def get_password_hash(password):
    return pwd_context.hash(password)
@@ -682,6 +691,315 @@ async def cadastrar_cidadao(
         "message": "Cadastro realizado com sucesso",
         "cidadao_id": novo_cidadao.cidadao_id
     }
+
+
+# ============================================
+# ESQUECI MINHA SENHA - Reset de Senha
+# ============================================
+
+# Rate limiting para solicitacoes de reset - armazena tentativas por email
+_reset_senha_tentativas = {}
+
+async def enviar_email_reset_senha(destinatario: str, nome_usuario: str, token: str, cliente_nome: str = "Gestao Interativa"):
+    """
+    Envia email com link de reset de senha para o cidadao.
+
+    Args:
+        destinatario: Email do destinatario
+        nome_usuario: Nome do usuario para personalizacao
+        token: Token de reset de senha
+        cliente_nome: Nome do cliente para o cabecalho do email
+
+    Returns:
+        dict: Resultado do envio com status e mensagem
+    """
+    try:
+        # Link de reset (frontend deve implementar a pagina de redefinicao)
+        reset_link = f"https://app.governafacil.com.br/redefinir-senha?token={token}"
+
+        # Template HTML do email de reset
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                            <!-- Header -->
+                            <tr>
+                                <td style="background: linear-gradient(135deg, #0F58AD 0%, #0092A6 100%); padding: 30px; text-align: center;">
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
+                                        {cliente_nome}
+                                    </h1>
+                                    <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">
+                                        Recuperacao de Senha
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Greeting -->
+                            <tr>
+                                <td style="padding: 30px 30px 15px 30px;">
+                                    <h2 style="color: #333; margin: 0 0 10px 0; font-size: 20px;">
+                                        Ola, {nome_usuario}!
+                                    </h2>
+                                    <p style="color: #666; margin: 0; font-size: 14px; line-height: 1.6;">
+                                        Recebemos uma solicitacao para redefinir a senha da sua conta.
+                                        Se voce nao fez essa solicitacao, pode ignorar este email.
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <!-- Token Section -->
+                            <tr>
+                                <td style="padding: 15px 30px 30px 30px;">
+                                    <div style="border-left: 4px solid #0F58AD; padding: 20px; margin-bottom: 20px; background-color: #f8f9fa; border-radius: 0 8px 8px 0;">
+                                        <p style="margin: 0 0 15px 0; color: #333; font-size: 14px; line-height: 1.5;">
+                                            <strong>Seu codigo de recuperacao:</strong>
+                                        </p>
+                                        <div style="background-color: #0F58AD; color: #ffffff; padding: 15px 25px; border-radius: 8px; font-size: 24px; font-weight: bold; letter-spacing: 3px; text-align: center;">
+                                            {token}
+                                        </div>
+                                        <p style="margin: 15px 0 0 0; color: #6c757d; font-size: 12px; text-align: center;">
+                                            Este codigo expira em <strong>1 hora</strong>
+                                        </p>
+                                    </div>
+
+                                    <div style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                                        <p style="margin: 0; color: #856404; font-size: 13px; line-height: 1.5;">
+                                            <strong>&#9888; Seguranca:</strong> Nunca compartilhe este codigo com outras pessoas.
+                                            Nossa equipe nunca solicitara seu codigo por telefone ou mensagem.
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Instructions -->
+                            <tr>
+                                <td style="padding: 0 30px 30px 30px;">
+                                    <h3 style="color: #333; margin: 0 0 15px 0; font-size: 16px; border-bottom: 2px solid #0F58AD; padding-bottom: 10px;">
+                                        Como redefinir sua senha:
+                                    </h3>
+                                    <ol style="color: #666; font-size: 14px; line-height: 1.8; padding-left: 20px; margin: 0;">
+                                        <li>Abra o aplicativo Governa Facil</li>
+                                        <li>Acesse a tela de "Esqueci minha senha"</li>
+                                        <li>Digite o codigo acima</li>
+                                        <li>Crie uma nova senha segura</li>
+                                    </ol>
+                                </td>
+                            </tr>
+
+                            <!-- Footer -->
+                            <tr>
+                                <td style="background-color: #f8f9fa; padding: 20px 30px; border-top: 1px solid #e9ecef;">
+                                    <p style="color: #6c757d; margin: 0; font-size: 12px; text-align: center; line-height: 1.6;">
+                                        Este email foi enviado automaticamente pelo sistema {cliente_nome}.<br>
+                                        Se voce nao solicitou a recuperacao de senha, ignore este email.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Copyright -->
+                        <p style="color: #999; font-size: 11px; margin-top: 20px; text-align: center;">
+                            &copy; {datetime.now().year} {cliente_nome}. Todos os direitos reservados.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+
+        # Configurar email
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"[{cliente_nome}] Recuperacao de Senha"
+        msg['From'] = EMAIL_CONTA
+        msg['To'] = destinatario
+
+        # Adicionar conteudo HTML
+        parte_html = MIMEText(html_content, 'html', 'utf-8')
+        msg.attach(parte_html)
+
+        # Enviar email
+        with smtplib.SMTP(EMAIL_SMTP, int(EMAIL_PORTA)) as server:
+            server.starttls()
+            server.login(EMAIL_USER, EMAIL_SENHA)
+            server.sendmail(EMAIL_CONTA, destinatario, msg.as_string())
+
+        return {"success": True, "message": f"Email enviado com sucesso para {destinatario}"}
+
+    except smtplib.SMTPAuthenticationError:
+        return {"success": False, "message": "Erro de autenticacao SMTP"}
+    except smtplib.SMTPException as e:
+        return {"success": False, "message": f"Erro SMTP: {str(e)}"}
+    except Exception as e:
+        return {"success": False, "message": f"Erro ao enviar email: {str(e)}"}
+
+
+@app.post("/api/cidadao/esqueci-senha")
+async def esqueci_senha(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Solicita reset de senha para cidadao.
+    Gera token de reset, salva no banco e envia email.
+    Rate limiting: maximo 3 solicitacoes por email por hora.
+    """
+    import secrets
+    from datetime import datetime, timedelta
+
+    dados = await request.json()
+    email = dados.get("email", "").strip().lower()
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Email e obrigatorio")
+
+    # Validar formato de email
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_regex, email):
+        raise HTTPException(status_code=400, detail="Email invalido")
+
+    # Rate limiting por email - maximo 3 solicitacoes por hora
+    agora = datetime.now()
+    if email in _reset_senha_tentativas:
+        tentativas = _reset_senha_tentativas[email]
+        # Limpar tentativas antigas (mais de 1 hora)
+        tentativas = [t for t in tentativas if agora - t < timedelta(hours=1)]
+        _reset_senha_tentativas[email] = tentativas
+
+        if len(tentativas) >= 3:
+            raise HTTPException(
+                status_code=429,
+                detail="Muitas solicitacoes de recuperacao de senha. Tente novamente em 1 hora."
+            )
+    else:
+        _reset_senha_tentativas[email] = []
+
+    # Verificar se cidadao existe
+    cidadao = db.query(models.Cidadao).filter(models.Cidadao.email == email).first()
+    if not cidadao:
+        # Por seguranca, nao informamos que o email nao existe
+        # Registramos a tentativa e retornamos sucesso
+        _reset_senha_tentativas[email].append(agora)
+        return {
+            "success": True,
+            "message": "Se o email estiver cadastrado, voce recebera as instrucoes de recuperacao"
+        }
+
+    # Invalidar tokens anteriores nao utilizados para este cidadao
+    db.query(models.PasswordResetToken).filter(
+        models.PasswordResetToken.cidadao_id == cidadao.cidadao_id,
+        models.PasswordResetToken.used == 0
+    ).update({"used": 1})
+    db.commit()
+
+    # Gerar novo token (6 digitos numericos para facilitar digitacao no app)
+    token = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+
+    # Calcular expiracao (1 hora)
+    expires_at = agora + timedelta(hours=1)
+
+    # Salvar token no banco
+    reset_token = models.PasswordResetToken(
+        cidadao_id=cidadao.cidadao_id,
+        token=token,
+        email=email,
+        expires_at=expires_at,
+        used=0
+    )
+    db.add(reset_token)
+    db.commit()
+
+    # Registrar tentativa
+    _reset_senha_tentativas[email].append(agora)
+
+    # Enviar email
+    resultado_email = await enviar_email_reset_senha(
+        destinatario=email,
+        nome_usuario=cidadao.nome,
+        token=token,
+        cliente_nome="Governa Facil"
+    )
+
+    if not resultado_email.get("success"):
+        print(f"Erro ao enviar email de reset: {resultado_email.get('message')}")
+        # Nao retornamos erro para nao expor informacoes
+
+    return {
+        "success": True,
+        "message": "Se o email estiver cadastrado, voce recebera as instrucoes de recuperacao"
+    }
+
+
+@app.post("/api/cidadao/redefinir-senha")
+async def redefinir_senha(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Redefine a senha do cidadao usando o token de reset.
+    Valida token, verifica expiracao e atualiza senha.
+    """
+    from datetime import datetime
+
+    dados = await request.json()
+    token = dados.get("token", "").strip()
+    nova_senha = dados.get("nova_senha", "")
+
+    if not token:
+        raise HTTPException(status_code=400, detail="Token e obrigatorio")
+
+    if not nova_senha:
+        raise HTTPException(status_code=400, detail="Nova senha e obrigatoria")
+
+    if len(nova_senha) < 6:
+        raise HTTPException(status_code=400, detail="A senha deve ter pelo menos 6 caracteres")
+
+    # Buscar token no banco
+    agora = datetime.now()
+    reset_token = db.query(models.PasswordResetToken).filter(
+        models.PasswordResetToken.token == token,
+        models.PasswordResetToken.used == 0
+    ).first()
+
+    if not reset_token:
+        raise HTTPException(status_code=400, detail="Token invalido ou ja utilizado")
+
+    # Verificar expiracao
+    if reset_token.expires_at < agora:
+        # Marcar como usado para evitar tentativas futuras
+        reset_token.used = 1
+        db.commit()
+        raise HTTPException(status_code=400, detail="Token expirado. Solicite um novo codigo de recuperacao")
+
+    # Buscar cidadao
+    cidadao = db.query(models.Cidadao).filter(
+        models.Cidadao.cidadao_id == reset_token.cidadao_id
+    ).first()
+
+    if not cidadao:
+        raise HTTPException(status_code=400, detail="Cidadao nao encontrado")
+
+    # Atualizar senha com hash bcrypt
+    cidadao.senha = get_password_hash(nova_senha)
+
+    # Marcar token como usado
+    reset_token.used = 1
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "Senha redefinida com sucesso! Voce ja pode fazer login com a nova senha."
+    }
+
 
 # Rotas Usuarios
 

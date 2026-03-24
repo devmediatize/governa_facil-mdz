@@ -436,10 +436,25 @@
     .chart-container {
         position: relative;
         height: 300px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .chart-container canvas {
+        max-width: 100% !important;
     }
 
     .chart-container-lg {
         height: 350px;
+    }
+
+    @media (max-width: 576px) {
+        .chart-container canvas {
+            min-width: 300px;
+        }
     }
 
     /* ===== RANKING BAIRROS ===== */

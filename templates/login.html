@@ -356,10 +356,11 @@
         @media (max-width: 1024px) {
             body {
                 flex-direction: column;
+                overflow: auto;
             }
 
             .branding-side {
-                padding: 40px 20px;
+                padding: 30px 20px;
                 min-height: auto;
             }
 
@@ -368,16 +369,88 @@
             }
 
             .branding-title {
-                font-size: 36px;
+                font-size: 32px;
+            }
+
+            .branding-subtitle {
+                font-size: 14px;
+                margin-bottom: 20px;
             }
 
             .features-list {
                 display: none;
             }
 
+            .stats-row {
+                display: none;
+            }
+
             .login-side {
                 width: 100%;
-                padding: 40px 30px;
+                min-height: auto;
+                padding: 30px 20px;
+            }
+
+            .login-logo img {
+                max-height: 120px;
+                max-width: 280px;
+            }
+
+            .login-header {
+                margin-bottom: 25px;
+            }
+
+            .login-header h2 {
+                font-size: 22px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .branding-side {
+                padding: 20px 15px;
+            }
+
+            .branding-logo img {
+                max-height: 100px;
+            }
+
+            .branding-title {
+                font-size: 24px;
+            }
+
+            .branding-subtitle {
+                font-size: 12px;
+            }
+
+            .login-side {
+                padding: 20px 15px;
+            }
+
+            .login-logo {
+                margin-bottom: 20px;
+            }
+
+            .login-logo img {
+                max-height: 100px;
+                max-width: 220px;
+            }
+
+            .login-header h2 {
+                font-size: 20px;
+            }
+
+            .login-header p {
+                font-size: 13px;
+            }
+
+            .form-control {
+                padding: 12px 12px 12px 42px;
+                font-size: 14px;
+            }
+
+            .btn-login {
+                padding: 14px;
+                font-size: 15px;
             }
         }
 
